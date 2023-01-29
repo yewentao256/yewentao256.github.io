@@ -43,7 +43,7 @@ hugo
 
 - `hugo`后没有css样式？f12查看前端去哪里找css了，根据相关信息修复`baseUrl`
   - 例如：本地可能用绝对路径来找，`/Users/yewentao/Desktop/myblog/docs`
-  - 部署到gitpage后用根目录来找，如`https://yewentao256.github.io/blog/docs`
+  - 部署到gitpage后用pageurl来找，如`https://yewentao256.github.io/blog`
 
 ## Referrence
 

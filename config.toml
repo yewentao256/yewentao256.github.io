@@ -1,4 +1,4 @@
-baseURL = 'https://yewentao256.github.io/blog/docs'
+baseURL = 'https://yewentao256.github.io/blog'
 title = 'Yewentao Hugo Site'
 theme = 'LoveIt'
 publishDir = 'docs'

@@ -2,8 +2,8 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
-            <loc>/Users/yewentao/Desktop/myblog/docs/posts/first-post/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
-            <loc>/Users/yewentao/Desktop/myblog/docs/posts/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
-            <loc>/Users/yewentao/Desktop/myblog/docs/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
-            <loc>/Users/yewentao/Desktop/myblog/docs/categories/</loc></url><url>
-            <loc>/Users/yewentao/Desktop/myblog/docs/tags/</loc></url></urlset>
+            <loc>https://yewentao256.github.io/blog/posts/first-post/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
+            <loc>https://yewentao256.github.io/blog/posts/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
+            <loc>https://yewentao256.github.io/blog/</loc><lastmod>2023-01-29T16:12:39&#43;08:00</lastmod></url><url>
+            <loc>https://yewentao256.github.io/blog/categories/</loc></url><url>
+            <loc>https://yewentao256.github.io/blog/tags/</loc></url></urlset>
