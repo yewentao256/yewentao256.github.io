@@ -1,0 +1,18 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Yewentao Hugo Site</title>
+        <link>/Users/yewentao/Desktop/myblog/docs/</link>
+        <description>This is my cool site</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sun, 29 Jan 2023 16:12:39 &#43;0800</lastBuildDate>
+            <atom:link href="/Users/yewentao/Desktop/myblog/docs/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+    <title>First Post</title>
+    <link>/Users/yewentao/Desktop/myblog/docs/posts/first-post/</link>
+    <pubDate>Sun, 29 Jan 2023 16:12:39 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>/Users/yewentao/Desktop/myblog/docs/posts/first-post/</guid>
+    <description><![CDATA[yewentao的第一篇博客 2023年01月29日16:13:05]]></description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,20 @@
+baseURL = 'https://yewentao256.github.io/blog/docs'
+title = 'Yewentao Hugo Site'
+theme = 'LoveIt'
+publishDir = 'docs'
+
+
+
+# 网站语言, 仅在这里 CN 大写 ["en", "zh-CN", "fr", "pl", ...]
+languageCode = "zh-CN"
+# 语言名称 ["English", "简体中文", "Français", "Polski", ...]
+languageName = "简体中文"
+# 是否包括中日韩文字
+hasCJKLanguage = true
+
+
+# 作者配置
+[author]
+  name = "yewentao"
+  email = "zhyanwentao@outlook.com"
+  link = "https://yewentao256.github.io/blog"
