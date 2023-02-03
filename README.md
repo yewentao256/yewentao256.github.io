@@ -28,7 +28,13 @@ hugo new posts/first-post.md
 - 本地启动服务
 
 ```bash
-hugo server
+hugo server -e production
+```
+
+- 将本地资源换成cdn资源
+
+```python
+python process_use_cdn.py
 ```
 
 - 构建网页

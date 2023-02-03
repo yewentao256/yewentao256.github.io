@@ -4,7 +4,15 @@
         <link>https://yewentao256.github.io/zh-cn/categories/csapp/</link>
         <description>csapp - 分类 - 我的全新 Hugo 网站</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/categories/csapp/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/categories/csapp/" rel="self" type="application/rss+xml" /><item>
+    <title>CSAPP_class_notes</title>
+    <link>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</link>
+    <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</guid>
+    <description><![CDATA[1. Overview Course theme theme：Abstraction is good but don&rsquo;t forget reality Five realities ints are not integers；floats are not real To understand numbers in computer eg：x^2 &gt;= 0? for float：]]></description>
+</item>
+<item>
     <title>Attacklab</title>
     <link>https://yewentao256.github.io/zh-cn/posts/csapp/attacklab/</link>
     <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>

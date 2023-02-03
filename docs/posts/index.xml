@@ -4,7 +4,15 @@
         <link>https://yewentao256.github.io/posts/</link>
         <description>All Posts | My New Hugo Site</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>CSAPP_class_notes</title>
+    <link>https://yewentao256.github.io/posts/csapp/csapp_class_notes/</link>
+    <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/csapp/csapp_class_notes/</guid>
+    <description><![CDATA[1. Overview Course theme theme：Abstraction is good but don&rsquo;t forget reality Five realities ints are not integers；floats are not real To understand numbers in computer eg：x^2 &gt;= 0? for float：yes！ for int： 40000*40000=1600000000 yes! 50000*50000=?? not! eg：(x+y) + z = x+(y+z)? for int: yes! for于 float: (1e20+-1e20)+3.14 = 3.14； (1e20+(-1e20+3.14) = ?? you&rsquo;ve got to know assembly learning about assembly memory matters memory management eg： there&rsquo;s more to performance than asymptotic complexity eg： computers do more than execute programs IO/network How the course fits into the CS/ECE curriculum build up the base for another courses.]]></description>
+</item>
+<item>
     <title>Attacklab</title>
     <link>https://yewentao256.github.io/posts/csapp/attacklab/</link>
     <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>
