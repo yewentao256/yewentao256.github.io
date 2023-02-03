@@ -25,7 +25,7 @@ def process_resources_use_cdn(path: str = "content/posts") -> None:
                 content = f.readlines()
                 for i, line in enumerate(content):
                     if '![image](images/' in line:
-                        content[i] = line.replace('![image](images/', cdn_prefix + root + '/images/')
+                        content[i] = line.replace('![image](images/', cdn_prefix + root.replace('\\', '/') + '/images/')
                         print(f'    changing `{line}` to `{content[i]}`'.replace('\n', ''))
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.writelines(content)
