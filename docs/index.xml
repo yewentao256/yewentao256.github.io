@@ -1,18 +1,35 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Yewentao Hugo Site</title>
-        <link>https://yewentao256.github.io/blog/</link>
-        <description>This is my cool site</description>
-        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sun, 29 Jan 2023 16:12:39 &#43;0800</lastBuildDate>
-            <atom:link href="https://yewentao256.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+        <title>My New Hugo Site</title>
+        <link>https://yewentao256.github.io/</link>
+        <description>This is my new hugo site</description>
+        <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</lastBuildDate>
+            <atom:link href="https://yewentao256.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
-    <title>First Post</title>
-    <link>https://yewentao256.github.io/blog/posts/first-post/</link>
-    <pubDate>Sun, 29 Jan 2023 16:12:39 &#43;0800</pubDate>
+    <title>Attacklab</title>
+    <link>https://yewentao256.github.io/posts/csapp/attacklab/</link>
+    <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>
     <author>yewentao</author>
-    <guid>https://yewentao256.github.io/blog/posts/first-post/</guid>
-    <description><![CDATA[yewentao的第一篇博客 2023年01月29日16:13:05]]></description>
+    <guid>https://yewentao256.github.io/posts/csapp/attacklab/</guid>
+    <description><![CDATA[Set up Environment Using a docker container is the simplest way, source from yansongsongsong
+docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:attacklab
+Then using vscode remote ssh to connect with it as we described in datalab
+password: THEPASSWORDYOUCREATED
+Part1: Code Injection Attacks phase_1 This phase requires us to call touch1() at the end of test() in ctarget
+1 2 3 4 5 6 7 8 9 10 11 12 void test() { int val; val = getbuf(); // here is a dangerous getbuf call that we can make use of printf(&#34;No exploit.]]></description>
+</item>
+<item>
+    <title>Bomblab</title>
+    <link>https://yewentao256.github.io/posts/csapp/bomblab/</link>
+    <pubDate>Fri, 03 Feb 2023 14:57:35 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/csapp/bomblab/</guid>
+    <description><![CDATA[Set up Environment Using a docker container is the simplest way, source from yansongsongsong
+docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:bomblab
+Then using vscode remote ssh to connect with it as we described in datalab
+password: THEPASSWORDYOUCREATED
+Commands We usually use 1 2 3 4 5 6 7 8 gdb -q bomb # start debugging b explode_bomb # help you break before bomb stepi # run into next instruction (stepin) nexti # run into next instruction (not stepin the funcs) disas phase_1 # make binary coding into assembly, helpful x/s 0x402400 # get the string value in address 0x402400 i registers # print the register infos p $rsp # print the value of variable Phase_1 assembler code for function phase_1:]]></description>
 </item>
 </channel>
 </rss>
