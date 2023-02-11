@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Categories - 分类 - 我的全新 Hugo 网站</title>
+        <title>Categories - 分类 - Yewentao&#39;s Blog</title>
         <link>https://yewentao256.github.io/zh-cn/categories/</link>
-        <description>Categories - 分类 - 我的全新 Hugo 网站</description>
+        <description>Categories - 分类 - Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
             <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/categories/" rel="self" type="application/rss+xml" /><item>
     <title>csapp</title>

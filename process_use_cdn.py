@@ -5,9 +5,9 @@ def process_resources_use_cdn(path: str = "content/posts") -> None:
     """本函数将处理所有markdown文件, 将图片文件引用转化为cdn引用, 实现本地部署到线上的转换
     
     例如：
-    `![image](images/android-chrome-192x192.png)
+    `![image](resources/android-chrome-192x192.png)
     将转换为：
-    `![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/first-post/images/android-chrome-192x192.png)`
+    `![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/first-post/resources/android-chrome-192x192.png)`
 
     Args:
         path (str): post 根目录
@@ -24,8 +24,8 @@ def process_resources_use_cdn(path: str = "content/posts") -> None:
                 print(f'processing {file_path} ...')
                 content = f.readlines()
                 for i, line in enumerate(content):
-                    if '![image](images/' in line:
-                        content[i] = line.replace('![image](images/', cdn_prefix + root.replace('\\', '/') + '/images/')
+                    if '![image](resources/' in line:
+                        content[i] = line.replace('![image](resources/', cdn_prefix + root.replace('\\', '/') + '/resources/')
                         print(f'    changing `{line}` to `{content[i]}`'.replace('\n', ''))
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.writelines(content)

@@ -1,8 +1,8 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
     <channel>
-        <title>Tags - Tag - My New Hugo Site</title>
+        <title>Tags - Tag - Yewentao&#39;s Blog</title>
         <link>https://yewentao256.github.io/tags/</link>
-        <description>Tags - Tag - My New Hugo Site</description>
+        <description>Tags - Tag - Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
             <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><atom:link href="https://yewentao256.github.io/tags/" rel="self" type="application/rss+xml" /></channel>
 </rss>

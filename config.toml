@@ -80,7 +80,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # 网站标题, 用于 Open Graph 和 Twitter Cards
   title = "yewentao's blog"
   # 网站描述, 用于 RSS, SEO, Open Graph 和 Twitter Cards
-  description = "This is my new hugo site"
+  description = "yewentao's blog"
   # 网站图片, 用于 Open Graph 和 Twitter Cards
   images = ["person-circle.svg"]
 
@@ -109,7 +109,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     # LoveIt 新增 | 0.2.0 自定义内容 (支持 HTML 格式)
     custom = ''
     # LoveIt 新增 | 0.2.0 是否显示 Hugo 和主题信息
-    hugo = true
+    hugo = false
     # LoveIt 新增 | 0.2.0 是否显示版权信息
     copyright = true
     # LoveIt 新增 | 0.2.0 是否显示作者
@@ -188,9 +188,9 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       # 主页显示头像的 URL
       # avatarURL = "/images/avatar.png"
       # LoveIt 更改 | 0.2.7 主页显示的网站标题 (支持 HTML 格式)
-      title = "Yewentao's blog"
+      title = "Yewentao's Blog"
       # 主页显示的网站副标题 (允许 HTML 格式)
-      subtitle = "This is my new hugo site"
+      subtitle = "Hello friend, welcome to my blog!"
       # 是否为副标题显示打字机动画
       typeit = true
       # 是否显示社交账号
@@ -208,72 +208,32 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # 作者的社交信息设置
   [params.social]
     GitHub = "yewentao256"
-    # Linkedin = ""
+    Linkedin = "yewentao"
     # Twitter = "xxxx"
     # Instagram = "xxxx"
     # Facebook = "xxxx"
     # Telegram = "xxxx"
-    # Medium = ""
     # Gitlab = ""
     # Youtubelegacy = ""
     # Youtubecustom = ""
     # Youtubechannel = ""
-    # Tumblr = ""
-    # Quora = ""
-    # Keybase = ""
-    # Pinterest = ""
-    # Reddit = ""
-    # Codepen = ""
     # FreeCodeCamp = ""
     # Bitbucket = ""
     # Stackoverflow = ""
     # Weibo = ""
-    # Odnoklassniki = ""
-    # VK = ""
-    # Flickr = ""
-    # Xing = ""
-    # Snapchat = ""
-    # Soundcloud = ""
-    # Spotify = ""
     # Bandcamp = ""
     # Paypal = ""
-    # Fivehundredpx = ""
-    # Mix = ""
-    # Goodreads = ""
-    # Lastfm = ""
-    # Foursquare = ""
-    # Hackernews = ""
-    # Kickstarter = ""
     # Patreon = ""
-    # Steam = ""
-    # Twitch = ""
     # Strava = ""
     # Skype = ""
     # Whatsapp = ""
     # Zhihu = ""
     # Douban = ""
-    # Angellist = ""
-    # Slidershare = ""
-    # Jsfiddle = ""
-    # Deviantart = ""
-    # Behance = ""
-    # Dribbble = ""
-    # Wordpress = ""
-    # Vine = ""
     # Googlescholar = ""
     # Researchgate = ""
-    # Mastodon = ""
-    # Thingiverse = ""
-    # Devto = ""
-    # Gitea = ""
-    # XMPP = ""
-    # Matrix = ""
     # Bilibili = ""
     # Discord = ""
     # DiscordInvite = ""
-    # Lichess = ""
-    # ORCID = ""
-    # Pleroma = ""
     # Kaggle = ""
     # MediaWiki= ""
     # Plume = ""
@@ -517,7 +477,7 @@ defaultContentLanguage = "en"
 [languages]
   [languages.en]
     weight = 1
-    title = "My New Hugo Site"
+    title = "Yewentao's Blog"
     languageCode = "en"
     languageName = "English"
     [[languages.en.menu.main]]
@@ -555,7 +515,7 @@ defaultContentLanguage = "en"
 
   [languages.zh-cn]
     weight = 2
-    title = "我的全新 Hugo 网站"
+    title = "Yewentao's Blog"
     languageCode = "zh-CN"
     languageName = "简体中文"
     hasCJKLanguage = true
