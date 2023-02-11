@@ -2,6 +2,7 @@
 title: "Bomblab"
 date: 2023-02-03T14:57:35+08:00
 categories: ["csapp"]
+summary: Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It's a little bit hard, please be patient and gradually find your way out, good luck! 
 ---
 
 ## 等待被翻译

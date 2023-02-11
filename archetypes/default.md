@@ -2,6 +2,7 @@
 title: "{{ replace .Name "-" " " | title }}"
 date: {{ .Date }}
 categories: [""]
+summary: "{{ replace .Name "-" " " | title }}"
 ---
 
 ## To be translated

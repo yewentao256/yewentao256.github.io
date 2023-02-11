@@ -2,6 +2,7 @@
 title: "Attacklab"
 date: 2023-02-03T16:41:42+08:00
 categories: ["csapp"]
+summary: Attacklab from CSAPP 15213, including P1-Code Injection Attacks and P2-Return-Oriented Programming. It's a little bit hard, please be patient and gradually find your way out, best wishes! 
 ---
 
 ## 等待被翻译

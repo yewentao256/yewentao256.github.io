@@ -10,7 +10,7 @@
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/csapp_class_notes/</guid>
-    <description><![CDATA[1. Overview Course theme theme：Abstraction is good but don&rsquo;t forget reality Five realities ints are not integers；floats are not real To understand numbers in computer eg：x^2 &gt;= 0? for float：yes！ for int： 40000*40000=1600000000 yes! 50000*50000=?? not! eg：(x+y) + z = x+(y+z)? for int: yes! for于 float: (1e20+-1e20)+3.14 = 3.14； (1e20+(-1e20+3.14) = ?? you&rsquo;ve got to know assembly learning about assembly memory matters memory management eg： there&rsquo;s more to performance than asymptotic complexity eg： computers do more than execute programs IO/network How the course fits into the CS/ECE curriculum build up the base for another courses.]]></description>
+    <description><![CDATA[My note while learning through CSAPP-15213 videos. Including Overview, Bits,Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory.]]></description>
 </item>
 <item>
     <title>Attacklab</title>
@@ -18,12 +18,7 @@
     <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/attacklab/</guid>
-    <description><![CDATA[Set up Environment Using a docker container is the simplest way, source from yansongsongsong
-docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:attacklab
-Then using vscode remote ssh to connect with it as we described in datalab
-password: THEPASSWORDYOUCREATED
-Part1: Code Injection Attacks phase_1 This phase requires us to call touch1() at the end of test() in ctarget
-1 2 3 4 5 6 7 8 9 10 11 12 void test() { int val; val = getbuf(); // here is a dangerous getbuf call that we can make use of printf(&#34;No exploit.]]></description>
+    <description><![CDATA[Attacklab from CSAPP 15213, including P1-Code Injection Attacks and P2-Return-Oriented Programming. It&rsquo;s a little bit hard, please be patient and gradually find your way out, best wishes!]]></description>
 </item>
 <item>
     <title>Bomblab</title>
@@ -31,11 +26,7 @@ Part1: Code Injection Attacks phase_1 This phase requires us to call touch1() at
     <pubDate>Fri, 03 Feb 2023 14:57:35 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/bomblab/</guid>
-    <description><![CDATA[Set up Environment Using a docker container is the simplest way, source from yansongsongsong
-docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:bomblab
-Then using vscode remote ssh to connect with it as we described in datalab
-password: THEPASSWORDYOUCREATED
-Commands We usually use 1 2 3 4 5 6 7 8 gdb -q bomb # start debugging b explode_bomb # help you break before bomb stepi # run into next instruction (stepin) nexti # run into next instruction (not stepin the funcs) disas phase_1 # make binary coding into assembly, helpful x/s 0x402400 # get the string value in address 0x402400 i registers # print the register infos p $rsp # print the value of variable Phase_1 assembler code for function phase_1:]]></description>
+    <description><![CDATA[Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It&rsquo;s a little bit hard, please be patient and gradually find your way out, good luck!]]></description>
 </item>
 </channel>
 </rss>

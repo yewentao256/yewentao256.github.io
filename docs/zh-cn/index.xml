@@ -12,7 +12,7 @@
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</guid>
-    <description><![CDATA[等待被翻译 非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间 1. Overview Course theme theme：Abstraction is good but don&rsquo;t forget reality Five realities ints are not inte]]></description>
+    <description><![CDATA[My note while learning through CSAPP-15213 videos. Including Overview, Bits,Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory.]]></description>
 </item>
 <item>
     <title>Attacklab</title>
@@ -20,7 +20,7 @@
     <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/csapp/attacklab/</guid>
-    <description><![CDATA[等待被翻译 非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间 Set up Environment Using a docker container is the simplest way, source from yansongsongsong docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:attacklab Then using vscode remote ssh to connect with it as we described in]]></description>
+    <description><![CDATA[Attacklab from CSAPP 15213, including P1-Code Injection Attacks and P2-Return-Oriented Programming. It&rsquo;s a little bit hard, please be patient and gradually find your way out, best wishes!]]></description>
 </item>
 <item>
     <title>Bomblab</title>
@@ -28,7 +28,7 @@
     <pubDate>Fri, 03 Feb 2023 14:57:35 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/csapp/bomblab/</guid>
-    <description><![CDATA[等待被翻译 非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间 Set up Environment Using a docker container is the simplest way, source from yansongsongsong docker run --privileged -d -p 1221:22 --name bomb yansongsongsong/csapp:bomblab Then using vscode remote ssh to connect with it as we described in]]></description>
+    <description><![CDATA[Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It&rsquo;s a little bit hard, please be patient and gradually find your way out, good luck!]]></description>
 </item>
 </channel>
 </rss>
