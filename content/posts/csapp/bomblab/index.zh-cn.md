@@ -4,6 +4,10 @@ date: 2023-02-03T14:57:35+08:00
 categories: ["csapp"]
 ---
 
+## 等待被翻译
+
+非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+
 ## Set up Environment
 
 Using a docker container is the simplest way, source from yansongsongsong
