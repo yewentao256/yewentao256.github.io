@@ -9,4 +9,4 @@ My name is yewentao, working in **sensetime** (Shanghai) as a deep learning syst
 
 My email: `zhyanwentao@outlook.com`
 
-**Note**: If you can't see the pictures in my blog, please use vpn.
+**Note**: If you can't see pictures in my blog, please use vpn.
