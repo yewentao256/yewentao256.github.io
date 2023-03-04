@@ -20,7 +20,7 @@ myblog
 - 开始书写博客
 
 ```bash
-hugo new posts/first-post.md
+hugo new posts/directory/title/index.en.md
 ```
 
 该命令以`archetypes/default.md`为模板创建新文章，位于`content/posts`目录下，书写好后删除`draft: true`即可
