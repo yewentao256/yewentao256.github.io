@@ -23,7 +23,7 @@
     <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function.]]></description>
 </item>
 <item>
-    <title>CSAPP_class_notes</title>
+    <title>CSAPP Class Notes</title>
     <link>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</link>
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>
@@ -45,6 +45,22 @@
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/csapp/bomblab/</guid>
     <description><![CDATA[Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It&rsquo;s a little bit hard, please be patient and gradually find your way out, good luck!]]></description>
+</item>
+<item>
+    <title>Understand Dynamic Programming</title>
+    <link>https://yewentao256.github.io/zh-cn/posts/algorithm/dynamic-programming/</link>
+    <pubDate>Fri, 11 Mar 2022 11:13:50 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/zh-cn/posts/algorithm/dynamic-programming/</guid>
+    <description><![CDATA[基于两个实际的例子理解动态规划算法]]></description>
+</item>
+<item>
+    <title>Understand Lightgbm</title>
+    <link>https://yewentao256.github.io/zh-cn/posts/algorithm/lightgbm/</link>
+    <pubDate>Fri, 17 Dec 2021 11:01:36 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/zh-cn/posts/algorithm/lightgbm/</guid>
+    <description><![CDATA[直观理解 <strong>LightGBM</strong>: 梯度提升决策树, 主要包含决策树和梯度提升两个概念。]]></description>
 </item>
 </channel>
 </rss>
