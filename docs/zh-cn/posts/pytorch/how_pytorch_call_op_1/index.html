@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>How Pytorch 2.0 Call Ops(一) - Yewentao&#39;s Blog</title><meta name="Description" content="yewentao&#39;s blog"><meta property="og:title" content="How Pytorch 2.0 Call Ops(一)" />
+<meta property="og:description" content="本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-03-11T09:53:09+08:00" />
+<meta property="article:modified_time" content="2023-03-11T09:53:09+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
+
+<meta name="twitter:title" content="How Pytorch 2.0 Call Ops(一)"/>
+<meta name="twitter:description" content="本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。"/>
+<meta name="application-name" content="我的网站">
+<meta name="apple-mobile-web-app-title" content="我的网站"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" /><link rel="prev" href="https://yewentao256.github.io/zh-cn/posts/pytorch/memory_format/" /><link rel="next" href="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "How Pytorch 2.0 Call Ops(一)",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/pytorch\/how_pytorch_call_op_1\/"
+        },"genre": "posts","wordcount":  8675 ,
+        "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/pytorch\/how_pytorch_call_op_1\/","datePublished": "2023-03-11T09:53:09+08:00","dateModified": "2023-03-11T09:53:09+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "yewentao"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/zh-cn/" title="Yewentao&#39;s Blog">Home</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/zh-cn/posts/"> 文章 </a><a class="menu-item" href="/zh-cn/categories/"> 分类 </a><a class="menu-item" href="/zh-cn/about/"> 关于 </a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="选择语言">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_1/">English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_1/" selected>简体中文</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/zh-cn/" title="Yewentao&#39;s Blog">Home</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/zh-cn/posts/" title="">文章</a><a class="menu-item" href="/zh-cn/categories/" title="">分类</a><a class="menu-item" href="/zh-cn/about/" title="">关于</a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="选择语言">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_1/">English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_1/" selected>简体中文</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">How Pytorch 2.0 Call Ops(一)</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">收录于 <a href="/zh-cn/categories/pytorch/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>pytorch</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-03-11">2023-03-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 8675 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 18 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#0-引入">0. 引入</a></li>
+    <li><a href="#1-c-到-pythoncontiguous如何被导出">1. c++ 到 python：contiguous如何被导出</a></li>
+    <li><a href="#2-代码生成简述native_functionsyaml和variable_methods">2. 代码生成简述：<code>native_functions.yaml</code>和<code>variable_methods</code></a></li>
+    <li><a href="#3-contiguous的调用在dispatch前">3. contiguous的调用：在dispatch前</a></li>
+    <li><a href="#4-dispatch-contiguous算子找schema与call-kernel">4. dispatch contiguous算子：找schema与call kernel</a></li>
+    <li><a href="#5-为什么能在表里找到contiguous算子算子register">5. 为什么能在表里找到contiguous算子：算子register</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="summary">Summary</h2>
+<p>本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。</p>
+<h2 id="0-引入">0. 引入</h2>
+<p>我们首先看这么一段代码</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span>
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>              <span class="c1"># torch.Size([1, 64, 5, 4])</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">stride</span><span class="p">())</span>           <span class="c1"># (1280, 1, 256, 64)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">is_contiguous</span><span class="p">())</span>    <span class="c1"># False</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>它会将NCHW的内存分布转换为NHWC（channel last）的内存分布，进而在一些特定场景下取得更好的性能提升（如conv2d）</p>
+<p><code>contiguous</code>是如何被导出到python层的？其底层实际运行逻辑是怎样的呢？我们将一层层往下走，并最终将调用链路串联起来，揭开pytorch调用算子流程的面纱。</p>
+<h2 id="1-c-到-pythoncontiguous如何被导出">1. c++ 到 python：contiguous如何被导出</h2>
+<p>python层对于contiguous没有额外封装，直接使用c++导出的pyi声明</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="c1"># torch/_C/__init__.pyi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Defined in torch/csrc/autograd/python_variable.cpp</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">_TensorMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span> <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Defined in torch/csrc/autograd/python_variable.cpp</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">_TensorBase</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">_TensorMeta</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">contiguous</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">contiguous_format</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span> <span class="o">...</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到，<code>contiguous</code>是<code>_TensorBase</code>的一个类方法。<code>_TensorBase</code>使用<code>_TensorMeta</code>作为元类（一种python机制，可以动态地修改类内部的属性或方法）。</p>
+<p><code>_TensorBase</code>是如何被导出到python层的呢？pytorch使用python自带的<strong>PyModuleDef</strong>机制创建了<code>torchmodule</code>，随后调用<code>THPVariable_initModule</code>并通过<code>PyModule_AddObject</code>导出</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/csrc/Module.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">PyObject</span><span class="o">*</span> <span class="nf">initModule</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">static</span> <span class="k">struct</span> <span class="nc">PyModuleDef</span> <span class="n">torchmodule</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span> <span class="s">&#34;torch._C&#34;</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">methods</span><span class="p">.</span><span class="n">data</span><span class="p">()};</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ASSERT_TRUE</span><span class="p">(</span><span class="n">module</span> <span class="o">=</span> <span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">torchmodule</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ASSERT_TRUE</span><span class="p">(</span><span class="n">THPVariable_initModule</span><span class="p">(</span><span class="n">module</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// torch/csrc/autograd/python_variable.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">bool</span> <span class="nf">THPVariable_initModule</span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span> <span class="n">module</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ....
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">PyModule_AddObject</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">&#34;_TensorMeta&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">THPVariableMetaType</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ....
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PyMethodDef</span><span class="o">&gt;</span> <span class="n">methods</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">THPUtils_addPyMethodDefs</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="n">torch</span><span class="o">::</span><span class="n">autograd</span><span class="o">::</span><span class="n">variable_methods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">THPUtils_addPyMethodDefs</span><span class="p">(</span><span class="n">methods</span><span class="p">,</span> <span class="n">extra_methods</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 将`variable_methods`并放到`THPVariableType.tp_methods`中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">THPVariableType</span><span class="p">.</span><span class="n">tp_methods</span> <span class="o">=</span> <span class="n">methods</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">PyType_Ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">THPVariableType</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Py_INCREF</span><span class="p">(</span><span class="o">&amp;</span><span class="n">THPVariableType</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PyModule_AddObject</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s">&#34;_TensorBase&#34;</span><span class="p">,</span> <span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">THPVariableType</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ....
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们的<code>contiguous</code>方法便位于<code>variable_methods</code>中，进而作为<code>_TensorBase</code>的成员方法被导出到python层。</p>
+<h2 id="2-代码生成简述native_functionsyaml和variable_methods">2. 代码生成简述：<code>native_functions.yaml</code>和<code>variable_methods</code></h2>
+<p><code>variable_methods</code>被定义在<code>tools/autograd/templates/python_variable_methods.cpp</code>中。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// tools/autograd/templates/python_variable_methods.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">PyMethodDef</span> <span class="n">variable_methods</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ... other functions
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">{</span><span class="s">&#34;contiguous&#34;</span><span class="p">,</span> <span class="n">castPyCFunctionWithKeywords</span><span class="p">(</span><span class="n">THPVariable_contiguous</span><span class="p">),</span> <span class="n">METH_VARARGS</span> <span class="o">|</span> <span class="n">METH_KEYWORDS</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">  <span class="err">$</span><span class="p">{</span><span class="n">py_method_defs</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>但注意，此处仅仅是模板，并不是实际被编译运行的代码。实际上，算子开发中有很多函数代码相似，pytorch为了减少重复的工作量，引入了一种<strong>代码生成机制</strong>，简单来说是基于<code>native.yaml</code>和模板来生成代码，具体逻辑可见<code>torchgen/gen.py</code>，我们不过多展开。</p>
+<p>在编译pytorch后，我们可以在generated文件夹下看到更多内容，如新生成的<code>unsqueeze</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/csrc/autograd/generated/python_variable_methods.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">PyMethodDef</span> <span class="n">variable_methods</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// other functions
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">{</span><span class="s">&#34;contiguous&#34;</span><span class="p">,</span> <span class="n">castPyCFunctionWithKeywords</span><span class="p">(</span><span class="n">THPVariable_contiguous</span><span class="p">),</span> <span class="n">METH_VARARGS</span> <span class="o">|</span> <span class="n">METH_KEYWORDS</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// generated new functions
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">{</span><span class="s">&#34;unsqueeze&#34;</span><span class="p">,</span> <span class="n">castPyCFunctionWithKeywords</span><span class="p">(</span><span class="n">THPVariable_unsqueeze</span><span class="p">),</span> <span class="n">METH_VARARGS</span> <span class="o">|</span> <span class="n">METH_KEYWORDS</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">  <span class="p">{</span><span class="s">&#34;unsqueeze_&#34;</span><span class="p">,</span> <span class="n">castPyCFunctionWithKeywords</span><span class="p">(</span><span class="n">THPVariable_unsqueeze_</span><span class="p">),</span> <span class="n">METH_VARARGS</span> <span class="o">|</span> <span class="n">METH_KEYWORDS</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>unsqueeze_</code>来自<code>native_functions.yaml</code>中的定义，替换了在模板中的<code>${py_method_defs}</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl">- <span class="nt">func</span><span class="p">:</span><span class="w"> </span><span class="l">unsqueeze_(Tensor(a!) self, int dim) -&gt; Tensor(a!)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">variants</span><span class="p">:</span><span class="w"> </span><span class="l">method</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">device_check</span><span class="p">:</span><span class="w"> </span><span class="l">NoCheck</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">device_guard</span><span class="p">:</span><span class="w"> </span><span class="kc">False</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">tags</span><span class="p">:</span><span class="w"> </span><span class="l">inplace_view</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">dispatch</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">CompositeExplicitAutograd</span><span class="p">:</span><span class="w"> </span><span class="l">unsqueeze_</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><code>func</code>：描述函数名称及参数、输出类型等</li>
+<li><code>variants</code>：<code>method</code>或<code>function</code>，指生成tensor method或单独function</li>
+<li><code>device_check</code>：确保传递给kernel的所有tensor在同一device上</li>
+<li><code>device_guard</code>：确保kernel在指定设备下执行（匹配第一个tensor参数的设备）</li>
+<li><code>dispatch</code>：指定后端与对应的函数。<code>CompositeExplicitAutograd</code>指的是显式自动微分dispatch key，需要在<code>derivative.yaml</code>写明微分规则。如果是<code>CompositeImplicitAutograd</code>则不需要，这是基于该算子底层算子都支持自动微分实现的，如<code>conv2d</code>。</li>
+<li><code>tags</code>：算子标签，详见<a href="https://github.com/pytorch/pytorch/blob/main/aten/src/ATen/native/tags.yaml" target="_blank" rel="noopener noreffer ">链接</a></li>
+</ul>
+<p>值得指出的是，由于<code>contiguous</code>代码较为复杂，所以在<code>tools/autograd/templates/python_variable_methods.cpp</code>中已经有了完整内容，并不是通过<code>{py_method_defs}</code>生成出来的。</p>
+<h2 id="3-contiguous的调用在dispatch前">3. contiguous的调用：在dispatch前</h2>
+<p>注意：我们调用流程走的是aten算子，而不是<code>torchprim</code>的版本算子。笔者是基于cpu编译的pytorch，没有走cuda（cudnn/triton）</p>
+<p>如果读者想要gdb调试CPP部分，请设置环境变量<code>export DEBUG=1</code>再编译。如果希望运行时看到调用链路，可以设置<code>export TORCH_SHOW_DISPATCH_TRACE=1</code>。</p>
+<p>由上文可知，我们放到<code>tensorbase</code>里的contiguous函数为<code>THPVariable_contiguous</code>，这里是直接与python层交互的函数，负责解析参数、执行调用等。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/csrc/autograd/generated/python_variable_methods.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="n">PyObject</span> <span class="o">*</span> <span class="nf">THPVariable_contiguous</span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span> <span class="n">self</span><span class="p">,</span> <span class="n">PyObject</span><span class="o">*</span> <span class="n">args</span><span class="p">,</span> <span class="n">PyObject</span><span class="o">*</span> <span class="n">kwargs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">PythonArgParser</span> <span class="n">parser</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">    <span class="s">&#34;contiguous(*, MemoryFormat memory_format=contiguous_format)&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="p">});</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ParsedArgs</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">parsed_args</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="n">parser</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 将self参数解析成`at::Tensor`
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span><span class="o">&amp;</span> <span class="n">self_</span> <span class="o">=</span> <span class="n">THPVariable_Unpack</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">memory_format</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="n">memoryformat</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">self_</span><span class="p">.</span><span class="n">is_contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// jit::tracer does something ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">THPVariable_Wrap</span><span class="p">(</span><span class="n">dispatch_contiguous</span><span class="p">(</span><span class="n">self_</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>简单而言就是解析python参数，随后判断当前tensor对于所需的<code>memory_format</code>是否<code>contiguous</code>，如果是的话直接返回，否则调用<code>dispatch_contiguous</code>。<code>is_contiguous()</code>的具体内容我们下文展开</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/csrc/autograd/generated/python_variable_methods.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="n">Tensor</span> <span class="nf">dispatch_contiguous</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 释放`Global Interpreter Lock (GIL)`
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">pybind11</span><span class="o">::</span><span class="n">gil_scoped_release</span> <span class="n">no_gil</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">OptionalDeviceGuard</span> <span class="n">device_guard</span><span class="p">(</span><span class="n">device_of</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>pybind11::gil_scoped_release</code>释放了<code>Global Interpreter Lock (GIL)</code>来提高性能（pybind11不会隐式释放，一切由用户操作，如果在释放后还需要访问python object，那么就必须require，详见<a href="https://pybind11.readthedocs.io/en/stable/advanced/misc.html" target="_blank" rel="noopener noreffer ">pybind11-gil</a>。在此处由于我们已经把参数全部解析成c++参数，所以可以自由释放gil了。</p>
+<p><code>OptionalDeviceGuard device_guard</code>是一种<strong>RAII</strong>（Resource Acquisition Is Initialization，资源获取即初始化）的guard，在构造函数中设置为某一设备，在析构函数中取消设置。相对<code>DeviceGuard</code>，<code>OptionalDeviceGuard</code>允许传一个nullopt，等效于<code>optional&lt;DeviceGuard&gt;</code>。这里我们不做展开，有兴趣的读者可以参考<code>c10/core/DeviceGuard.h</code></p>
+<p>之后调用<code>self.contiguous()</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/core/TensorBody.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="nl">Tensor</span><span class="p">:</span> <span class="k">public</span> <span class="n">TensorBase</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ....
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Tensor</span> <span class="nf">contiguous</span><span class="p">(</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="o">=</span><span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Contiguous</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">TensorBase</span><span class="o">::</span><span class="n">contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/TensorBase.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">TensorBase</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">TensorBase</span> <span class="nf">contiguous</span><span class="p">(</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="o">=</span><span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Contiguous</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">is_contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">__dispatch_contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>细心的读者可能发现，在tensorbase里它再次调用了<code>is_contiguous</code>方法，这是否和上面<code>THPVariable_contiguous</code>中重复了呢？对于我们例子中从python中调用下来确实是重复了，但contiguous并不是只有python层一个入口，c++层其他tensor也可能调用，所以这里需要加上。</p>
+<p>那能不能python层不检查呢，都到此处来检查？理论上也是可以的，但相对而言就会多走一些调用流，降低运行效率。而后文我们会展开<code>is_contiguous</code>的判断逻辑，由于其采取了变量形式存储，所以<code>is_contiguous</code>运行效率非常高的，因此权衡之下将<code>is_contiguous</code>多次调用。</p>
+<p>随后调用<code>TensorBase</code>的<code>__dispatch_contiguous()</code>方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/Tensor.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">TensorBase</span> <span class="n">TensorBase</span><span class="o">::</span><span class="n">__dispatch_contiguous</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">OptionalTensorRef</span> <span class="nf">self</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">_ops</span><span class="o">::</span><span class="n">contiguous</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="o">*</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意此处将tensorbase转成了<code>OptionalTensorRef self</code>，这将使成员方法调用变成函数方法调用，即self变成了之后调用contiguous算子的<strong>参数</strong></p>
+<p>这也和<code>native_functions.yaml</code>中参数声明对应起来了<code>aten::contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format) -&gt; Tensor(a)</code></p>
+<h2 id="4-dispatch-contiguous算子找schema与call-kernel">4. dispatch contiguous算子：找schema与call kernel</h2>
+<p>调用<code>at::_ops::contiguous::call()</code>来到基于<code>native_functions.yaml</code>生成的文件<code>Operators_4.cpp</code>中</p>
+<p>dispatch分为两步，第一步找到function schema，第二步调用schema中符合条件的kernel（如cpu tensor调度到cpu kernel、cuda tensor到cuda kernel等，该过程后面详细展开）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/Operators_4.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">contiguous</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="n">create_contiguous_typed_handle</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">op</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="n">C10_NOINLINE</span> <span class="n">c10</span><span class="o">::</span><span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">contiguous</span><span class="o">::</span><span class="n">schema</span><span class="o">&gt;</span> <span class="n">create_contiguous_typed_handle</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">c10</span><span class="o">::</span><span class="n">Dispatcher</span><span class="o">::</span><span class="n">singleton</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">      <span class="p">.</span><span class="n">findSchemaOrThrow</span><span class="p">(</span><span class="n">contiguous</span><span class="o">::</span><span class="n">name</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">::</span><span class="n">overload_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="p">.</span><span class="n">typed</span><span class="o">&lt;</span><span class="n">contiguous</span><span class="o">::</span><span class="n">schema</span><span class="o">&gt;</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里的<code>contiguous::name/overload_name</code>来自<code>continuous_ops.h</code>（生成代码）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/ops/contiguous_ops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="nc">TORCH_API</span> <span class="n">contiguous</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">schema</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">ptr_schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">*</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&#34;aten::contiguous&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA</span><span class="p">(</span><span class="n">overload_name</span><span class="p">,</span> <span class="s">&#34;&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA</span><span class="p">(</span><span class="n">schema_str</span><span class="p">,</span> <span class="s">&#34;contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format) -&gt; Tensor(a)&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">redispatch</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">DispatchKeySet</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们展开说明op的获取流程，首先拿到一个<code>Dispatcher</code>的singleton（单例）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">Dispatcher</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">C10_ALWAYS_INLINE</span> <span class="k">static</span> <span class="n">Dispatcher</span><span class="o">&amp;</span> <span class="n">singleton</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="n">Dispatcher</span><span class="o">&amp;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">realSingleton</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">C10_EXPORT</span> <span class="n">Dispatcher</span><span class="o">&amp;</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">realSingleton</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">Dispatcher</span> <span class="n">_singleton</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">_singleton</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后拿着dispatcher的单例去<code>findSchemaOrThrow()</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">OperatorHandle</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">findSchemaOrThrow</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">overload_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里name = &#34;aten::contiguous&#34;, overload_name = &#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">findSchema</span><span class="p">({</span><span class="n">name</span><span class="p">,</span> <span class="n">overload_name</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">it</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">it2</span> <span class="o">=</span> <span class="n">findOp</span><span class="p">({</span><span class="n">name</span><span class="p">,</span> <span class="n">overload_name</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">it</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">OperatorHandle</span><span class="o">&gt;</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">findSchema</span><span class="p">(</span><span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">overload_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// (const c10::OperatorName) (name = &#34;aten::contiguous&#34;, overload_name = &#34;&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">findOp</span><span class="p">(</span><span class="n">overload_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">hasSchema</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">it</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">c10</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">it</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">OperatorHandle</span><span class="o">&gt;</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">findOp</span><span class="p">(</span><span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">overload_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">operatorLookupTable_</span><span class="p">.</span><span class="n">read</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="k">const</span> <span class="n">ska</span><span class="o">::</span><span class="n">flat_hash_map</span><span class="o">&lt;</span><span class="n">OperatorName</span><span class="p">,</span> <span class="n">OperatorHandle</span><span class="o">&gt;&amp;</span> <span class="n">operatorLookupTable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">OperatorHandle</span><span class="o">&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">found</span> <span class="o">=</span> <span class="n">operatorLookupTable</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">overload_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">found</span> <span class="o">==</span> <span class="n">operatorLookupTable</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">c10</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">found</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里的<code>operatorLookupTable_</code>是<code>Dispatcher.h</code>中声明的一个私有变量<code>LeftRight&lt;ska::flat_hash_map&lt;OperatorName, OperatorHandle&gt;&gt; operatorLookupTable_;</code>，简单来说是一个哈希表，这里传了一个匿名函数进去，在哈希表中查找name，如果有则返回找到的<code>OperatorHandle</code>，如果没有则返回<code>nullopt</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">LeftRight</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">read</span><span class="p">(</span><span class="n">F</span><span class="o">&amp;&amp;</span> <span class="n">readFunc</span><span class="p">)</span> <span class="k">const</span> <span class="o">-&gt;</span> <span class="k">typename</span> <span class="n">c10</span><span class="o">::</span><span class="n">invoke_result_t</span><span class="o">&lt;</span><span class="n">F</span><span class="p">,</span> <span class="k">const</span> <span class="n">T</span><span class="o">&amp;&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// _data[_foregroundDataIndex.load()]拿到了所需的 operatorLookupTable
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nf">readFunc</span><span class="p">(</span><span class="n">_data</span><span class="p">[</span><span class="n">_foregroundDataIndex</span><span class="p">.</span><span class="n">load</span><span class="p">()]);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里我们找到了对应的<code>c10::OptionalBase&lt;c10::OperatorHandle&gt;</code>op并返回，随后经过<code>typed()</code>最终生成了<code>c10::TypedOperatorHandle&lt;at::Tensor (const at::Tensor &amp;, c10::MemoryFormat)&gt;</code>给到外层static变量op。</p>
+<p>到这里第一步查找schema步骤完成，我们接着开始查找并调用kernel。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/Operators_4.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">contiguous</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="n">create_contiguous_typed_handle</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">op</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后就调用call方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Return</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Args</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">Return</span> <span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;</span> <span class="k">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">OperatorHandle</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">C10_ALWAYS_INLINE</span> <span class="n">Return</span> <span class="nf">call</span><span class="p">(</span><span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">c10</span><span class="o">::</span><span class="n">Dispatcher</span><span class="o">::</span><span class="n">singleton</span><span class="p">().</span><span class="n">call</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span><span class="o">&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Return</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Args</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">C10_ALWAYS_INLINE_UNLESS_MOBILE</span> <span class="n">Return</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 基于tensor等参数算出一个最佳的dispatch key set
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">dispatchKeySet</span> <span class="o">=</span> <span class="n">op</span><span class="p">.</span><span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">op</span><span class="p">.</span><span class="n">dispatchKeyExtractor</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="k">template</span> <span class="n">getDispatchKeySetUnboxed</span><span class="o">&lt;</span><span class="n">Args</span><span class="p">...</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">...);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 根据disptach key set去operatorHandle中找kernel
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">const</span> <span class="n">KernelFunction</span><span class="o">&amp;</span> <span class="n">kernel</span> <span class="o">=</span> <span class="n">op</span><span class="p">.</span><span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">op</span><span class="p">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">dispatchKeySet</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 最后调用kernel
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">kernel</span><span class="p">.</span><span class="k">template</span> <span class="n">call</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span><span class="o">&gt;</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/OperatorEntry.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">const</span> <span class="n">KernelFunction</span><span class="o">&amp;</span> <span class="n">lookup</span><span class="p">(</span><span class="n">DispatchKeySet</span> <span class="n">ks</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="k">auto</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">ks</span><span class="p">.</span><span class="n">getDispatchTableIndexForDispatchKeySet</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">kernel</span> <span class="o">=</span> <span class="n">dispatchTable_</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ... some check
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">kernel</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在<code>call</code>方法中，首先算出一个<code>dispatchKeySet</code>，随后进入到 <code>op.lookup</code>中根据<code>dispatchKeySet</code>再算出<code>idx</code>，随后在<code>dispatchTable_</code>中找到最终调度到的kernel function，并调用其模板函数 <code>call</code>。</p>
+<p><code>dispatchKeySet</code>是一个<code>uint64_t</code>位集，每个dispatch key代表一个bit位，越大的bit索引代表优先级越高，例如一个tensor的device指定为<code>cuda</code>，disptach key set可能为<code>{AutogradCUDA | CUDA | ADInplaceOrView}</code>，那么会先进行dispatch到<code>AutogradCUDA</code>上，进行一些自动微分处理，然后再<code>redispatch</code>到<code>CUDA</code>上。</p>
+<p>这里特别指出，<code>ADInplaceOrView</code>是一个比较特殊的dispatchkey，专门针对inplace以及view操作时注册，为后续autograd计算提供额外设置。</p>
+<ul>
+<li>如对inplace操作增加<code>version counter</code>，后续autograd engine执行backward的时候会检查version，如果需要执行梯度计算的tensor被inplace操作过，则报错避免不正确的梯度计算。这部分代码在<code>torch/csrc/autograd/generated/ADInplaceOrViewTypeEverything.cpp</code>中。</li>
+<li><code>view</code>则同理防止对生成view的tensor做任何修改以确保避免不正确的梯度计算（因为<code>view</code>的tensor和原tensor共享存储）。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/boxing/KernelFunction_impl.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Return</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Args</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">C10_ALWAYS_INLINE</span> <span class="n">Return</span> <span class="n">KernelFunction</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">OperatorHandle</span><span class="o">&amp;</span> <span class="n">opHandle</span><span class="p">,</span> <span class="n">DispatchKeySet</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">guts</span><span class="o">::</span><span class="n">disjunction</span><span class="o">&lt;</span><span class="n">has_symint</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="c1">// ... get inlined by compiler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span><span class="n">C10_LIKELY</span><span class="p">(</span><span class="n">unboxed_kernel_func_</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">auto</span> <span class="o">*</span><span class="n">functor</span> <span class="o">=</span> <span class="n">boxed_kernel_func_</span><span class="p">.</span><span class="n">getFunctor</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">callUnboxedKernelFunction</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">unboxed_kernel_func_</span><span class="p">,</span> <span class="n">functor</span><span class="p">,</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">impl</span><span class="o">::</span><span class="n">BoxedKernelWrapper</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;::</span><span class="n">call</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">boxed_kernel_func_</span><span class="p">,</span> <span class="n">opHandle</span><span class="p">,</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里如果<code>unboxed_kernel_func_</code>非空，就从<code>boxed_kernel_func_</code>处拿到<code>functor</code>，然后调用<code>callUnboxedKernelFunction&lt;Return, Args...&gt;</code>。</p>
+<p><code>unboxed</code>指的是未打包的函数，包含完整的签名和参数等，打包的<code>boxed</code>函数直观上理解为把所有参数压成一个整体，例如<code>void conjugateFallback(const c10::OperatorHandle&amp; op, DispatchKeySet dispatch_keys, torch::jit::Stack* stack)</code>中的<code>stack</code>，这样不用针对每个参数变体都单独写一个函数签名，可以最大程度复用代码，编译出来的binary占用空间也小一些，方便在移动端部署，但相对解包封包的过程会一定程度上影响效率。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/boxing/KernelFunction_impl.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Return</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Args</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">Return</span> <span class="n">callUnboxedKernelFunction</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">unboxed_kernel_func</span><span class="p">,</span> <span class="n">OperatorKernel</span><span class="o">*</span> <span class="n">functor</span><span class="p">,</span> <span class="n">DispatchKeySet</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">Args</span><span class="o">&amp;&amp;</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">using</span> <span class="n">ActualSignature</span> <span class="o">=</span> <span class="n">Return</span> <span class="p">(</span><span class="n">OperatorKernel</span><span class="o">*</span><span class="p">,</span> <span class="n">DispatchKeySet</span><span class="p">,</span> <span class="n">Args</span><span class="p">...);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ActualSignature</span><span class="o">*</span> <span class="n">func</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">ActualSignature</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">unboxed_kernel_func</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 此时functor：&amp;(at:<i class="anonymous namespace" aria-hidden="true"></i><i class="anonymous namespace" aria-hidden="true"></i>:wrapper_CompositeImplicitAutograd__contiguous(at::Tensor const&amp;, c10::MemoryFormat))&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="p">)(</span><span class="n">functor</span><span class="p">,</span> <span class="n">dispatchKeySet</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Args</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后来到<code>wrap_kernel_functor_unboxed_</code>中调用<code>call</code>函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/boxing/impl/make_boxed_from_unboxed_functor.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">KernelFunctor</span><span class="p">,</span> <span class="k">class</span> <span class="nc">ReturnType</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">ParameterTypes</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">wrap_kernel_functor_unboxed_</span><span class="o">&lt;</span><span class="n">KernelFunctor</span><span class="p">,</span> <span class="n">ReturnType</span><span class="p">(</span><span class="n">ParameterTypes</span><span class="p">...)</span><span class="o">&gt;</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">ReturnType</span> <span class="nf">call</span><span class="p">(</span><span class="n">OperatorKernel</span><span class="o">*</span> <span class="n">functor</span><span class="p">,</span> <span class="n">DispatchKeySet</span><span class="p">,</span> <span class="n">ParameterTypes</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 注意此处已经不再有dispatch key了
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">KernelFunctor</span><span class="o">*</span> <span class="n">functor_</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">KernelFunctor</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">functor</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">functor_</span><span class="p">)(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">ParameterTypes</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/boxing/impl/WrapFunctionIntoFunctor.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">FuncPtr</span><span class="p">,</span> <span class="k">class</span> <span class="nc">ReturnType</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Parameters</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">WrapFunctionIntoFunctor_</span><span class="o">&lt;</span><span class="n">FuncPtr</span><span class="p">,</span> <span class="n">ReturnType</span><span class="p">,</span> <span class="n">guts</span><span class="o">::</span><span class="n">typelist</span><span class="o">::</span><span class="n">typelist</span><span class="o">&lt;</span><span class="n">Parameters</span><span class="p">...</span><span class="o">&gt;&gt;</span> <span class="k">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">c10</span><span class="o">::</span><span class="n">OperatorKernel</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="n">C10_ALWAYS_INLINE</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="k">operator</span><span class="p">()(</span><span class="n">Parameters</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">FuncPtr</span><span class="o">::</span><span class="n">func_ptr</span><span class="p">())(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Parameters</span><span class="o">&gt;</span><span class="p">(</span><span class="n">args</span><span class="p">)...);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后我们就剥开了层层封装，调度到了实际的functor上（根据编译选项、tensor类型等此处调度到的kernel会有所差异）。</p>
+<p>这里调度到了<strong>CompositeImplicitAutograd</strong>上，该dispatch key的含义是组合非显式自动微分，不需要如<code>ExplicitAutograd</code>那样单独写微分函数，依赖于底层的其他算子都能实现自动微分来实现</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">wrapper_CompositeImplicitAutograd__contiguous</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">native</span><span class="o">::</span><span class="n">contiguous</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最后便调用到了native的contiguous中（<code>aten/src/ATen/native/TensorProperties.cpp</code>），至此算子dispatch流程结束</p>
+<h2 id="5-为什么能在表里找到contiguous算子算子register">5. 为什么能在表里找到contiguous算子：算子register</h2>
+<p>上文中我们梳理了contiguous的dispatch流程，但有分发就一定有注册，contiguous算子的schema是如何注册到<code>OperatorHandle</code>中的，其kernel又是如何注册到<code>dispatchTable_</code>中的呢？</p>
+<p>在开始说明contiguous算子注册流程前，我们先简单了解一下通用的pytorch算子注册流程，即通过<code>TORCH_LIBRARY(ns, m)</code>和<code>TORCH_LIBRARY_IMPL(ns, k, m)</code>两个宏进行两步注册。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/library.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define TORCH_LIBRARY(ns, m)    \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  static void TORCH_LIBRARY_init_##ns(torch::Library&amp;);     \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  static const torch::detail::TorchLibraryInit TORCH_LIBRARY_static_init_##ns( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      torch::Library::DEF, &amp;TORCH_LIBRARY_init_##ns, \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      #ns,   \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      c10::nullopt,  \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      __FILE__,  \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      __LINE__);     \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  void TORCH_LIBRARY_init_##ns(torch::Library&amp; m)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define TORCH_LIBRARY_IMPL(ns, k, m) _TORCH_LIBRARY_IMPL(ns, k, m, C10_UID)
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先，会调用<code>TORCH_LIBRARY(ns, m)</code>宏在<code>ns</code>namespace下注册schema（本质是通过<strong>Dispatcher</strong>写入<code>OperatorEntry.schema_</code>字段），此时只有一个空dispatch table，具体kernel还没有注册。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/RegisterSchema.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">TORCH_LIBRARY</span><span class="p">(</span><span class="n">aten</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">m</span><span class="p">.</span><span class="n">def</span><span class="p">(</span><span class="s">&#34;batch_norm(Tensor input, Tensor? weight, Tensor? bias, Tensor? running_mean, Tensor? running_var, bool training, float momentum, float eps, bool cudnn_enabled) -&gt; Tensor&#34;</span><span class="p">,</span> <span class="p">{});</span>
+</span></span><span class="line"><span class="cl">  <span class="n">m</span><span class="p">.</span><span class="n">def</span><span class="p">(</span><span class="s">&#34;contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format) -&gt; Tensor(a)&#34;</span><span class="p">,</span> <span class="p">{});</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后，会调用<code>TORCH_LIBRARY_IMPL(ns, k, m)</code>注册算子具体实现（本质是通过<strong>Dispatcher</strong>写入<code>OperatorEntry.dispatchTable_</code>字段），绑定具体dispatch key，如<code>CompositeImplicitAutograd</code>、<code>CPU</code>、<code>CUDA</code>等。有一些特殊的设计如<code>catchall</code>等会扩散写入所有disptachkey，基于<code>BackendSelect</code>实现<code>fallback</code>会redispatch到下一个优先级的dispatch key等。</p>
+<p>例如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">TORCH_LIBRARY_IMPL</span><span class="p">(</span><span class="n">aten</span><span class="p">,</span> <span class="n">CompositeImplicitAutograd</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// lots of ops
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">m</span><span class="p">.</span><span class="n">impl</span><span class="p">(</span><span class="s">&#34;batch_norm&#34;</span><span class="p">,</span> <span class="n">TORCH_FN</span><span class="p">(</span><span class="n">wrapper_CompositeImplicitAutograd__batch_norm</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="n">m</span><span class="p">.</span><span class="n">impl</span><span class="p">(</span><span class="s">&#34;contiguous&#34;</span><span class="p">,</span> <span class="n">TORCH_FN</span><span class="p">(</span><span class="n">wrapper_CompositeImplicitAutograd__contiguous</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>了解了基本算子注册方式后，我们详细展开算子注册流程：</p>
+<p>首先对<code>TORCH_LIBRARY_IMPL</code>我们进行宏展开</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/library.h
+</span></span></span><span class="line"><span class="cl"><span class="c1">// C10_UID是一个unique identifier，自增 counter
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define _TORCH_LIBRARY_IMPL(ns, k, m, uid)  \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  static void C10_CONCATENATE(   \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      TORCH_LIBRARY_IMPL_init_##ns##_##k##_, uid)(torch::Library&amp;); \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  static const torch::detail::TorchLibraryInit C10_CONCATENATE( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      TORCH_LIBRARY_IMPL_static_init_##ns##_##k##_, uid)( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      torch::Library::IMPL, \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      c10::guts::if_constexpr&lt;c10::impl::dispatch_key_allowlist_check( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">          c10::DispatchKey::k)&gt;(\
+</span></span></span><span class="line"><span class="cl"><span class="cp">          []() { return &amp;C10_CONCATENATE( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">                TORCH_LIBRARY_IMPL_init_##ns##_##k##_, uid); \
+</span></span></span><span class="line"><span class="cl"><span class="cp">          },  \
+</span></span></span><span class="line"><span class="cl"><span class="cp">          []() { return [](torch::Library&amp;) -&gt; void {}; }), \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      #ns, \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      c10::make_optional(c10::DispatchKey::k), \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      __FILE__,   \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      __LINE__);  \
+</span></span></span><span class="line"><span class="cl"><span class="cp">  void C10_CONCATENATE( \
+</span></span></span><span class="line"><span class="cl"><span class="cp">      TORCH_LIBRARY_IMPL_init_##ns##_##k##_, uid)(torch::Library &amp; m)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12</span><span class="p">(</span><span class="n">torch</span><span class="o">::</span><span class="n">Library</span><span class="o">&amp;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="k">const</span> <span class="n">torch</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">TorchLibraryInit</span>
+</span></span><span class="line"><span class="cl">    <span class="n">TORCH_LIBRARY_IMPL_static_init_aten_CompositeImplicitAutograd_12</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">torch</span><span class="o">::</span><span class="n">Library</span><span class="o">::</span><span class="n">IMPL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">c10</span><span class="o">::</span><span class="n">guts</span><span class="o">::</span><span class="n">if_constexpr</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">impl</span><span class="o">::</span><span class="n">dispatch_key_allowlist_check</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">c10</span><span class="o">::</span><span class="n">DispatchKey</span><span class="o">::</span><span class="n">CompositeImplicitAutograd</span><span class="p">)</span><span class="o">&gt;</span><span class="p">([]()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">              <span class="k">return</span> <span class="o">&amp;</span><span class="n">TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span> <span class="p">[]()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">[](</span><span class="n">torch</span><span class="o">::</span><span class="n">Library</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{};</span> <span class="p">}),</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;aten&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">c10</span><span class="o">::</span><span class="n">make_optional</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">DispatchKey</span><span class="o">::</span><span class="n">CompositeImplicitAutograd</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;pytorch/build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="mi">7156</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">torch</span><span class="o">::</span><span class="n">Library</span><span class="o">&amp;</span> <span class="n">m</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">m</span><span class="p">.</span><span class="n">impl</span><span class="p">(</span><span class="s">&#34;batch_norm&#34;</span><span class="p">,</span> <span class="n">TORCH_FN</span><span class="p">(</span><span class="n">wrapper_CompositeImplicitAutograd__batch_norm</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="n">m</span><span class="p">.</span><span class="n">impl</span><span class="p">(</span><span class="s">&#34;contiguous&#34;</span><span class="p">,</span> <span class="o">::</span><span class="n">c10</span><span class="o">::</span><span class="n">CompileTimeFunctionPointer</span><span class="o">&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">remove_pointer_t</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">remove_reference_t</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">wrapper_CompositeImplicitAutograd__contiguous</span><span class="p">)</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="n">wrapper_CompositeImplicitAutograd__contiguous</span><span class="o">&gt;</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12</code>会在我们<code>import torch</code>的时候被<strong>TorchLibraryInit</strong>调用，此处不详细展开，我们重点看<code>m.impl</code>发生了什么</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/library.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">Library</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Name</span><span class="p">,</span> <span class="k">typename</span> <span class="n">Func</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Library</span><span class="o">&amp;</span> <span class="n">impl</span><span class="p">(</span><span class="n">Name</span> <span class="n">name</span><span class="p">,</span> <span class="n">Func</span><span class="o">&amp;&amp;</span> <span class="n">raw_f</span><span class="p">,</span> <span class="n">_RegisterOrVerify</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">_RegisterOrVerify</span><span class="o">::</span><span class="n">REGISTER</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined C10_MOBILE
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="n">CppFunction</span> <span class="nf">f</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Func</span><span class="o">&gt;</span><span class="p">(</span><span class="n">raw_f</span><span class="p">),</span> <span class="n">NoInferSchemaTag</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#else
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="n">CppFunction</span> <span class="nf">f</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Func</span><span class="o">&gt;</span><span class="p">(</span><span class="n">raw_f</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="k">return</span> <span class="nf">_impl</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">rv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">CppFunction</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Lambda</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">explicit</span> <span class="n">CppFunction</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">Lambda</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="n">std</span><span class="o">::</span><span class="n">enable_if_t</span><span class="o">&lt;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">c10</span><span class="o">::</span><span class="n">guts</span><span class="o">::</span><span class="n">is_functor</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Lambda</span><span class="o">&gt;&gt;::</span><span class="n">value</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="o">&gt;</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="o">:</span> <span class="n">func_</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">KernelFunction</span><span class="o">::</span><span class="n">makeFromUnboxedLambda</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Lambda</span><span class="o">&gt;</span><span class="p">(</span><span class="n">f</span><span class="p">))),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cpp_signature_</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">impl</span><span class="o">::</span><span class="n">CppSignature</span><span class="o">::</span><span class="n">make</span><span class="o">&lt;</span><span class="n">Lambda</span><span class="o">&gt;</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">schema_</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">inferFunctionSchemaFromFunctor</span><span class="o">&lt;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Lambda</span><span class="o">&gt;&gt;</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">debug_</span><span class="p">()</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里用CppFunction初始化了<code>func_</code>, <code>cpp_signature_</code>, <code>schema_</code>三个变量</p>
+<p><code>func_</code>即函数指针，待会我们重点展开，<code>cpp_signature_</code>即函数签名，如果kernel是以一种我们可以知道函数签名的方式创建的（例如<code>unboxed c++ function</code>），那我们就存储下来并在之后的kernel注册和调用中用于检查。</p>
+<p>我们重点看<code>func_</code>的构造</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/boxing/KernelFunction_impl.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">FuncPtr</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">AllowLegacyTypes</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">KernelFunction</span> <span class="n">KernelFunction</span><span class="o">::</span><span class="n">makeFromUnboxedFunction</span><span class="p">(</span><span class="n">FuncPtr</span> <span class="n">func_ptr</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ... c10 mobile alias code
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">makeFromUnboxedFunctor</span><span class="o">&lt;</span><span class="n">AllowLegacyTypes</span><span class="p">,</span> <span class="k">typename</span> <span class="n">impl</span><span class="o">::</span><span class="n">WrapFunctionIntoFunctor</span><span class="o">&lt;</span><span class="n">FuncPtr</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">guts</span><span class="o">::</span><span class="n">make_unique_base</span><span class="o">&lt;</span><span class="n">OperatorKernel</span><span class="p">,</span> <span class="k">typename</span> <span class="n">impl</span><span class="o">::</span><span class="n">WrapFunctionIntoFunctor</span><span class="o">&lt;</span><span class="n">FuncPtr</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">&gt;</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span><span class="o">&lt;</span><span class="kt">bool</span> <span class="n">AllowLegacyTypes</span><span class="p">,</span> <span class="k">class</span> <span class="nc">KernelFunctor</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">KernelFunction</span> <span class="n">KernelFunction</span><span class="o">::</span><span class="n">makeFromUnboxedFunctor</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">OperatorKernel</span><span class="o">&gt;</span> <span class="n">kernelFunctor</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span><span class="o">*</span> <span class="n">unboxed_fn</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">impl</span><span class="o">::</span><span class="n">wrap_kernel_functor_unboxed</span><span class="o">&lt;</span><span class="n">KernelFunctor</span><span class="o">&gt;::</span><span class="n">call</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span><span class="o">*</span> <span class="n">void_unboxed_fn</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">unboxed_fn</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">bool</span> <span class="n">is_symint</span> <span class="o">=</span> <span class="n">fn_has_symint</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">unboxed_fn</span><span class="p">)</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">KernelFunction</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">kernelFunctor</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="o">&amp;</span><span class="n">impl</span><span class="o">::</span><span class="n">make_boxed_from_unboxed_functor</span><span class="o">&lt;</span><span class="n">KernelFunctor</span><span class="p">,</span> <span class="n">AllowLegacyTypes</span><span class="o">&gt;::</span><span class="n">call</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">is_symint</span> <span class="o">?</span> <span class="k">nullptr</span> <span class="o">:</span> <span class="n">void_unboxed_fn</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">is_symint</span> <span class="o">?</span> <span class="nl">void_unboxed_fn</span> <span class="p">:</span> <span class="k">nullptr</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最终，我们将<code>raw_f</code>封装成了<code>KernelFunction</code>，返回给了外层的<code>CppFunction</code>并让其完成了初始化。随后我们便调用<code>_impl(name, std::move(f), rv)</code>进行进一步处理</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/library.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Library</span><span class="o">&amp;</span> <span class="n">Library</span><span class="o">::</span><span class="n">_impl</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name_str</span><span class="p">,</span> <span class="n">CppFunction</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">,</span> <span class="n">_RegisterOrVerify</span> <span class="n">rv</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">at</span><span class="o">::</span><span class="n">OperatorName</span> <span class="n">name</span> <span class="o">=</span> <span class="n">_parseNameForLib</span><span class="p">(</span><span class="n">name_str</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">dispatch_key</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">dispatch_key_</span><span class="p">.</span><span class="n">has_value</span><span class="p">()</span> <span class="o">?</span> <span class="n">f</span><span class="p">.</span><span class="nl">dispatch_key_</span> <span class="p">:</span> <span class="n">dispatch_key_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 按照contiguous调用到此处：dispatch_key为c10::OptionalBase&lt;c10::DispatchKey&gt; = { init_ = true, storage_ = (dummy_ = &#39;|&#39;, value_ = CompositeImplicitAutograd)}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">switch</span> <span class="p">(</span><span class="n">rv</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="n">_RegisterOrVerify</span><span class="o">::</span><span class="nl">REGISTER</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">      <span class="n">registrars_</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">c10</span><span class="o">::</span><span class="n">Dispatcher</span><span class="o">::</span><span class="n">singleton</span><span class="p">().</span><span class="n">registerImpl</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">          <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">          <span class="n">dispatch_key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">func_</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">          <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">cpp_signature_</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">          <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">schema_</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">          <span class="n">debugString</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">debug_</span><span class="p">),</span> <span class="n">file_</span><span class="p">,</span> <span class="n">line_</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="n">_RegisterOrVerify</span><span class="o">::</span><span class="nl">VERIFY</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">      <span class="n">c10</span><span class="o">::</span><span class="n">Dispatcher</span><span class="o">::</span><span class="n">singleton</span><span class="p">().</span><span class="n">waitForImpl</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dispatch_key</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们发现了很熟悉的对象<code>c10::Dispatcher::singleton()</code>，在注册这里我们调用了<code>c10::Dispatcher::singleton().registerImpl()</code>将我们封装好的kernelfunction（<code>f.func_</code>）及signature、schema等信息注册进dispatcher</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">RegistrationHandleRAII</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">registerImpl</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="n">OperatorName</span> <span class="n">op_name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">DispatchKey</span><span class="o">&gt;</span> <span class="n">dispatch_key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">KernelFunction</span> <span class="n">kernel</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">::</span><span class="n">CppSignature</span><span class="o">&gt;</span> <span class="n">cpp_signature</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">FunctionSchema</span><span class="o">&gt;</span> <span class="n">inferred_function_schema</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">debug</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">mutex_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 第一步注册schema
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="n">findOrRegisterName_</span><span class="p">(</span><span class="n">op_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 第二步注册kernel
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">op</span><span class="p">.</span><span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">op</span><span class="p">.</span><span class="n">registerKernel</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="o">*</span><span class="k">this</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dispatch_key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">cpp_signature</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">inferred_function_schema</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">debug</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="o">++</span><span class="n">op</span><span class="p">.</span><span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">def_and_impl_count</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">cond_var_</span><span class="p">.</span><span class="n">notify_all</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// RegistrationHandleRAII自动回收机制，该对象注册了匿名函数`deregisterImpl_`，会在对象销毁时自动将op的kernel函数deregister，是很标准的RAII设计
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="nf">RegistrationHandleRAII</span><span class="p">([</span><span class="k">this</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">dispatch_key</span><span class="p">,</span> <span class="n">handle</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">deregisterImpl_</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">dispatch_key</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">OperatorHandle</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">findOrRegisterName_</span><span class="p">(</span><span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">op_name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="k">auto</span> <span class="n">found</span> <span class="o">=</span> <span class="n">findOp</span><span class="p">(</span><span class="n">op_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">found</span> <span class="o">!=</span> <span class="n">c10</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">*</span><span class="n">found</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">operators_</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">OperatorName</span><span class="p">(</span><span class="n">op_name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="n">OperatorHandle</span> <span class="nf">handle</span><span class="p">(</span><span class="o">--</span><span class="n">operators_</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="n">operatorLookupTable_</span><span class="p">.</span><span class="n">write</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="n">ska</span><span class="o">::</span><span class="n">flat_hash_map</span><span class="o">&lt;</span><span class="n">OperatorName</span><span class="p">,</span> <span class="n">OperatorHandle</span><span class="o">&gt;&amp;</span> <span class="n">operatorLookupTable</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">operatorLookupTable</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">op_name</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">handle</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先会查找该op是否已经在<code>operatorLookupTable_</code>注册，如果已经注册则直接返回，如果没有则写入table（注意此时还没有注册具体的kernel实现，即第一步schema注册）</p>
+<p>随后调用<code>op.operatorDef_-&gt;op.registerKernel()</code>将之前封装好的kernelfunction注册进该<code>OperatorEntry</code>（第二步kernel注册）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/OperatorEntry.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">OperatorEntry</span><span class="o">::</span><span class="n">AnnotatedKernelContainerIterator</span> <span class="n">OperatorEntry</span><span class="o">::</span><span class="n">registerKernel</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">c10</span><span class="o">::</span><span class="n">Dispatcher</span><span class="o">&amp;</span> <span class="n">dispatcher</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">DispatchKey</span><span class="o">&gt;</span> <span class="n">dispatch_key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">KernelFunction</span> <span class="n">kernel</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">CppSignature</span><span class="o">&gt;</span> <span class="n">cpp_signature</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">FunctionSchema</span><span class="o">&gt;</span> <span class="n">inferred_function_schema</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">debug</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// check schema ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 将kernel加入到kernel list中，如果是第一个kernel则创建list
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 重定向 catchAll 注册到 CompositeImplicitAutograd.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span><span class="o">&amp;</span> <span class="n">k</span> <span class="o">=</span> <span class="n">dispatch_key</span><span class="p">.</span><span class="n">has_value</span><span class="p">()</span> <span class="o">?</span> <span class="n">kernels_</span><span class="p">[</span><span class="o">*</span><span class="n">dispatch_key</span><span class="p">]</span> <span class="o">:</span> <span class="n">kernels_</span><span class="p">[</span><span class="n">DispatchKey</span><span class="o">::</span><span class="n">CompositeImplicitAutograd</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">k</span><span class="p">.</span><span class="n">emplace_front</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">inferred_function_schema</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">debug</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="n">AnnotatedKernelContainerIterator</span> <span class="n">inserted</span> <span class="o">=</span> <span class="n">k</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 更新dispatch table
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">dispatch_key</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">updateDispatchTable_</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">,</span> <span class="o">*</span><span class="n">dispatch_key</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">updateDispatchTableFull_</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">inserted</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此处先通过<code>dispatch_key</code>找到<code>kernels_</code>中找到<code>k</code>（kernel的列表：<code>(std::list&lt;c10::impl::AnnotatedKernel, std::allocator&lt;c10::impl::AnnotatedKernel&gt; &gt;)</code>），将kernel插入首位</p>
+<p>随后更新dispatcher的entry，到这里<code>registerImpl</code>就将op的kernel注册完成了</p>
+<p>最后，返回<code>*this</code>指针，<code>m.impl(&quot;contiguous&quot;, TORCH_FN(wrapper_CompositeImplicitAutograd__contiguous));</code>注册完成</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2023-03-11</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" data-title="How Pytorch 2.0 Call Ops(一)"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" data-title="How Pytorch 2.0 Call Ops(一)"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" data-title="How Pytorch 2.0 Call Ops(一)"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/" data-title="How Pytorch 2.0 Call Ops(一)"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/zh-cn/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/zh-cn/posts/pytorch/memory_format/" class="prev" rel="prev" title="Tensor Memory Format"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Tensor Memory Format</a>
+            <a href="/zh-cn/posts/pytorch/how_pytorch_call_op_2/" class="next" rel="next" title="How Pytorch 2.0 Call Ops(二)">How Pytorch 2.0 Call Ops(二)<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://yewentao256.github.io/blog" target="_blank">yewentao</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/zh-cn/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

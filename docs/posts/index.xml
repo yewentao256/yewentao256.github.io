@@ -4,7 +4,31 @@
         <link>https://yewentao256.github.io/posts/</link>
         <description>All Posts | Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sat, 04 Mar 2023 09:52:50 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sat, 11 Mar 2023 09:53:09 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>How Pytorch 2.0 Call Ops(1)</title>
+    <link>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_1/</link>
+    <pubDate>Sat, 11 Mar 2023 09:53:09 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_1/</guid>
+    <description><![CDATA[This article introduces the process of pytorch 2.0 calling ops, using <code>contiguous</code> as an example.]]></description>
+</item>
+<item>
+    <title>How Pytorch 2.0 Call Ops(2)</title>
+    <link>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/</link>
+    <pubDate>Sat, 11 Mar 2023 09:53:09 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/</guid>
+    <description><![CDATA[This article introduces the process of pytorch 2.0 calling ops, using <code>contiguous</code> as an example.]]></description>
+</item>
+<item>
+    <title>How Pytorch 2.0 Call Ops(3)</title>
+    <link>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/</link>
+    <pubDate>Sat, 11 Mar 2023 09:53:09 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/</guid>
+    <description><![CDATA[This article introduces the process of pytorch 2.0 calling ops, using <code>contiguous</code> as an example.]]></description>
+</item>
+<item>
     <title>Tensor Memory Format</title>
     <link>https://yewentao256.github.io/posts/pytorch/memory_format/</link>
     <pubDate>Sat, 04 Mar 2023 09:52:50 &#43;0800</pubDate>
@@ -21,7 +45,7 @@
     <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function.]]></description>
 </item>
 <item>
-    <title>CSAPP Class Notes</title>
+    <title>CSAPP_class_notes</title>
     <link>https://yewentao256.github.io/posts/csapp/csapp_class_notes/</link>
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>

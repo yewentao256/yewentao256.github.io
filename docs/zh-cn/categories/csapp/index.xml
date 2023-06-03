@@ -13,7 +13,7 @@
     <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function.]]></description>
 </item>
 <item>
-    <title>CSAPP Class Notes</title>
+    <title>CSAPP_class_notes</title>
     <link>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</link>
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>

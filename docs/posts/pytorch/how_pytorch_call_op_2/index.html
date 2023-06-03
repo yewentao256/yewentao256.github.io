@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>How Pytorch 2.0 Call Ops(2) - Yewentao&#39;s Blog</title><meta name="Description" content="yewentao&#39;s blog"><meta property="og:title" content="How Pytorch 2.0 Call Ops(2)" />
+<meta property="og:description" content="This article introduces the process of pytorch 2.0 calling ops, using contiguous as an example." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-03-11T09:53:09+08:00" />
+<meta property="article:modified_time" content="2023-03-11T09:53:09+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
+
+<meta name="twitter:title" content="How Pytorch 2.0 Call Ops(2)"/>
+<meta name="twitter:description" content="This article introduces the process of pytorch 2.0 calling ops, using contiguous as an example."/>
+<meta name="application-name" content="我的网站">
+<meta name="apple-mobile-web-app-title" content="我的网站"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" /><link rel="prev" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><link rel="next" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_1/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "How Pytorch 2.0 Call Ops(2)",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_2\/"
+        },"genre": "posts","wordcount":  1371 ,
+        "url": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_2\/","datePublished": "2023-03-11T09:53:09+08:00","dateModified": "2023-03-11T09:53:09+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "yewentao"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Yewentao&#39;s Blog">Home</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_2/" selected>English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_2/">简体中文</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Yewentao&#39;s Blog">Home</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_2/" selected>English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_2/">简体中文</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">How Pytorch 2.0 Call Ops(2)</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">included in <a href="/categories/pytorch/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>pytorch</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-03-11">2023-03-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1371 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;7 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#to-be-translated">To be translated</a></li>
+    <li><a href="#6-register和dispatch的回顾">6. register和dispatch的回顾</a></li>
+    <li><a href="#7-is_contiguous判断是否连续">7. <code>is_contiguous</code>判断是否连续</a></li>
+    <li><a href="#8-clone算子自动微分与empty-tensor">8. clone算子：自动微分与empty tensor</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="summary">Summary</h2>
+<p>This article introduces the process of pytorch 2.0 calling ops, using <code>contiguous</code> as an example.</p>
+<h2 id="to-be-translated">To be translated</h2>
+<p>Oh Sorry!</p>
+<p>This blog has&rsquo;t been translated to English, please wait for a little while&hellip;</p>
+<h2 id="6-register和dispatch的回顾">6. register和dispatch的回顾</h2>
+<p>我们纵观register和dispatch的过程，总结其大体流程为：</p>
+<ol>
+<li>注册op schema</li>
+<li>注册op下的具体kernel实现（基于dispatch key）</li>
+<li>查找op schema</li>
+<li>查找op下具体kernel实现并调用（基于dispatch key）</li>
+</ol>
+<p>中间几个重要的数据类型：<code>Dispatcher</code>, <code>OperatorHandle</code>, <code>OperatorEntry</code></p>
+<ul>
+<li><strong>Dispatcher</strong>
+<ul>
+<li><code>operatorLookupTable_</code>维护了OperatorName-&gt;OperatorHandle的映射</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">Dispatcher</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">friend</span> <span class="k">class</span> <span class="nc">impl</span><span class="o">::</span><span class="n">OperatorEntry</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="nc">OperatorDef</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">explicit</span> <span class="nf">OperatorDef</span><span class="p">(</span><span class="n">OperatorName</span><span class="o">&amp;&amp;</span> <span class="n">op_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">:</span> <span class="n">op</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">op_name</span><span class="p">))</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">impl</span><span class="o">::</span><span class="n">OperatorEntry</span> <span class="n">op</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">size_t</span> <span class="n">def_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">size_t</span> <span class="n">def_and_impl_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">};</span>
+</span></span><span class="line"><span class="cl">  <span class="k">friend</span> <span class="k">class</span> <span class="nc">OperatorHandle</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="o">&gt;</span> <span class="k">friend</span> <span class="k">class</span> <span class="nc">TypedOperatorHandle</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">static</span> <span class="n">Dispatcher</span><span class="o">&amp;</span> <span class="n">realSingleton</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">OperatorHandle</span><span class="o">&gt;</span> <span class="n">findSchema</span><span class="p">(</span><span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">operator_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Return</span><span class="p">,</span> <span class="k">class</span><span class="err">... </span><span class="nc">Args</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Return</span> <span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">Return</span> <span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">RegistrationHandleRAII</span> <span class="nf">registerImpl</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">OperatorDef</span><span class="o">&gt;</span> <span class="n">operators_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">LeftRight</span><span class="o">&lt;</span><span class="n">ska</span><span class="o">::</span><span class="n">flat_hash_map</span><span class="o">&lt;</span><span class="n">OperatorName</span><span class="p">,</span> <span class="n">OperatorHandle</span><span class="o">&gt;&gt;</span> <span class="n">operatorLookupTable_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ska</span><span class="o">::</span><span class="n">flat_hash_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">libraries_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>OperatorHandle</strong>
+<ul>
+<li>其内部的<code>operatorDef_</code>本质是上面Dispatcher中的<code>OperatorDef</code>，是对<code>OperatorEntry</code>的封装</li>
+<li>更多时候用的是<code>TypedOperatorHandle</code>，<code>OperatorHandle</code>的子类，可以理解为针对op参数模板化的<code>OperatorHandle</code></li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/Dispatcher.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">OperatorHandle</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span> <span class="k">friend</span> <span class="k">struct</span> <span class="nc">std</span><span class="o">::</span><span class="n">hash</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">operator_name</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">op</span><span class="p">.</span><span class="n">operator_name</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">FunctionSchema</span><span class="o">&amp;</span> <span class="n">schema</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">operatorDef_</span><span class="o">-&gt;</span><span class="n">op</span><span class="p">.</span><span class="n">schema</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">FuncType</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">FuncType</span><span class="o">&gt;</span> <span class="n">typed</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">FuncType</span><span class="o">&gt;</span><span class="p">(</span><span class="n">operatorIterator_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">friend</span> <span class="k">class</span> <span class="nc">Dispatcher</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="o">&gt;</span> <span class="k">friend</span> <span class="k">class</span> <span class="nc">TypedOperatorHandle</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">Dispatcher</span><span class="o">::</span><span class="n">OperatorDef</span><span class="o">*</span> <span class="n">operatorDef_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">Dispatcher</span><span class="o">::</span><span class="n">OperatorDef</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">operatorIterator_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>OperatorEntry</strong>：
+<ul>
+<li>实际存储op信息的数据结构</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/core/dispatch/OperatorEntry.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">class</span> <span class="nc">TORCH_API</span> <span class="n">OperatorEntry</span> <span class="k">final</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="k">public</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">explicit</span> <span class="n">OperatorEntry</span><span class="p">(</span><span class="n">OperatorName</span><span class="o">&amp;&amp;</span> <span class="n">operator_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">FunctionSchema</span><span class="o">&amp;</span> <span class="n">schema</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">schema_</span><span class="o">-&gt;</span><span class="n">schema</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="nf">registerSchema</span><span class="p">(</span><span class="n">FunctionSchema</span><span class="o">&amp;&amp;</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;&amp;</span> <span class="n">debug</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">Tag</span><span class="o">&gt;</span> <span class="n">tags</span> <span class="o">=</span> <span class="p">{});</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="nf">deregisterSchema</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">OperatorName</span><span class="o">&amp;</span> <span class="n">operator_name</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">name_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">AnnotatedKernelContainer</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">AnnotatedKernel</span><span class="o">&gt;</span><span class="p">;</span>  <span class="c1">// linked list
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">AnnotatedKernelContainerIterator</span> <span class="o">=</span> <span class="n">AnnotatedKernelContainer</span><span class="o">::</span><span class="n">iterator</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">AnnotatedKernelContainerIterator</span> <span class="nf">registerKernel</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="nf">deregisterKernel_</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">DispatchKeyExtractor</span><span class="o">&amp;</span> <span class="n">dispatchKeyExtractor</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">dispatchKeyExtractor_</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">KernelFunction</span><span class="o">&amp;</span> <span class="n">lookup</span><span class="p">(</span><span class="n">DispatchKeySet</span> <span class="n">ks</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="k">auto</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">ks</span><span class="p">.</span><span class="n">getDispatchTableIndexForDispatchKeySet</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">kernel</span> <span class="o">=</span> <span class="n">dispatchTable_</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">kernel</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">private</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="n">OperatorName</span> <span class="n">name_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">AnnotatedSchema</span><span class="o">&gt;</span> <span class="n">schema_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">KernelFunction</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">num_runtime_entries</span><span class="o">&gt;</span> <span class="n">dispatchTable_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">DispatchKeyExtractor</span> <span class="n">dispatchKeyExtractor_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ska</span><span class="o">::</span><span class="n">flat_hash_map</span><span class="o">&lt;</span><span class="n">DispatchKey</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">AnnotatedKernel</span><span class="o">&gt;&gt;</span> <span class="n">kernels_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">CppSignatureWithDebug</span><span class="o">&gt;</span> <span class="n">cpp_signature_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>通过 <strong>Library</strong> -&gt; <strong>Dispatcher</strong> -&gt; <strong>OperatorHandle</strong> -&gt; <strong>OperatorEntry</strong> 这样的调用链路，pytorch完成了op和对应kernel的注册。之后，pytorch就可以基于这条链路查找到所需算子的kernel并轻松实现调用。</p>
+<h2 id="7-is_contiguous判断是否连续">7. <code>is_contiguous</code>判断是否连续</h2>
+<p>大致了解了pytorch算子的注册和调用流程之后，我们终于进入了contiguous算子实际执行的流程了，这部分相对而言简单很多。</p>
+<p>我们将调用路径拉回到上文dispatch末端</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">wrapper_CompositeImplicitAutograd__contiguous</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">native</span><span class="o">::</span><span class="n">contiguous</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里调用aten native的contiguous算子</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorProperties.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">contiguous</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">is_contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TORCH_CHECK</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">memory_format</span> <span class="o">!=</span> <span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Preserve</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="s">&#34;preserve memory format is unsupported by the contiguous operator&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">clone</span><span class="p">(</span><span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先判断<code>is_contiguous(memory_format)</code>，即在指定memory format下是否已经连续，经过<code>TensorBase.h</code>中转来到<code>TensorImpl.h</code>中</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// c10/core/TensorImpl.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="nc">C10_API</span> <span class="nl">TensorImpl</span> <span class="p">:</span> <span class="k">public</span> <span class="n">c10</span><span class="o">::</span><span class="n">intrusive_ptr_target</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nf">is_contiguous_default</span><span class="p">(</span><span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">memory_format</span> <span class="o">==</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">::</span><span class="n">ChannelsLast</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">is_channels_last_contiguous_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">memory_format</span> <span class="o">==</span> <span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">::</span><span class="n">ChannelsLast3d</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="n">is_channels_last_3d_contiguous_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">is_contiguous_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> <span class="k">protected</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">ExtraMeta</span><span class="o">&gt;</span> <span class="n">extra_meta_</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">impl</span><span class="o">::</span><span class="n">SizesAndStrides</span> <span class="n">sizes_and_strides_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">storage_offset_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">numel_</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">caffe2</span><span class="o">::</span><span class="n">TypeMeta</span> <span class="n">data_type_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">Device</span><span class="o">&gt;</span> <span class="n">device_opt_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">bool</span> <span class="nl">is_contiguous_</span> <span class="p">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nl">is_channels_last_</span> <span class="p">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nl">is_channels_last_contiguous_</span> <span class="p">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nl">is_channels_last_3d_</span> <span class="p">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nl">is_channels_last_3d_contiguous_</span> <span class="p">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到，pytorch的判断<code>is_contiguous</code>并没有计算，而是将数据直接存储在<code>TensorImpl</code>里，每次直接取用即可，这样省去了计算量，但也要求在更改tensor stride或者初始化的时候算出相关bool并存储。</p>
+<p>那么，它是如何被设置的呢？我们溯源该变量的set流程，发现它被<code>refresh_contiguous()</code>设置，每次修改tensor的shape或stride的时候都要调用该方法。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// c10/core/TensorImpl.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">_refresh_contiguous</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">type_id</span> <span class="o">=</span> <span class="n">identity</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="p">(</span><span class="n">dim</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">case</span> <span class="mi">4</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="n">compute_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_contiguous</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">type_id</span><span class="p">,</span> <span class="n">compute_channels_last_contiguous_2d</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_3d_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="k">case</span> <span class="mi">5</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="n">compute_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_contiguous</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">type_id</span><span class="p">,</span> <span class="n">compute_channels_last_contiguous_2d</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_3d_contiguous</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">type_id</span><span class="p">,</span> <span class="n">compute_channels_last_contiguous_3d_dim5</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="n">compute_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">_set_is_channels_last_3d_contiguous</span><span class="p">(</span><span class="n">type_id</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们挑一个<code>_compute_channels_last_contiguous_2d</code>展开看看，其本质就是在contiguous（NCHW）标准下，是否符合NHWC（1320置换）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">bool</span> <span class="n">_compute_channels_last_contiguous_2d</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ArrayRef</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">sizes</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ArrayRef</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">strides</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">switch</span> <span class="p">(</span><span class="n">sizes</span><span class="p">.</span><span class="n">size</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">T</span> <span class="n">expected</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="c1">// const array可以被编译器自动展开加速
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="nl">d</span> <span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">})</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">size_d</span> <span class="o">=</span> <span class="n">sizes</span><span class="p">[</span><span class="n">d</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">size_d</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="k">if</span> <span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">          <span class="n">expected</span> <span class="o">*=</span> <span class="n">size_d</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>例如一个<code>N, C, H, W = 2, 2048, 1, 1</code>的tensor，它的stride为<code>[2048, 1, 1, 1]</code> 就是一个channels last的tensor（同时也是contiguous的tensor，因为内存排布刚好h、w都是1）</p>
+<h2 id="8-clone算子自动微分与empty-tensor">8. clone算子：自动微分与empty tensor</h2>
+<p>继续我们的调用流程，如果tensor在指定memory format下已经连续，那就直接返回，如果不连续，那就按照指定memory format进行<code>clone</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/core/TensorBody.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">Tensor</span><span class="o">::</span><span class="n">clone</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">_ops</span><span class="o">::</span><span class="n">clone</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const_cast</span><span class="o">&lt;</span><span class="n">Tensor</span><span class="o">&amp;&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">),</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/Operators_1.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">clone</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">static</span> <span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="n">create_clone_typed_handle</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">op</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>是不是很熟悉？是的，这就是我们上面调用contiguous算子的入口，再经过类似的dispatch流程（找op schema，然后找kernel）后我们来到了实际clone处。由于上面contiguous的dispatch key是<code>CompositeImplicitAutograd</code>，这里clone算子也调用到该disptach key并需要处理自动微分相关逻辑。</p>
+<p>这与我们对clone算子的印象也是一致的：完全独立的副本，保留<code>requires_grad</code>属性并支持自动求导（<code>CloneBackward0</code>放入<code>grad_fn</code>中）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// torch/csrc/autograd/generated/VariableType_1.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">clone</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">DispatchKeySet</span> <span class="n">ks</span><span class="p">,</span> <span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 此处调用`checked_cast_variable`检查tensor是否defined
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// self_和self地址相同
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span><span class="o">&amp;</span> <span class="n">self_</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="s">&#34;self&#34;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 自动求导相关，如果需要自动求导，则设置grad_fn到graph里
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">_any_requires_grad</span> <span class="o">=</span> <span class="n">compute_requires_grad</span><span class="p">(</span> <span class="n">self</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">_any_requires_grad</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">_any_has_forward_grad_result</span> <span class="o">=</span> <span class="p">(</span><span class="n">isFwGradDefined</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">_any_has_forward_grad_result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">CloneBackward0</span><span class="o">&gt;</span> <span class="n">grad_fn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">_any_requires_grad</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">grad_fn</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">CloneBackward0</span><span class="o">&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">CloneBackward0</span><span class="p">(),</span> <span class="n">deleteNode</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">grad_fn</span><span class="o">-&gt;</span><span class="n">set_next_edges</span><span class="p">(</span><span class="n">collect_next_edges</span><span class="p">(</span> <span class="n">self</span> <span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#ifndef NDEBUG
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="c1">// 拿到self的storage和impl
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span> <span class="n">self__storage_saved</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self_</span><span class="p">.</span><span class="n">has_storage</span><span class="p">()</span> <span class="o">?</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self_</span><span class="p">.</span><span class="n">storage</span><span class="p">())</span> <span class="o">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">intrusive_ptr</span><span class="o">&lt;</span><span class="n">TensorImpl</span><span class="o">&gt;</span> <span class="n">self__impl_saved</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">self_</span><span class="p">.</span><span class="n">defined</span><span class="p">())</span> <span class="n">self__impl_saved</span> <span class="o">=</span> <span class="n">self_</span><span class="p">.</span><span class="n">getIntrusivePtr</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="c1">// 将当前dispatchkey和c10::after_autograd_keyset运算后，redisptach clone算子
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// redispatch的结果是拿到了clone的正确结果，redisptach的过程我们下文展开
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">_tmp</span> <span class="o">=</span> <span class="p">([</span><span class="o">&amp;</span><span class="p">]()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">at</span><span class="o">::</span><span class="n">AutoDispatchBelowADInplaceOrView</span> <span class="n">guard</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">redispatch</span><span class="o">::</span><span class="n">clone</span><span class="p">(</span><span class="n">ks</span> <span class="o">&amp;</span> <span class="n">c10</span><span class="o">::</span><span class="n">after_autograd_keyset</span><span class="p">,</span> <span class="n">self_</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">})();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">_tmp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>值得指出的是，在上面代码中redisptach的过程中，在重新计算dispatchkey之后，redisptach到aten的clone算子。<code>redispatch</code>和<code>call</code>有什么区别呢？</p>
+<p>一方面，是函数签名上的差异，<code>redispatch</code>带了一个<code>currentDispatchKeySet</code>，就不用像call那样从op里取dispatchkey，直接用参数传进来的就好。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="n">Return</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">call</span><span class="p">(</span><span class="k">const</span> <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">Return</span><span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">inline</span> <span class="n">Return</span> <span class="n">Dispatcher</span><span class="o">::</span><span class="n">redispatch</span><span class="p">(</span><span class="k">const</span> <span class="n">TypedOperatorHandle</span><span class="o">&lt;</span><span class="n">Return</span> <span class="p">(</span><span class="n">Args</span><span class="p">...)</span><span class="o">&gt;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">DispatchKeySet</span> <span class="n">currentDispatchKeySet</span><span class="p">,</span> <span class="n">Args</span><span class="p">...</span> <span class="n">args</span><span class="p">)</span> <span class="k">const</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>另一方面，是<code>redispatch</code>调用中，一般会将当前dispatchkey再下调一个优先级（如与<code>c10::after_autograd_keyset</code>进行与操作），然后调度到实际执行clone的算子上（此处已经处理了自动微分，之后就不再需要考虑自动微分），做了一层分级</p>
+<p>redispatch后到<code>CompositeExplicitAutograd.cpp</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// build/aten/src/ATen/RegisterCompositeExplicitAutograd.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="n">wrapper_CompositeExplicitAutograd__clone</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">at</span><span class="o">::</span><span class="n">native</span><span class="o">::</span><span class="n">clone</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorFactories.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">clone</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">optional_memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Tensor</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">memory_format</span> <span class="o">==</span> <span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Preserve</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建空tensor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">self</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">empty_like</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src</span><span class="p">.</span><span class="n">options</span><span class="p">(),</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">_is_zerotensor</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">zero_</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>创建tensor时调用了<code>empty_like</code>算子，创建一个和src相同（但memory format为新memory format）的空tensor，一样经过dispatch后来到<code>TensorFactories.cpp</code>，然后<code>empty_like</code>又调用了empty算子（先call到<code>build/aten/src/ATen/RegisterBackendSelect.cpp</code>处，然后redispatch到CPU上——redispatch到哪根据编译选项不同会有差异）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorFactories.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">empty_like</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">ScalarType</span><span class="o">&gt;</span> <span class="n">dtype</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Layout</span><span class="o">&gt;</span> <span class="n">layout</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Device</span><span class="o">&gt;</span> <span class="n">device</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">pin_memory</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">optional_memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Tensor</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">memory_format</span> <span class="o">==</span> <span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Preserve</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">empty</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">sizes</span><span class="p">(),</span> <span class="n">options</span><span class="p">.</span><span class="n">memory_format</span><span class="p">(</span><span class="n">memory_format</span><span class="p">),</span> <span class="n">c10</span><span class="o">::</span><span class="n">nullopt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>empty</code>最终dispatch到<code>empty_cpu上</code>，首先拿一个cpu的allocator，然后调用<code>empty_generic</code>方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/EmptyTensor.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">TensorBase</span> <span class="nf">empty_cpu</span><span class="p">(</span><span class="n">IntArrayRef</span> <span class="n">size</span><span class="p">,</span> <span class="n">ScalarType</span> <span class="n">dtype</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">pin_memory</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                     <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format_opt</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">allocator</span> <span class="o">=</span> <span class="n">GetCPUAllocatorMaybePinned</span><span class="p">(</span><span class="n">pin_memory</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">constexpr</span> <span class="n">c10</span><span class="o">::</span><span class="n">DispatchKeySet</span> <span class="n">cpu_ks</span><span class="p">(</span><span class="n">c10</span><span class="o">::</span><span class="n">DispatchKey</span><span class="o">::</span><span class="n">CPU</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">empty_generic</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">allocator</span><span class="p">,</span> <span class="n">cpu_ks</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">memory_format_opt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// c10/core/Allocator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">C10_API</span> <span class="n">at</span><span class="o">::</span><span class="n">Allocator</span><span class="o">*</span> <span class="n">allocator_array</span><span class="p">[</span><span class="n">at</span><span class="o">::</span><span class="n">COMPILE_TIME_MAX_DEVICE_TYPES</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">at</span><span class="o">::</span><span class="n">Allocator</span><span class="o">*</span> <span class="n">GetAllocator</span><span class="p">(</span><span class="k">const</span> <span class="n">at</span><span class="o">::</span><span class="n">DeviceType</span><span class="o">&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里根据devicetype拿到对应类型的allocator，cpu就拿cpu，cuda就拿cuda
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span><span class="o">*</span> <span class="n">alloc</span> <span class="o">=</span> <span class="n">allocator_array</span><span class="p">[</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">)];</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TORCH_INTERNAL_ASSERT_DEBUG_ONLY</span><span class="p">(</span><span class="n">alloc</span><span class="p">,</span> <span class="s">&#34;Allocator for &#34;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s">&#34; is not set.&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">alloc</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>empty_generic</code>调用到<code>_empty_generic</code>方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// pytorch/aten/src/ATen/EmptyTensor.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">TensorBase</span> <span class="n">_empty_generic</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ArrayRef</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">size</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">Allocator</span><span class="o">*</span> <span class="n">allocator</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">DispatchKeySet</span> <span class="n">ks</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ScalarType</span> <span class="n">scalar_type</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">memory_format_opt</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 计算需要分配的空间，然后实行分配，拿到storage指针
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">caffe2</span><span class="o">::</span><span class="n">TypeMeta</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">scalarTypeToTypeMeta</span><span class="p">(</span><span class="n">scalar_type</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">computeStorageNbytesContiguous</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">.</span><span class="n">itemsize</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">storage_impl</span> <span class="o">=</span> <span class="n">c10</span><span class="o">::</span><span class="n">make_intrusive</span><span class="o">&lt;</span><span class="n">StorageImpl</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">c10</span><span class="o">::</span><span class="n">StorageImpl</span><span class="o">::</span><span class="n">use_byte_size_t</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">      <span class="n">size_bytes</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="n">allocator</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="cm">/*resizeable=*/</span><span class="nb">true</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 使用storage指针创建tensor(实际上是TensorBase类型)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 此时shape，stride等已经计算好并填入了（NCHW的形式）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 我们按照文章一开始的用例，此处stride为 [1280,20,4,1]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">tensor</span> <span class="o">=</span> <span class="n">detail</span><span class="o">::</span><span class="n">make_tensor_base</span><span class="o">&lt;</span><span class="n">TensorImpl</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">storage_impl</span><span class="p">),</span> <span class="n">ks</span><span class="p">,</span> <span class="n">dtype</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">memory_format_opt</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 此处仅仅改了stride，并不需要改变tensor内存排布（因为只是空tensor）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 如一开始用例的话，此处stride改变为[1280, 1, 256, 64]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">memory_format_opt</span> <span class="o">!=</span> <span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Contiguous</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">tensor</span><span class="p">.</span><span class="n">unsafeGetTensorImpl</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">empty_tensor_restride</span><span class="p">(</span><span class="o">*</span><span class="n">memory_format_opt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">tensor</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>_empty_generic</code>调用完毕后，新tensor便创建好了，对于stride计算有疑问的小伙伴们可以看笔者的另外一篇文章<a href="../memory_format/index.zh-cn.md" rel="">memory_format</a></p>
+<p>创建好后，一路返回到redispatch的clone算子处</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorFactories.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">clone</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">optional_memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Tensor</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">memory_format</span> <span class="o">==</span> <span class="n">MemoryFormat</span><span class="o">::</span><span class="n">Preserve</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建空tensor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">self</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">empty_like</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src</span><span class="p">.</span><span class="n">options</span><span class="p">(),</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">_is_zerotensor</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">zero_</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果源tensor为空，那就直接set zero，如果不是，那么就调用<code>copy_</code>算子</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-03-11</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" data-title="How Pytorch 2.0 Call Ops(2)"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" data-title="How Pytorch 2.0 Call Ops(2)"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" data-title="How Pytorch 2.0 Call Ops(2)"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" data-title="How Pytorch 2.0 Call Ops(2)"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/pytorch/how_pytorch_call_op_3/" class="prev" rel="prev" title="How Pytorch 2.0 Call Ops(3)"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>How Pytorch 2.0 Call Ops(3)</a>
+            <a href="/posts/pytorch/how_pytorch_call_op_1/" class="next" rel="next" title="How Pytorch 2.0 Call Ops(1)">How Pytorch 2.0 Call Ops(1)<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://yewentao256.github.io/blog" target="_blank">yewentao</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

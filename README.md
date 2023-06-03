@@ -31,7 +31,7 @@ hugo new posts/directory/title/index.en.md
 hugo server -e production
 ```
 
-- 将本地资源换成cdn资源
+- 将本地资源换成cdn资源/将cdn资源换成本地资源url
 
 ```python
 python process_use_cdn.py

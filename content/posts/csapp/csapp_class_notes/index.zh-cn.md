@@ -29,9 +29,9 @@ summary: My note while learning through CSAPP-15213 videos. Including Overview, 
   - learning about assembly
 - **memory matters**
   - memory management
-  - eg：![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/overview-memory.png)
+  - eg：![image](resources/overview-memory.png)
 - **there's more to performance than asymptotic complexity**
-  - eg：![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/overview-performance.png)
+  - eg：![image](resources/overview-performance.png)
 - **computers do more than execute programs**
   - IO/network
 
@@ -71,7 +71,7 @@ build up the base for another courses.
 - Bit-level options in C: & | ~ ^
 - Logic Operations in C: && || !
 - Shift operations
-  - eg: ![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/bit-shift.png)
+  - eg: ![image](resources/bit-shift.png)
 
 ### Integers
 
@@ -125,7 +125,7 @@ build up the base for another courses.
 - Machine words: 32bits, 64bits
 - Word-Oriented Memory Organization
 - Byte Ordering
-  ![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/bytes-order.png)
+  ![image](resources/bytes-order.png)
 
 ## 3. Floating Point
 
@@ -139,7 +139,7 @@ eg:
 
 ### IEEE Floating Point
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/floating-point.png)
+![image](resources/floating-point.png)
 
 - **f = (-1)^s^  M  2^E^**
   - `E = exp - Bias`
@@ -175,7 +175,7 @@ eg:
 
 - Examples together
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/floating-point2.png)
+![image](resources/floating-point2.png)
 
 - Note: when closing to 0, the numbers get denser
 
@@ -240,7 +240,7 @@ double d < 0 -> d*2 <0 (YES! even if overflow, it's `negative inf`)
 
 The process of compiling C:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/turning-c-into-object-code.png)
+![image](resources/turning-c-into-object-code.png)
 
 Compiler: GCC, to make assembly code: `gcc -Og -S ...`
 
@@ -290,7 +290,7 @@ For example: **leaq**
 - `testq`: compare number (`a&b`) but only set `ZF` and `SF`
 - `setX`: set the low-order byte of destination to `0` or `1` based on the condition codes above
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/setX-instructions.png)
+![image](resources/setX-instructions.png)
 
 - example
 
@@ -316,7 +316,7 @@ ret
 
 - `jX`: jump to different part of code depending on condition codes
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/jX-instruction.png)
+![image](resources/jX-instruction.png)
 
 - Note: Sometimes like `Test? x+y:x-y` in C, it's efficient to calculate `x+y` and `x-y` both, then choose one using `conditional move` rather than using branches. Since **branches are very disruptive to instruction flow through pipelines**
 
@@ -332,11 +332,11 @@ Using branches and control introduced above to realize `do-while`, `while` and `
 
 - Structure:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/switch-jump-table.png)
+![image](resources/switch-jump-table.png)
 
 - How to form a jump table?
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/switch-form-table.png)
+![image](resources/switch-form-table.png)
 
 Normally to make an array, and for some holes like `x=0`, `x=4`, let it go to the default part.
 
@@ -358,25 +358,25 @@ jmp *.L4(, %rdi, 8)
 
 ### Stack Structure
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/memory-stack.png)
+![image](resources/memory-stack.png)
 
 ### Calling Conventions
 
 - passing control: when calling a function, push the next instruction address to the stack, when ret, get the address back then jump to the address.
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-control-flow.png)
+![image](resources/procedure-control-flow.png)
 
 - passing data:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-passing-data.png)
+![image](resources/procedure-passing-data.png)
 
 - save local data:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-stack-frame.png)
+![image](resources/procedure-stack-frame.png)
 
 Normally, use `%rsp` directly, sub some value at the beginning, then add it back before `return`.
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-stack-frame-eg.png)
+![image](resources/procedure-stack-frame-eg.png)
 
 It's OK to use `movl` to `%esi`, since the rest of 32 bits would be set to zero. This depends on the compiler
 
@@ -392,31 +392,31 @@ callee saved: the callee make sure not to affect any data used in the caller--`%
 
 - recursive function example:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-recursive-function.png)
+![image](resources/procedure-recursive-function.png)
 
 ### Arrays
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/array-memory.png)
+![image](resources/array-memory.png)
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/array-access.png)
+![image](resources/array-access.png)
 
 ### Structures
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/structure-alignment.png)
+![image](resources/structure-alignment.png)
 
 ### Floating Point
 
 float add(param passed in `%xmm0`, `%xmm1`):
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/floating-point-add.png)
+![image](resources/floating-point-add.png)
 
 double add:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/floating-point-add2.png)
+![image](resources/floating-point-add2.png)
 
 ### Memory Layout
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/memory-layout.png)
+![image](resources/memory-layout.png)
 
 - **stack** for local variable (if more than 8MB, segmentation fault)
 - **heap** memory is dynamically allocated for `malloc`、`new` ...
@@ -425,7 +425,7 @@ double add:
 
 ### Buffer Overflow
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/buffer-overflow-example.png)
+![image](resources/buffer-overflow-example.png)
 
 If you input 23 characters in `gets()`, it's ok (a default `\0` at the end of line)
 
@@ -449,7 +449,7 @@ Ways to avoid:
 
 #### Return-Oriented Programming attacks
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/ROP-attack.png)
+![image](resources/ROP-attack.png)
 
 Use existing codes(gadgets) to attack, see **attacklab** for more details.
 
@@ -459,7 +459,7 @@ Use existing codes(gadgets) to attack, see **attacklab** for more details.
 
 - Code motion/pre-computation
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/code-motion.png)
+![image](resources/code-motion.png)
 
 - strength reduction
 
@@ -471,7 +471,7 @@ eg: `f = func(param)`, then use f directly, instead of `a = func(param) + 2, b =
 
 - removing unnecessary procedure calls
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/procedure-call-reduction.png)
+![image](resources/procedure-call-reduction.png)
 
 Why compiler doesn't optimize this? Remember compiler always considers the procedure as **black box**. (It doesn't know whether the procedure will change the pointer or global variable, etc.)
 
@@ -479,7 +479,7 @@ Note: in **python**, `len(str)` is a O(1) func, so it doesn't really matter.
 
 - Remove memory accessing
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/memory-accessing.png)
+![image](resources/memory-accessing.png)
 
 As you can see the `b[i]` has to read from memory **each time**
 
@@ -487,7 +487,7 @@ It's better using a local variable to cal the sum
 
 Why compiler can't optimize it? **Memory Aliasing**
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/memory-aliasing.png)
+![image](resources/memory-aliasing.png)
 
 ### Exploiting instruction-level parallelism
 
@@ -495,11 +495,11 @@ Why compiler can't optimize it? **Memory Aliasing**
 
 - modern cpu design
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/mordern-cpu-design.png)
+![image](resources/mordern-cpu-design.png)
 
 - ideas of pipeline
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/pipeline-ideas.png)
+![image](resources/pipeline-ideas.png)
 
 (`p1 = a*b`, dependency)
 
@@ -524,7 +524,7 @@ Note: Not always useful, based on the processor
 
 Based on wide registers:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/SIMD-op.png)
+![image](resources/SIMD-op.png)
 
 Also called **AVX instructions**
 
@@ -532,12 +532,12 @@ Also called **AVX instructions**
 
 In order to making instructions run smoothly. We introduce the **branch predict**
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/branch-prediction.png)
+![image](resources/branch-prediction.png)
 
 - Simply **guess** the branch to go
 - Begin executing instructions at predicted position
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/branch-misprediction.png)
+![image](resources/branch-misprediction.png)
 
 - It can recover when mis-prediction, causing huge performance cost
 
@@ -565,25 +565,25 @@ In order to making instructions run smoothly. We introduce the **branch predict*
 
 - Bus(collection of parallel wires) structure
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/bus-structure.png)
+![image](resources/bus-structure.png)
 
 - Disk
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/disk-view.png)
+![image](resources/disk-view.png)
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/disk-view2.png)
+![image](resources/disk-view2.png)
 
 capacity: `512 bytes/sector * 300 sectors/track(on average) * 20000 tracks/surface * 2 surfaces/platter * 5 platters/ disk = 30.72GB`
 
 disk access:
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/disk-access.png)
+![image](resources/disk-access.png)
 
 Normally `disk access time = seek time(4~9ms) + rotation(2~5ms) + transfer(0.02ms)`, much slower than RAM(`ns`)
 
 - Bus structure expand
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/bus-structure-expand.png)
+![image](resources/bus-structure-expand.png)
 
 Note: this is not the modern design, which use point to point connection instead of a public wire
 
@@ -591,11 +591,11 @@ Note: this is not the modern design, which use point to point connection instead
 
 - solid state disk(ssd): much faster than normal disk
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/ssd.png)
+![image](resources/ssd.png)
 
 - cpu-memory-gap
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cpu-memory-gap.png)
+![image](resources/cpu-memory-gap.png)
 
 ### Locality of reference
 
@@ -603,19 +603,19 @@ Note: this is not the modern design, which use point to point connection instead
 
 ### Caching in memory hierarchy
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/memory-hierarchy.png)
+![image](resources/memory-hierarchy.png)
 
 ### Cache memory organization and operation
 
 - general cache organization
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cache-organization.png)
+![image](resources/cache-organization.png)
 
 `cache_size = S * E * B bytes`
 
 - cache read
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cache-read.png)
+![image](resources/cache-read.png)
 
 1. locate **set**
 2. check all lines in set to match **tag**
@@ -626,15 +626,15 @@ Note: if not match, old line is **evicted and replaced**
 
 - simple example
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cache-example.png)
+![image](resources/cache-example.png)
 
 When there comes a `8 [1000]`, it will miss, and set 0 is evicted
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cache-example-2.png)
+![image](resources/cache-example-2.png)
 
 And when there comes a `0 [0000]`, it will miss again
 
-![image](https://cdn.jsdelivr.net/gh/yewentao256/blog/content/posts/csapp/csapp_class_notes/resources/cache-example-3.png)
+![image](resources/cache-example-3.png)
 
 However, if we change the bits of lines, it will change.
 

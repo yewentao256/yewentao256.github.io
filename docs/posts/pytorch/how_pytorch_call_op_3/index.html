@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>How Pytorch 2.0 Call Ops(3) - Yewentao&#39;s Blog</title><meta name="Description" content="yewentao&#39;s blog"><meta property="og:title" content="How Pytorch 2.0 Call Ops(3)" />
+<meta property="og:description" content="This article introduces the process of pytorch 2.0 calling ops, using contiguous as an example." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-03-11T09:53:09+08:00" />
+<meta property="article:modified_time" content="2023-03-11T09:53:09+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
+
+<meta name="twitter:title" content="How Pytorch 2.0 Call Ops(3)"/>
+<meta name="twitter:description" content="This article introduces the process of pytorch 2.0 calling ops, using contiguous as an example."/>
+<meta name="application-name" content="我的网站">
+<meta name="apple-mobile-web-app-title" content="我的网站"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><link rel="prev" href="https://yewentao256.github.io/posts/pytorch/memory_format/" /><link rel="next" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "How Pytorch 2.0 Call Ops(3)",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_3\/"
+        },"genre": "posts","wordcount":  3049 ,
+        "url": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_3\/","datePublished": "2023-03-11T09:53:09+08:00","dateModified": "2023-03-11T09:53:09+08:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "yewentao"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Yewentao&#39;s Blog">Home</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_3/" selected>English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_3/">简体中文</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Yewentao&#39;s Blog">Home</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/yewentao256" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/posts/pytorch/how_pytorch_call_op_3/" selected>English</option><option value="/zh-cn/posts/pytorch/how_pytorch_call_op_3/">简体中文</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">How Pytorch 2.0 Call Ops(3)</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">included in <a href="/categories/pytorch/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>pytorch</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-03-11">2023-03-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;3049 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;15 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#to-be-translated">To be translated</a></li>
+    <li><a href="#9-copy_算子与tensoriterator">9. copy_算子与TensorIterator</a></li>
+    <li><a href="#10-copy算子kernel执行">10. copy算子：kernel执行</a></li>
+    <li><a href="#11-cpu_kernel_vec底层运行原理">11. <code>cpu_kernel_vec</code>底层运行原理</a></li>
+    <li><a href="#12-contiguous执行流程回顾">12. contiguous执行流程回顾</a></li>
+    <li><a href="#reference">Reference</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="summary">Summary</h2>
+<p>This article introduces the process of pytorch 2.0 calling ops, using <code>contiguous</code> as an example.</p>
+<h2 id="to-be-translated">To be translated</h2>
+<p>Oh Sorry!</p>
+<p>This blog has&rsquo;t been translated to English, please wait for a little while&hellip;</p>
+<h2 id="9-copy_算子与tensoriterator">9. copy_算子与TensorIterator</h2>
+<p>在clone算子中，创建好指定memory format的tensor之后，我们便调用copy算子</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/Copy.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">copy_</span><span class="p">(</span><span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">non_blocking</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">_is_zerotensor</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">zero_</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">copy_impl</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">non_blocking</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">copy_impl</span><span class="p">(</span><span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Tensor</span> <span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">non_blocking</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">is_same</span><span class="p">(</span><span class="n">src</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  <span class="c1">// ... 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 如果self和src是相同storage的view
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">const</span> <span class="kt">bool</span> <span class="n">is_same_data</span> <span class="o">=</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">self</span><span class="p">.</span><span class="n">is_alias_of</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="o">&amp;&amp;</span>                          <span class="c1">// storage相同
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="n">self</span><span class="p">.</span><span class="n">storage_offset</span><span class="p">()</span> <span class="o">==</span> <span class="n">src</span><span class="p">.</span><span class="n">storage_offset</span><span class="p">()</span> <span class="o">&amp;&amp;</span>  <span class="c1">// storage offset相同
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="n">self</span><span class="p">.</span><span class="n">strides</span><span class="p">().</span><span class="n">equals</span><span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">strides</span><span class="p">())</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">self</span><span class="p">.</span><span class="n">sizes</span><span class="p">().</span><span class="n">equals</span><span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">sizes</span><span class="p">())</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">self</span><span class="p">.</span><span class="n">scalar_type</span><span class="p">()</span> <span class="o">==</span> <span class="n">src</span><span class="p">.</span><span class="n">scalar_type</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">is_same_data</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 构建了at::TensorIterator，划定input output 便于处理device、dtype等相关内容
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">iter</span> <span class="o">=</span> <span class="n">TensorIteratorConfig</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 将tensor存储到TensorIteratorConfig中的SmallVector&lt;c10::MaybeOwned&lt;TensorBase&gt;, 4&gt; tensors_;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 注意此处顺序，先add了output，保证output在list的第一位
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">self</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">add_input</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">resize_outputs</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>    <span class="c1">// 设置变量，下同
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">.</span><span class="n">check_all_same_dtype</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">check_all_same_device</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">build</span><span class="p">();</span>   <span class="c1">// 新建一个TensorIterator，使用上面构建的config build
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">DeviceType</span> <span class="n">device_type</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">device_type</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">device_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">kCUDA</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">device_type</span> <span class="o">=</span> <span class="n">kCUDA</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">device_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">kHIP</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">device_type</span> <span class="o">=</span> <span class="n">kHIP</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">device_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">kMPS</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">device_type</span> <span class="o">=</span> <span class="n">kMPS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">copy_stub</span><span class="p">(</span><span class="n">device_type</span><span class="p">,</span> <span class="n">iter</span><span class="p">,</span> <span class="n">non_blocking</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里展开补充一下tensor iterator build部分的代码</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">build</span><span class="p">(</span><span class="n">TensorIteratorConfig</span><span class="o">&amp;</span> <span class="n">config</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">is_reduction_</span> <span class="o">=</span> <span class="n">config</span><span class="p">.</span><span class="n">is_reduction_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">enforce_linear_iteration_</span> <span class="o">=</span> <span class="n">config</span><span class="p">.</span><span class="n">enforce_linear_iteration_</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 将config中的tensors_转存到iterator的SmallVector&lt;OperandInfo, 4&gt; operands_;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">populate_operands</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 设置 `is_output` 等 flag，判断是否input output是相同tensor(inplace操作)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">mark_outputs</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 检查output 内存没有overlap，同时与input不共享存储
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">compute_mem_overlaps</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 计算out name
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">compute_names</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 计算广播的shape，逻辑为首先取output的shape作为shape_存储，如果input的tensor shape与shape_不同，则infer出新的shape，详见下文
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">compute_shape</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 如果output需要resize（与shape_不同），则打上标记
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">mark_resize_outputs</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 计算device（取第一个不为cpu的device作为common device）和dtype（取第一个input tensor的dtype作为conmon_dtype_，取第一个output tensor的dtype作为output_dtype_）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">compute_types</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 尝试快速构建output tensor（比如如果所有tensor都是contiguous、channals last，那就可以快速infer output/resize（如果需要），set name等）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fast_set_up</span><span class="p">(</span><span class="n">config</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 计算每个tensor广播后的stride（实际上是计算出op.stride_bytes（stride * element_size）如本例中，shape_为[1, 64, 5, 4], output.stride_bytes = [5120, 4, 1024, 256]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">compute_strides</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 此处对tensor的shape、stride进行重排序，将stride[0]作为最快的步进维度（stride升序排列），如本例中，shape_变为[64, 4, 5, 1], output.stride_bytes = [4, 256, 1024, 5120]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">reorder_dimensions</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果output没有defined，这里进行allocate
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">allocate_or_resize_outputs</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果每个tensor对应dim size为1或shape[n] * stride[n] == stride[n + 1]，合并相邻的dimension。为什么要合并相邻dimension呢？这样可以有效提升取址运算效率，也便于之后取stride遍历。我们下文展开说明这段代码
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">is_meta_</span><span class="p">)</span> <span class="n">coalesce_dimensions</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们再进一步展开如何计算广播的代码</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">compute_shape</span><span class="p">(</span><span class="k">const</span> <span class="n">TensorIteratorConfig</span><span class="o">&amp;</span> <span class="n">config</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="nl">op</span> <span class="p">:</span> <span class="n">operands_</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">shape_</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">shape_</span> <span class="o">=</span> <span class="n">shape</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="o">!</span><span class="n">shape</span><span class="p">.</span><span class="n">equals</span><span class="p">(</span><span class="n">shape_</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">all_ops_same_shape_</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">shape_</span> <span class="o">=</span> <span class="n">infer_size_dimvector</span><span class="p">(</span><span class="n">shape_</span><span class="p">,</span> <span class="n">shape</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/ExpandUtils.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">DimVector</span> <span class="nf">infer_size_dimvector</span><span class="p">(</span><span class="n">IntArrayRef</span> <span class="n">a</span><span class="p">,</span> <span class="n">IntArrayRef</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">infer_size_impl</span><span class="o">&lt;</span><span class="n">DimVector</span><span class="p">,</span> <span class="n">IntArrayRef</span><span class="o">&gt;</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">Container</span><span class="p">,</span> <span class="k">typename</span> <span class="n">ArrayType</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">Container</span> <span class="n">infer_size_impl</span><span class="p">(</span><span class="n">ArrayType</span> <span class="n">a</span><span class="p">,</span> <span class="n">ArrayType</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 例如：a = {2, 1, 3}， b = {4, 3}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">size_t</span> <span class="n">dimsA</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">size_t</span> <span class="n">dimsB</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">size_t</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">dimsA</span> <span class="o">&gt;</span> <span class="n">dimsB</span> <span class="o">?</span> <span class="nl">dimsA</span> <span class="p">:</span> <span class="n">dimsB</span><span class="p">;</span>  <span class="c1">// 取更大的dim，例如 ndim = 3
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Container</span> <span class="nf">expandedSizes</span><span class="p">(</span><span class="n">ndim</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 使用 ptrdiff_t 来确保有符号的比较
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="n">ptrdiff_t</span> <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ptrdiff_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ptrdiff_t</span> <span class="n">dimA</span> <span class="o">=</span> <span class="n">dimsA</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">offset</span><span class="p">;</span>  <span class="c1">// 相当于 dimsA - ndim + i
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ptrdiff_t</span> <span class="n">dimB</span> <span class="o">=</span> <span class="n">dimsB</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">offset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">sizeA</span> <span class="o">=</span> <span class="p">(</span><span class="n">dimA</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="n">a</span><span class="p">[</span><span class="n">dimA</span><span class="p">]</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// 如果dimA不是负数那就取值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">auto</span> <span class="n">sizeB</span> <span class="o">=</span> <span class="p">(</span><span class="n">dimB</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="n">b</span><span class="p">[</span><span class="n">dimB</span><span class="p">]</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">TORCH_CHECK</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sizeA</span> <span class="o">==</span> <span class="n">sizeB</span> <span class="o">||</span> <span class="n">sizeA</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">||</span> <span class="n">sizeB</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;The size of tensor a (&#34;</span><span class="p">,</span> <span class="n">sizeA</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;) must match the size of tensor b (&#34;</span><span class="p">,</span> <span class="n">sizeB</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;) at non-singleton dimension &#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果sizeA与sizeB相同，那么任意取；如果sizeA为1，那么取sizeB（实现了取更大的值）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">expandedSizes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sizeA</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">?</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">sizeB</span><span class="p">)</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">sizeA</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 如上例，最终返回 {2,4,3}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">expandedSizes</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们再展开说明<code>coalesce_dimensions</code>如何合并维度</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">coalesce_dimensions</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">ndim</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 如果dim == 1 或 shape[n] * stride[n] == stride[n + 1]则可合并
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 注意需要所有input和output tensor同时满足条件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">can_coalesce</span> <span class="o">=</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="kt">int</span> <span class="n">dim0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">dim1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">shape0</span> <span class="o">=</span> <span class="n">shape_</span><span class="p">[</span><span class="n">dim0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">shape1</span> <span class="o">=</span> <span class="n">shape_</span><span class="p">[</span><span class="n">dim1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">shape0</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">||</span> <span class="n">shape1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ntensors</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">auto</span><span class="o">&amp;</span> <span class="n">stride</span> <span class="o">=</span> <span class="n">operands_</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">stride_bytes</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span><span class="n">shape0</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="n">dim0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">stride</span><span class="p">[</span><span class="n">dim1</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 将stride[dim0]的值赋为stride[dim1]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">replace_stride</span> <span class="o">=</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="kt">int</span> <span class="n">dim0</span><span class="p">,</span> <span class="kt">int</span> <span class="n">dim1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ntensors</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">auto</span><span class="o">&amp;</span> <span class="n">stride</span> <span class="o">=</span> <span class="n">operands_</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">stride_bytes</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">stride</span><span class="p">[</span><span class="n">dim0</span><span class="p">]</span> <span class="o">=</span> <span class="n">stride</span><span class="p">[</span><span class="n">dim1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里的逻辑是双指针，从prev_dim指针开始，遍历后面每一个维度，尽可能合并更多维度
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int</span> <span class="n">prev_dim</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">dim</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndim</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">can_coalesce</span><span class="p">(</span><span class="n">prev_dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span><span class="n">shape_</span><span class="p">[</span><span class="n">prev_dim</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">replace_stride</span><span class="p">(</span><span class="n">prev_dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="n">shape_</span><span class="p">[</span><span class="n">prev_dim</span><span class="p">]</span> <span class="o">*=</span> <span class="n">shape_</span><span class="p">[</span><span class="n">dim</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">prev_dim</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">if</span> <span class="p">(</span><span class="n">prev_dim</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">replace_stride</span><span class="p">(</span><span class="n">prev_dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">shape_</span><span class="p">[</span><span class="n">prev_dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">shape_</span><span class="p">[</span><span class="n">dim</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 最后resize 如我们上例的tensor：
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// shape_ = [64, 4, 5, 1], output.stride_bytes = [4, 256, 1024, 5120], input.stride_bytes = [80, 4, 16, 5120]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 变为 shape_ = [64, 20], input.stride_bytes = [80, 4]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">shape_</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">prev_dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ntensors</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">operands_</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">stride_bytes</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">ndim</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">has_coalesced_dimensions_</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>合并相邻维度后，<code>TensorIterator</code>就构建完成了，注意此时已经没有了<code>input</code>和<code>output</code>的参数，之后所有操作全部基于该iterator展开。</p>
+<h2 id="10-copy算子kernel执行">10. copy算子：kernel执行</h2>
+<p>回到上文，<code>copy_stub</code>进行一轮dispatch后调用到<code>copy_kernel</code>(device_type用于dispatch到不同的kernel，到具体kernel时已经没有了这个参数)。此外，</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/CopyKernel.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">copy_kernel</span><span class="p">(</span><span class="n">TensorIterator</span><span class="o">&amp;</span> <span class="n">iter</span><span class="p">,</span> <span class="kt">bool</span> <span class="cm">/*non_blocking*/</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ScalarType</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">dtype</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">auto</span> <span class="n">strides_out</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">strides</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">auto</span> <span class="n">strides_in</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">strides</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">iter</span><span class="p">.</span><span class="n">dtype</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">copy_same_dtype</span><span class="p">(</span><span class="n">iter</span><span class="p">,</span> <span class="n">requires_conj</span><span class="p">,</span> <span class="n">requires_neg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="cm">/* bfloat16 */</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">float_bfloat16_copy_kernel</span><span class="p">(</span><span class="n">iter</span><span class="p">,</span> <span class="n">requires_neg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果类型不一致，走到该分支
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4 宏 switch 处理数据类型
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 如果`has_contiguous_first_dim`为true（两tensor的 stride[0] == elementsize）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 则直接调用iter.for_each直接传入一个带类型转化的匿名函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 否则调用cpu_kernel(aten/src/ATen/native/cpu/Loops.h)，本质是调用`iter.for_each`传入`basic_loop`的匿名函数（basic_loop可以支持任意stride的1d slice）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// basic loop为何能支持任意stride呢？请继续阅读本文，之后会进行介绍
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">ComplexHalf</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">Half</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">BFloat16</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="s">&#34;copy_&#34;</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">using</span> <span class="n">dest_t</span> <span class="o">=</span> <span class="n">scalar_t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4</span><span class="p">(</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">ComplexHalf</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">Half</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">,</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">BFloat16</span><span class="p">,</span> <span class="n">iter</span><span class="p">.</span><span class="n">dtype</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#34;copy_&#34;</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">has_contiguous_first_dim</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">ninputs</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">iter</span><span class="p">.</span><span class="n">noutputs</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">          <span class="n">iter</span><span class="p">.</span><span class="n">for_each</span><span class="p">([](</span><span class="kt">char</span> <span class="o">**</span><span class="n">data</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int64_t</span> <span class="o">*</span><span class="n">strides</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">src</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">scalar_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">auto</span> <span class="n">dst</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">dest_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">at</span><span class="o">::</span><span class="n">vec</span><span class="o">::</span><span class="n">convert</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">});</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="n">cpu_kernel</span><span class="p">(</span><span class="n">iter</span><span class="p">,</span> <span class="p">[](</span><span class="n">scalar_t</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">dest_t</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">c10</span><span class="o">::</span><span class="n">convert</span><span class="o">&lt;</span><span class="n">dest_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">});</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们重点看类型一致的情况（<code>contiguous</code>到这里一定是类型一致的），因为我们不需要取负也不需要共轭，所以调用到<code>direct_copy_kernel</code>函数</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/CopyKernel.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">direct_copy_kernel</span><span class="p">(</span><span class="n">TensorIteratorBase</span> <span class="o">&amp;</span><span class="n">iter</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ScalarType</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">iter</span><span class="p">.</span><span class="n">dtype</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">isQIntType</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 量化整数类型...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">ScalarType</span><span class="o">::</span><span class="n">ComplexHalf</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 半精度复数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND3</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">kBool</span><span class="p">,</span> <span class="n">kHalf</span><span class="p">,</span> <span class="n">kBFloat16</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="s">&#34;copy_kernel&#34;</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">cpu_kernel_vec</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">          <span class="n">iter</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="n">scalar_t</span> <span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scalar_t</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span><span class="p">;</span> <span class="p">},</span>
+</span></span><span class="line"><span class="cl">          <span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="n">Vectorized</span><span class="o">&lt;</span><span class="n">scalar_t</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vectorized</span><span class="o">&lt;</span><span class="n">scalar_t</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span><span class="p">;</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND3</code> 宏展开后代码如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/CopyKernel.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="n">the_type</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">constexpr</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">at_dispatch_name</span> <span class="o">=</span> <span class="s">&#34;copy_kernel&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span> <span class="n">_st</span> <span class="o">=</span> <span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">scalar_type</span><span class="p">(</span><span class="n">the_type</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="k">switch</span> <span class="p">(</span><span class="n">_st</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Byte</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Char</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Int</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Long</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Short</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Double</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">Float</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nf">constexpr</span> <span class="p">(</span><span class="o">!</span><span class="n">at</span><span class="o">::</span><span class="n">should_include_kernel_dtype</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">at_dispatch_name</span><span class="p">,</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// error check
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">          <span class="k">using</span> <span class="n">scalar_t</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">__unused__</span><span class="p">))</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">              <span class="n">c10</span><span class="o">::</span><span class="n">impl</span><span class="o">::</span><span class="n">ScalarTypeToCPPTypeT</span><span class="o">&lt;</span><span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">return</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cpu_kernel_vec</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="n">iter</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="n">scalar_t</span> <span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scalar_t</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span><span class="p">;</span> <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="n">Vectorized</span><span class="o">&lt;</span><span class="n">scalar_t</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vectorized</span><span class="o">&lt;</span><span class="n">scalar_t</span><span class="o">&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">return</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="p">});</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}();</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">ComplexDouble</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="n">at</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="nl">ComplexFloat</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="nl">kBool</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="nl">kHalf</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="nl">kBFloat16</span><span class="p">:</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span> 
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>到这里copy kernel本身的内容已经调用完成，将两个匿名函数传给了<code>cpu_kernel_vec</code></p>
+<h2 id="11-cpu_kernel_vec底层运行原理">11. <code>cpu_kernel_vec</code>底层运行原理</h2>
+<p><code>cpu_kernel_vec</code>支持标量化函数和向量化函数作参数，我们展开其细节</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="kt">bool</span> <span class="n">check_dynamic_cast</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span> <span class="k">typename</span> <span class="n">func_t</span><span class="p">,</span> <span class="k">typename</span> <span class="n">vec_func_t</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">cpu_kernel_vec</span><span class="p">(</span><span class="n">TensorIteratorBase</span><span class="o">&amp;</span> <span class="n">iter</span><span class="p">,</span> <span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">vec_func_t</span><span class="o">&amp;&amp;</span> <span class="n">vop</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">grain_size</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">internal</span><span class="o">::</span><span class="n">GRAIN_SIZE</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ... some check
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// make_vectorized_loop2d将标量op和向量化op整合成一个对象`VectorizedLoop2d`给for_each
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">iter</span><span class="p">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">make_vectorized_loop2d</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">vop</span><span class="p">),</span> <span class="n">grain_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// cast_outputs方法用于将输出张量按照当前数据类型进行强制类型转换
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">iter</span><span class="p">.</span><span class="n">cast_outputs</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">loop2d_t</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">grain_size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">numel</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">numel</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">numel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">numel</span> <span class="o">&lt;</span> <span class="n">grain_size</span> <span class="o">||</span> <span class="n">at</span><span class="o">::</span><span class="n">get_num_threads</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果元素数量少于grain_size或者线程数为1，使用串行操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">serial_for_each</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="n">numel</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 否则，划分为grain_size大小的多个任务，每个任务里再串行迭代
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">at</span><span class="o">::</span><span class="n">parallel_for</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numel</span><span class="p">,</span> <span class="n">grain_size</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="kt">int64_t</span> <span class="n">begin</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">end</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">serial_for_each</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="p">{</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">});</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们继续深入展开串行操作<code>serial_for_each</code>，注意<code>operands_</code>这个变量，它是TensorIterator的operands集合<code>SmallVector&lt;OperandInfo, 4&gt; operands_;</code>，包括inputs和outputs的tensor，其中output一定位于第一个（这部分介绍在上文iterator构建过程中）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">serial_for_each</span><span class="p">(</span><span class="n">loop2d_t</span> <span class="n">loop</span><span class="p">,</span> <span class="n">Range</span> <span class="n">range</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="k">auto</span> <span class="n">ntensors</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">ntensors</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 由于上面构建TensorIterator的时候进行了维度合并，所以这里ndim为2
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">const</span> <span class="k">auto</span> <span class="n">ndim</span> <span class="o">=</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">ndim</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">c10</span><span class="o">::</span><span class="n">SmallBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">*</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="n">ptrs</span><span class="p">(</span><span class="n">ntensors</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 此处总strides长4
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">c10</span><span class="o">::</span><span class="n">SmallBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">8</span><span class="o">&gt;</span> <span class="n">strides</span><span class="p">(</span><span class="n">ntensors</span> <span class="o">*</span> <span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="mi">2</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里operands_是 TensorIteratorBase的tensor op列表
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// `get_base_ptrs`拿到了所有tensor的storage指针，转化为char*类型，存储在指针列表中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">at</span><span class="o">::</span><span class="n">get_base_ptrs</span><span class="p">(</span><span class="n">ptrs</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">operands_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// `get_strides`则将所有tensor stride按序存储到strides中（低维到高维排列）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 低维到高维排列是为了方便下面取值计算
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 如我们的例子中，strides最后为[4, 80, 256, 4] 注意这里是int64_t数据类型
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 其中out tensor的stride为[4, 256], input tensor的stride为[80, 4]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">at</span><span class="o">::</span><span class="n">get_strides</span><span class="p">(</span><span class="n">strides</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">operands_</span><span class="p">,</span> <span class="n">ndim</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">at</span><span class="o">::</span><span class="n">internal</span><span class="o">::</span><span class="n">serial_for_each</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="n">shape_</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">ptrs</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">ptrs</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">loop</span><span class="p">,</span> <span class="n">range</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIteratorInternal.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">serial_for_each</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">IntArrayRef</span> <span class="n">shape</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">IntArrayRef</span> <span class="n">strides</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span><span class="o">**</span> <span class="n">base_ptrs</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">size_t</span> <span class="n">ntensors</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="k">typename</span> <span class="n">TensorIteratorBase</span><span class="o">::</span><span class="n">loop2d_t</span> <span class="n">loop</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Range</span> <span class="n">range</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="k">auto</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">shape</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 这里又创建了和上面一样声明的ptrs，但此处的ptrs存放的是当前batch中需要处理的地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">c10</span><span class="o">::</span><span class="n">SmallBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">*</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="n">ptrs</span><span class="p">(</span><span class="n">ntensors</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">DimCounter</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">range</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 通过DimCounter确保每一个element都被处理过，is_done判断offset是否大于range.end
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">counter</span><span class="p">.</span><span class="n">is_done</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">get_data_ptrs</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">          <span class="n">ptrs</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="p">{</span><span class="n">base_ptrs</span><span class="p">,</span> <span class="n">ntensors</span><span class="p">},</span> <span class="n">strides</span><span class="p">,</span> <span class="n">counter</span><span class="p">.</span><span class="n">values</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="k">auto</span> <span class="n">step</span> <span class="o">=</span> <span class="n">counter</span><span class="p">.</span><span class="n">max_2d_step</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">      <span class="n">loop</span><span class="p">(</span><span class="n">ptrs</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">strides</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">step</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">      <span class="n">counter</span><span class="p">.</span><span class="n">increment</span><span class="p">(</span><span class="n">step</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里的<code>DimCounter</code>是何方神圣呢？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIteratorInternal.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="nc">DimCounter</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">DimCounter</span><span class="p">(</span><span class="n">IntArrayRef</span> <span class="n">shape</span><span class="p">,</span> <span class="n">Range</span> <span class="n">range</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="nf">increment</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;&amp;</span> <span class="n">step</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="nf">is_done</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>   <span class="c1">// return offset &gt;= range.end;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">max_2d_step</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">IntArrayRef</span> <span class="n">shape</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Range</span> <span class="n">range</span><span class="p">;</span>    <span class="c1">// range是处理的element范围，如{0, numel()}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">c10</span><span class="o">::</span><span class="n">SmallBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">4</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>  <span class="c1">// 每个维度上的offset，注意是元素的offset，不是stride
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// 当前处理的元素offset
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DimCounter</span><span class="o">::</span><span class="n">DimCounter</span><span class="p">(</span><span class="n">IntArrayRef</span> <span class="n">shape</span><span class="p">,</span> <span class="n">Range</span> <span class="n">range</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="o">:</span> <span class="n">shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">,</span> <span class="n">range</span><span class="p">(</span><span class="n">range</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">,</span> <span class="n">values</span><span class="p">(</span><span class="n">shape</span><span class="p">.</span><span class="n">size</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">  <span class="p">,</span> <span class="n">offset</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">begin</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">fill</span><span class="p">(</span><span class="n">values</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">values</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">begin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">linear_offset</span> <span class="o">=</span> <span class="n">range</span><span class="p">.</span><span class="n">begin</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">values</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">dim</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int64_t</span> <span class="n">size</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="c1">// 我们举一个新例子，如begin = 1066670, size = [64, 2000, 10], 此处values存下了余数offset [46, 666, 8]，
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="c1">// 这里的offset之后乘以stride就可以算出总体offset，来实现直接找到当前range的begin位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="n">values</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">linear_offset</span> <span class="o">%</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">linear_offset</span> <span class="o">/=</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">linear_offset</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意<code>get_data_ptrs</code>方法，此处取到了当前range的起始指针，存放到<code>ptrs</code>中（<code>ptrs[0]</code>为output的指针，其余为input指针）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIteratorInternal.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">get_data_ptrs</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span><span class="o">**</span> <span class="n">ptrs</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ArrayRef</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">*&gt;</span> <span class="n">base</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">IntArrayRef</span> <span class="n">strides</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">IntArrayRef</span> <span class="n">counter</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="kt">int64_t</span> <span class="n">ntensors</span> <span class="o">=</span> <span class="n">base</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="kt">int64_t</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">counter</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">copy</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">base</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">ptrs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里求出每个tensor在当前range下的起始指针
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 算法为所有维度上offset与stride byte乘积之和
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 例如offset = [46, 666, 8], output stride（对应strides维度为[0,2,4]） = [4, 256, 512000]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 起始地址为 base + 46 * 4 + 666 * 256 + 8 * 512000 = base + 4266680
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 注意到4266680 / 4正好是我们之前的第1066670个元素（range.begin）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">dim</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ndim</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int64_t</span> <span class="n">value</span> <span class="o">=</span> <span class="n">counter</span><span class="p">[</span><span class="n">dim</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">arg</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ntensors</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">ptrs</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">strides</span><span class="p">[</span><span class="n">dim</span> <span class="o">*</span> <span class="n">ntensors</span> <span class="o">+</span> <span class="n">arg</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后走到<code>max_2d_step</code>方法，这里无论有多少维度，只取二维，即获取到当前batch应处理数据的step <code>(m, n)</code>，我们希望尽可能快地取完数据，理想情况下（没有offset时），比如shape为<code>[64, 2000, 10]</code>，我们取step = <code>{64, 2000}</code>，那么取10次就能取完数据（但本例中第三维开始offset已经是8了，所以取三次正好取完）。</p>
+<p>但由于offset限制，所以我们不一定能取满<code>{64, 2000}</code>那么大，但经过一次取少量数据<code>shape[0] - values[0]</code>一次调整对齐之后，第一维就对齐了，之后第一维都能取满64。同理，第二维可能需要经过<code>shape[1] - values[1]</code>调整一次后才能对齐。</p>
+<p>例如，我们走到这里时第一次step = <code>{18, 1}</code>，然后进<code>loop</code>（<strong>loop逻辑我们下文展开</strong>），调用<code>increment</code>更新offset为<code>1066670 + 18 = 1066688</code>, 更新<code>values=[0, 667, 8]</code></p>
+<p>第二次走到这里时step就为<code>{64, 1333}</code>，可以取的数据变多了，然后调用<code>increment</code>更新offset为<code>1066688 + 64 * 1333 = 1152000</code>， 更新<code>values=[0,0,9]</code></p>
+<p>第三次到这里offset就完全修正完成了，取最大的step为<code>{64, 2000}</code>，随后更新offset为<code>1280000</code>，更新values = <code>[0,0,0]</code>，因为我们的range 正好是<code>{1066670, 1280000}</code>，调用结束。</p>
+<p>注意最后一次取数据的时候有可能出现数据不足的情况，那取接近end的少批量数据<code>range.end - offset</code>取完</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/TensorIterator.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">DimCounter</span><span class="o">::</span><span class="n">max_2d_step</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 尝试取最大范围的数据，注意如果offset已经接近end，则通过range.end - offset取完数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int64_t</span> <span class="n">step0</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">range</span><span class="p">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">offset</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">step1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">step0</span> <span class="o">==</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">shape</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">step1</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">offset</span><span class="p">)</span> <span class="o">/</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">{</span><span class="n">step0</span><span class="p">,</span> <span class="n">step1</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="n">DimCounter</span><span class="o">::</span><span class="n">increment</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;&amp;</span> <span class="n">step</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">offset</span> <span class="o">+=</span> <span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">step</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">values</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int64_t</span> <span class="n">overflow</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// step[1] 不为1说明第一维已经调整过offset了，直接跳到第二维
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">overflow</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ndim</span> <span class="o">&amp;&amp;</span> <span class="n">overflow</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">size</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">prev</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="n">prev</span> <span class="o">+</span> <span class="n">overflow</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// overflow标记是否偏差溢出，如果溢出下一维度要对应处理+1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">overflow</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">value</span> <span class="o">-=</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">overflow</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="n">TORCH_INTERNAL_ASSERT</span><span class="p">(</span><span class="n">overflow</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">overflow</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最后调用到<code>loop</code>方法。注意看上文的<code>cpu_kernel_vec</code>，这里传进来的op其实只是lambda表达式 <code>[=](scalar_t a) -&gt; scalar_t { return a; },</code>和<code>[=](Vectorized&lt;scalar_t&gt; a) -&gt; Vectorized&lt;scalar_t&gt; { return a; }</code></p>
+<p><code>loop2d</code>本质上是根据step0和step1进行二重循环：</p>
+<ul>
+<li>首先循环step0，如果可以向量化展开（如stride恰好等于type size）就尽可能调用<code>vectorized_loop</code>展开（类似for循环展开，在一次循环中处理多个数据），否则调用<code>basic_loop</code>for循环step0，每次步进第一维的stride实现逐元素处理。</li>
+<li>然后 <code>advance</code> 第二维的stride，实现step1的loop。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">op_t</span><span class="p">,</span> <span class="k">typename</span> <span class="n">vop_t</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">VectorizedLoop2d</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kt">void</span> <span class="nf">operator</span><span class="p">()(</span><span class="kt">char</span><span class="o">**</span> <span class="n">base</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int64_t</span> <span class="o">*</span><span class="n">strides</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">size0</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">size1</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// using data_t = std::array&lt;char*, ntensors&gt;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 这里将上面的当前range需处理的指针地址复制到data array中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">data_t</span> <span class="n">data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">copy_n</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ntensors</span><span class="p">,</span> <span class="n">data</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 拿到第二维 output的strides，便于`advance`
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">int64_t</span> <span class="o">*</span><span class="n">outer_strides</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">strides</span><span class="p">[</span><span class="n">ntensors</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// using traits = function_traits&lt;op_t&gt;;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 注意这里op_t为[=](scalar_t a) -&gt; scalar_t { return a; }，
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 这里is contiguous是在做什么呢？我们下文展开
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">is_contiguous</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">&gt;</span><span class="p">(</span><span class="n">strides</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">i</span> <span class="nl">C10_UNUSED</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">size1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">vectorized_loop</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">size0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">vop</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">advance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outer_strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="c1">// Indices是一个模板类，模板参数为traits::arity（func_t参数数量，我们copy kernel arity为1）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="c1">// 构造了indices数值序列（左闭右开），即{0}
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="k">using</span> <span class="n">Indices</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_index_sequence</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">::</span><span class="n">arity</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">unroll_contiguous_scalar_checks</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">&gt;</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">Indices</span><span class="p">{},</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">size_t</span> <span class="n">idx</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 这一部分{}内都是匿名函数体的内容
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="c1">// idx非0，进行向量化loop
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>          <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">i</span> <span class="nl">C10_UNUSED</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">size1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">vectorized_loop</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">size0</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">vop</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">advance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outer_strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="c1">// idx为0，表示scalar维度，进行basic loop
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>          <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">i</span> <span class="nl">C10_UNUSED</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">size1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">basic_loop</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">strides</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">size0</span><span class="p">,</span> <span class="n">op</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">advance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outer_strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">});</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在进入任何计算前，首先调用了<code>is_contiguous&lt;traits&gt;(strides)</code>，这里是在做什么呢？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/IsContiguous.h
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 在本例中，traits为function_traits&lt;at::native::AVX2::direct_copy_kernel(at::TensorIteratorBase&amp;)::$_5::operator()() const::&#39;lambda5&#39;()::operator()() const::&#39;lambda&#39;(float)&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">traits</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;!</span><span class="n">std</span><span class="o">::</span><span class="n">is_void</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">traits</span><span class="o">::</span><span class="n">result_type</span><span class="o">&gt;::</span><span class="n">value</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">*</span> <span class="o">=</span> <span class="k">nullptr</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">bool</span> <span class="n">is_contiguous</span><span class="p">(</span><span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="n">strides</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// traits::arity为参数个数，本例中为1，恰好为ntensors - 1（指向input stride）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">IsContiguous</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">::</span><span class="n">arity</span><span class="p">,</span> <span class="n">traits</span><span class="o">::</span><span class="n">arity</span><span class="p">,</span> <span class="n">traits</span><span class="o">&gt;::</span><span class="n">eval</span><span class="p">(</span><span class="n">strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// n: 函数参数个数 (traits::arity)
+</span></span></span><span class="line"><span class="cl"><span class="c1">// stride_index: 本例中为1
+</span></span></span><span class="line"><span class="cl"><span class="c1">// traits: function_traits (详见 FunctionTraits.h)
+</span></span></span><span class="line"><span class="cl"><span class="c1">// s: scalar参数索引或-1，我们这里由于没传，所以为默认的-1
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="kt">int</span> <span class="n">stride_index</span><span class="p">,</span> <span class="k">typename</span> <span class="n">traits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">s</span><span class="o">=-</span><span class="mi">1</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">IsContiguous</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="kt">bool</span> <span class="nf">eval</span><span class="p">(</span><span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="n">strides</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">using</span> <span class="n">type</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">traits</span><span class="o">::</span><span class="k">template</span> <span class="n">arg</span><span class="o">&lt;</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="o">&gt;::</span><span class="n">type</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 这里对strides[stride_index] == sizeof(type)判断，即要求相邻元素间隔恰好等于当前元素大小。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 由于我们strides[1] = 80（对应input tensor的最低维stride）不等于任何一种type，直接返回false，无需递归判断output tensor的最低维stride
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="n">strides</span><span class="p">[</span><span class="n">stride_index</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">n</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">type</span><span class="p">))</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">           <span class="n">IsContiguous</span><span class="o">&lt;</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">stride_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">traits</span><span class="p">,</span> <span class="n">s</span><span class="o">&gt;::</span><span class="n">eval</span><span class="p">(</span><span class="n">strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>随后走到下一个分支判断<code>unroll_contiguous_scalar_checks</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1">// traits: function_traits&lt;direct_copy_kernel(at::TensorIteratorBase&amp;)&gt;
+</span></span></span><span class="line"><span class="cl"><span class="c1">// cb_t: 上面的一段匿名函数
+</span></span></span><span class="line"><span class="cl"><span class="c1">// INDEX0: 0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">traits</span><span class="p">,</span> <span class="k">typename</span> <span class="n">cb_t</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">INDEX0</span><span class="p">,</span> <span class="n">size_t</span> <span class="p">...</span><span class="n">INDEX</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">unroll_contiguous_scalar_checks</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="n">strides</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">index_sequence</span><span class="o">&lt;</span><span class="n">INDEX0</span><span class="p">,</span> <span class="n">INDEX</span><span class="p">...</span><span class="o">&gt;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cb_t</span><span class="o">&amp;&amp;</span> <span class="n">cb</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里类似上面，判断strides[1]（input的最低维stride）是否contiguous，return false
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">is_contiguous_scalar</span><span class="o">&lt;</span><span class="n">traits</span><span class="p">,</span> <span class="n">INDEX0</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">strides</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cb</span><span class="p">(</span><span class="n">INDEX0</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 递归调用unroll，由于INDEX空了，所以调用到下面的cb(0)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">unroll_contiguous_scalar_checks</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">&gt;</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">index_sequence</span><span class="o">&lt;</span><span class="n">INDEX</span><span class="p">...</span><span class="o">&gt;</span><span class="p">{},</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">cb_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">cb</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">traits</span><span class="p">,</span> <span class="k">typename</span> <span class="n">cb_t</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="n">unroll_contiguous_scalar_checks</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="cm">/*strides*/</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">std</span><span class="o">::</span><span class="n">index_sequence</span><span class="o">&lt;&gt;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cb_t</span><span class="o">&amp;&amp;</span> <span class="n">cb</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cb</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>调用<code>cb(0)</code>后，执行上文中匿名函数的basic loop分支</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1">// size1即我们的上文的step[1]，这里的意思是for 第二维数据，loop第一维数据
+</span></span></span><span class="line"><span class="cl"><span class="c1">// data即我们上文处理好的指针首地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">i</span> <span class="nl">C10_UNUSED</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">size1</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">basic_loop</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span> <span class="n">strides</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">size0</span><span class="p">,</span> <span class="n">op</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">advance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outer_strides</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后调用到<code>basic_loop</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">func_t</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="n">basic_loop</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">C10_RESTRICT</span> <span class="n">data</span><span class="p">[],</span> <span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="n">strides_</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">n</span><span class="p">,</span> <span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">op</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里op即我们最早指定的匿名函数  [=](scalar_t a) -&gt; scalar_t { return a; }
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">using</span> <span class="n">traits</span> <span class="o">=</span> <span class="n">function_traits</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 从上文读到这里，ntensors恰好为arity+1就很好理解了，对于我们的copy kernel，op参数为一个，对应ntensors为2（一个output 一个input)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">ntensors</span> <span class="o">=</span> <span class="n">traits</span><span class="o">::</span><span class="n">arity</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 使用局部变量 strides 有利于在老版本的编译器上优化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kt">int64_t</span> <span class="n">strides</span><span class="p">[</span><span class="n">ntensors</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 注意这里只用拿output和input最低维的stride即可，因为我们正在for loop 第二维
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">arg</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">ntensors</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">strides</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">strides_</span><span class="p">[</span><span class="n">arg</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1">// 这里i是0，n是第一维需要loop的数量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="c1">// 为什么要费尽心机把i传下来，而不是直接在下面for循环里int i=0呢？因为有的情况下并不需要从0开始遍历（如vectorized的时候）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">execute_op</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">op</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">func_t</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;!</span><span class="n">std</span><span class="o">::</span><span class="n">is_void</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">function_traits</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;::</span><span class="n">result_type</span><span class="o">&gt;::</span><span class="n">value</span><span class="o">&gt;::</span><span class="n">type</span><span class="o">*</span> <span class="o">=</span> <span class="k">nullptr</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="n">execute_op</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">C10_RESTRICT</span> <span class="n">data</span><span class="p">[],</span> <span class="k">const</span> <span class="kt">int64_t</span><span class="o">*</span> <span class="n">strides</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">n</span><span class="p">,</span> <span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">op</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">traits</span> <span class="o">=</span> <span class="n">function_traits</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">using</span> <span class="n">result_type</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">traits</span><span class="o">::</span><span class="n">result_type</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="p">(;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 这里算出需要操作的output指针地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">result_type</span><span class="o">*</span> <span class="n">out_ptr</span> <span class="o">=</span> <span class="p">(</span><span class="n">result_type</span><span class="o">*</span><span class="p">)(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">strides</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// dereference算出input的地址data[1] + i * strides[1]，封成了tuple作为apply的参数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">*</span><span class="n">out_ptr</span> <span class="o">=</span> <span class="n">c10</span><span class="o">::</span><span class="n">guts</span><span class="o">::</span><span class="n">apply</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="n">dereference</span><span class="o">&lt;</span><span class="n">traits</span><span class="o">&gt;</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="o">&amp;</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="o">&amp;</span><span class="n">strides</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">i</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">F</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Tuple</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="n">CUDA_HOST_DEVICE</span> <span class="kr">inline</span> <span class="k">constexpr</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="n">apply</span><span class="p">(</span><span class="n">F</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">,</span> <span class="n">Tuple</span><span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 最后调用std::apply函数，调用op函数取出了tuple里地址的值，return并写out_ptr
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">apply</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">Tuple</span><span class="o">&gt;</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>basic_loop</code>执行完后，对于当前子batch数据已经正确地复制到了output中，但还没有结束，我们还需要进行<code>advance</code>操作，将操作的首地址advance加上第二维的stride，以便进行下一个子batch的循环。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/cpu/Loops.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">advance</span><span class="p">(</span><span class="n">data_t</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int64_t</span> <span class="o">*</span><span class="n">outer_strides</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// outer_strides为第二维的stride，如本例中为[256, 4]
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="nl">arg</span> <span class="p">:</span> <span class="n">c10</span><span class="o">::</span><span class="n">irange</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">size</span><span class="p">()))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">+=</span> <span class="n">outer_strides</span><span class="p">[</span><span class="n">arg</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>到此，<code>copy</code>算子执行完成，旧tensor的数据按照指定memory format的格式复制到新tensor上，<code>contiguous</code>流程结束。</p>
+<p>额外指出，如果stride满足条件（<strong>input output type相同</strong>，<strong>contiguous</strong>（这里的contiguous指大小恰好等于<code>sizeof(type)</code>），或者input只是一个scalar（stride0），那么会调用<code>vectorized_loop</code>，每次循环中一次处理尽可能多的数据。</p>
+<p>可以看到，通过向量化循环展开，循环条件变成了<code>for (; i &lt;= n - 2 * Vec::size(); i += 2 * Vec::size())</code>，这里vec size默认是8，减少16倍循环次数。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">func_t</span><span class="p">,</span> <span class="k">typename</span> <span class="n">vec_func_t</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="n">vectorized_loop</span><span class="p">(</span><span class="kt">char</span><span class="o">**</span> <span class="n">C10_RESTRICT</span> <span class="n">data_</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">S</span><span class="p">,</span> <span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">op</span><span class="p">,</span> <span class="n">vec_func_t</span><span class="o">&amp;&amp;</span> <span class="n">vop</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Vec</span><span class="o">::</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Vec</span><span class="o">::</span><span class="n">size</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ... 向量化循环展开逻辑
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// basic_loop处理剩余没有被展开的数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">basic_loop</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">func_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">op</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="12-contiguous执行流程回顾">12. contiguous执行流程回顾</h2>
+<p>虽然我们展开了很多底层技术细节，如<strong>tensor_iterator如何预处理tensor</strong>，<strong>dim counter如何取需处理的step</strong>，<strong>loop2d如何实现迭代</strong>等，但从上层理解，最关键的调用链路为以下两段代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorProperties.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">contiguous</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span> <span class="n">MemoryFormat</span> <span class="n">memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">is_contiguous</span><span class="p">(</span><span class="n">memory_format</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">clone</span><span class="p">(</span><span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="c1">// aten/src/ATen/native/TensorFactories.cpp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Tensor</span> <span class="nf">clone</span><span class="p">(</span><span class="k">const</span> <span class="n">Tensor</span><span class="o">&amp;</span> <span class="n">src</span><span class="p">,</span> <span class="n">c10</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">c10</span><span class="o">::</span><span class="n">MemoryFormat</span><span class="o">&gt;</span> <span class="n">optional_memory_format</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">Tensor</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">self</span> <span class="o">=</span> <span class="n">at</span><span class="o">::</span><span class="n">empty_like</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">src</span><span class="p">.</span><span class="n">options</span><span class="p">(),</span> <span class="n">memory_format</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">_is_zerotensor</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">zero_</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">self</span><span class="p">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>即先判断是否contiguous，如果非contiguous则按照指定memory format <code>clone</code> tensor，在clone算子中，先<code>empty</code>出一个指定memory format的新tensor，然后<code>copy_</code>将旧tensor的数据按照stride等信息复制到新tensor上。</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://pybind11.readthedocs.io/en/stable/advanced/misc.html" target="_blank" rel="noopener noreffer ">pybind11-gil</a></li>
+<li><a href="https://github.com/pytorch/pytorch" target="_blank" rel="noopener noreffer ">pytorch-github</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/129778637" target="_blank" rel="noopener noreffer ">Pytorch Tensor 加法实现细节</a></li>
+</ul>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-03-11</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" data-title="How Pytorch 2.0 Call Ops(3)"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" data-title="How Pytorch 2.0 Call Ops(3)"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" data-title="How Pytorch 2.0 Call Ops(3)"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" data-title="How Pytorch 2.0 Call Ops(3)"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/pytorch/memory_format/" class="prev" rel="prev" title="Tensor Memory Format"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Tensor Memory Format</a>
+            <a href="/posts/pytorch/how_pytorch_call_op_2/" class="next" rel="next" title="How Pytorch 2.0 Call Ops(2)">How Pytorch 2.0 Call Ops(2)<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://yewentao256.github.io/blog" target="_blank">yewentao</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -2,7 +2,7 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
-            <loc>https://yewentao256.github.io/zh-cn/categories/</loc><lastmod>2023-03-04T10:07:15&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/categories/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/categories/"
@@ -11,7 +11,16 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/categories/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/posts/</loc><lastmod>2023-03-04T10:07:15&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_3/</loc><lastmod>2023-03-11T11:53:09&#43;08:00</lastmod><xhtml:link
+                        rel="alternate"
+                        hreflang="en"
+                        href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/"
+                        /><xhtml:link
+                    rel="alternate"
+                    hreflang="zh-cn"
+                    href="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_3/"
+                    /></url><url>
+            <loc>https://yewentao256.github.io/zh-cn/posts/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/posts/"
@@ -20,7 +29,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/posts/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/categories/pytorch/</loc><lastmod>2023-03-04T10:07:15&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/categories/pytorch/</loc><lastmod>2023-03-11T11:53:09&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/categories/pytorch/"
@@ -28,6 +37,33 @@
                     rel="alternate"
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/categories/pytorch/"
+                    /></url><url>
+            <loc>https://yewentao256.github.io/zh-cn/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
+                        rel="alternate"
+                        hreflang="en"
+                        href="https://yewentao256.github.io/"
+                        /><xhtml:link
+                    rel="alternate"
+                    hreflang="zh-cn"
+                    href="https://yewentao256.github.io/zh-cn/"
+                    /></url><url>
+            <loc>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/</loc><lastmod>2023-03-11T10:53:09&#43;08:00</lastmod><xhtml:link
+                        rel="alternate"
+                        hreflang="en"
+                        href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/"
+                        /><xhtml:link
+                    rel="alternate"
+                    hreflang="zh-cn"
+                    href="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/"
+                    /></url><url>
+            <loc>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/</loc><lastmod>2023-03-11T09:53:09&#43;08:00</lastmod><xhtml:link
+                        rel="alternate"
+                        hreflang="en"
+                        href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_1/"
+                        /><xhtml:link
+                    rel="alternate"
+                    hreflang="zh-cn"
+                    href="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_1/"
                     /></url><url>
             <loc>https://yewentao256.github.io/zh-cn/posts/pytorch/memory_format/</loc><lastmod>2023-03-04T10:07:15&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
@@ -38,15 +74,6 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/posts/pytorch/memory_format/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/</loc><lastmod>2023-03-04T10:07:15&#43;08:00</lastmod><xhtml:link
-                        rel="alternate"
-                        hreflang="en"
-                        href="https://yewentao256.github.io/"
-                        /><xhtml:link
-                    rel="alternate"
-                    hreflang="zh-cn"
-                    href="https://yewentao256.github.io/zh-cn/"
-                    /></url><url>
             <loc>https://yewentao256.github.io/zh-cn/posts/csapp/cachelab/</loc><lastmod>2023-02-19T14:59:44&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
@@ -56,7 +83,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/posts/csapp/cachelab/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/categories/csapp/</loc><lastmod>2023-02-19T14:59:44&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/categories/csapp/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/categories/csapp/"
@@ -65,7 +92,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/categories/csapp/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</loc><lastmod>2023-02-11T19:47:38&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/posts/csapp/csapp_class_notes/"
@@ -101,7 +128,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/posts/csapp/bomblab/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/categories/algorithm/</loc><lastmod>2022-03-11T11:13:50&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/categories/algorithm/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/categories/algorithm/"
@@ -110,7 +137,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/categories/algorithm/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/posts/algorithm/dynamic-programming/</loc><lastmod>2022-03-11T11:13:50&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/posts/algorithm/dynamic-programming/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/posts/algorithm/dynamic-programming/"
@@ -119,7 +146,7 @@
                     hreflang="zh-cn"
                     href="https://yewentao256.github.io/zh-cn/posts/algorithm/dynamic-programming/"
                     /></url><url>
-            <loc>https://yewentao256.github.io/zh-cn/posts/algorithm/lightgbm/</loc><lastmod>2021-12-17T11:01:36&#43;08:00</lastmod><xhtml:link
+            <loc>https://yewentao256.github.io/zh-cn/posts/algorithm/lightgbm/</loc><lastmod>2023-03-12T19:24:36&#43;08:00</lastmod><xhtml:link
                         rel="alternate"
                         hreflang="en"
                         href="https://yewentao256.github.io/posts/algorithm/lightgbm/"
