@@ -1,8 +1,8 @@
 ---
-title: "Shell_lab"
+title: "ShellLab"
 date: 2023-06-23T10:41:24+08:00
 categories: ["csapp"]
-summary: "在这个lab中，我们将通过开发一个简洁但完整的unix shell程序来对进程控制、信号机制等概念有进一步的认知。源码地址：[https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]"
+summary: "在这个lab中，我们将通过开发一个简洁但完整的unix shell程序来对进程控制、信号机制等概念有进一步的认知。源码：[https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]"
 ---
 
 ## Summary

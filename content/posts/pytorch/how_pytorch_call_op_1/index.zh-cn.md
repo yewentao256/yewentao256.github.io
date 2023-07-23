@@ -721,5 +721,7 @@ OperatorEntry::AnnotatedKernelContainerIterator OperatorEntry::registerKernel(
 
 最后，返回`*this`指针，`m.impl("contiguous", TORCH_FN(wrapper_CompositeImplicitAutograd__contiguous));`注册完成
 
+继续阅读：[How Pytorch 2.0 Call Ops(2)](../how_pytorch_call_op_2/index.zh-cn.md)
+
 ---
 *Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

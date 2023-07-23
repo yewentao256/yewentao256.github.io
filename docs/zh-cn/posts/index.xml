@@ -5,12 +5,12 @@
         <description>所有文章 | Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
             <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 23 Jun 2023 10:41:24 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/posts/" rel="self" type="application/rss+xml" /><item>
-    <title>Shell_lab</title>
+    <title>ShellLab</title>
     <link>https://yewentao256.github.io/zh-cn/posts/csapp/shell_lab/</link>
     <pubDate>Fri, 23 Jun 2023 10:41:24 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/csapp/shell_lab/</guid>
-    <description><![CDATA[在这个lab中，我们将通过开发一个简洁但完整的unix shell程序来对进程控制、信号机制等概念有进一步的认知。源码地址：[https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]]]></description>
+    <description><![CDATA[在这个lab中，我们将通过开发一个简洁但完整的unix shell程序来对进程控制、信号机制等概念有进一步的认知。源码：[https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]]]></description>
 </item>
 <item>
     <title>How Pytorch 2.0 Call Ops(三)</title>
