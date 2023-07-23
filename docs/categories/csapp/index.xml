@@ -4,13 +4,21 @@
         <link>https://yewentao256.github.io/categories/csapp/</link>
         <description>csapp - Category - Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sun, 19 Feb 2023 14:56:21 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/categories/csapp/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Fri, 23 Jun 2023 10:41:24 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/categories/csapp/" rel="self" type="application/rss+xml" /><item>
+    <title>Shell_lab</title>
+    <link>https://yewentao256.github.io/posts/csapp/shell_lab/</link>
+    <pubDate>Fri, 23 Jun 2023 10:41:24 &#43;0800</pubDate>
+    <author>yewentao</author>
+    <guid>https://yewentao256.github.io/posts/csapp/shell_lab/</guid>
+    <description><![CDATA[In this lab, we&rsquo;ll become more familiar with the concepts of process control and signal by writing a simple Unix shell program that supports job control. Source code: [https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]]]></description>
+</item>
+<item>
     <title>Cachelab</title>
     <link>https://yewentao256.github.io/posts/csapp/cachelab/</link>
     <pubDate>Sun, 19 Feb 2023 14:56:21 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/cachelab/</guid>
-    <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function.]]></description>
+    <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]]]></description>
 </item>
 <item>
     <title>CSAPP_class_notes</title>
@@ -18,7 +26,7 @@
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/csapp_class_notes/</guid>
-    <description><![CDATA[My note while learning through CSAPP-15213 videos. Including Overview, Bits,Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory.]]></description>
+    <description><![CDATA[My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory. Source: [https://github.com/yewentao256/CSAPP_15213]]]></description>
 </item>
 <item>
     <title>Attacklab</title>
@@ -26,7 +34,7 @@
     <pubDate>Fri, 03 Feb 2023 16:41:42 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/attacklab/</guid>
-    <description><![CDATA[Attacklab from CSAPP 15213, including P1-Code Injection Attacks and P2-Return-Oriented Programming. It&rsquo;s a little bit hard, please be patient and gradually find your way out, best wishes!]]></description>
+    <description><![CDATA[Attacklab from CSAPP 15213, including P1-Code Injection Attacks and P2-Return-Oriented Programming. It&rsquo;s a little bit hard, please be patient and gradually find your way out, best wishes! Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/attacklab]]]></description>
 </item>
 <item>
     <title>Bomblab</title>
@@ -34,7 +42,7 @@
     <pubDate>Fri, 03 Feb 2023 14:57:35 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/posts/csapp/bomblab/</guid>
-    <description><![CDATA[Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It&rsquo;s a little bit hard, please be patient and gradually find your way out, good luck!]]></description>
+    <description><![CDATA[Bomblab from CSAPP 15213, including 6 normal phases and 1 extra secret-phase. It&rsquo;s a little bit hard, please be patient and gradually find your way out, good luck! Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/bomblab]]]></description>
 </item>
 </channel>
 </rss>

@@ -81,7 +81,7 @@ $$O(data * features) → O(bins * features)$$
 
 - 复杂度：
 
-$$O(bins *features) → O(bins* bundle)$$
+$$O(bins * features) → O(bins * bundle)$$
 
 ## Reference
 

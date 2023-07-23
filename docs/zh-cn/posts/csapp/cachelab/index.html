@@ -5,16 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Cachelab - Yewentao&#39;s Blog</title><meta name="Description" content="yewentao&#39;s blog"><meta property="og:title" content="Cachelab" />
-<meta property="og:description" content="In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function." />
+<meta property="og:description" content="In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://yewentao256.github.io/zh-cn/posts/csapp/cachelab/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-02-19T14:56:21+08:00" />
-<meta property="article:modified_time" content="2023-02-19T14:59:44+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta property="article:modified_time" content="2023-07-23T10:38:51+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
 
 <meta name="twitter:title" content="Cachelab"/>
-<meta name="twitter:description" content="In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function."/>
+<meta name="twitter:description" content="In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]"/>
 <meta name="application-name" content="我的网站">
 <meta name="apple-mobile-web-app-title" content="我的网站"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -29,8 +29,8 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/csapp\/cachelab\/"
-        },"genre": "posts","wordcount":  2031 ,
-        "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/csapp\/cachelab\/","datePublished": "2023-02-19T14:56:21+08:00","dateModified": "2023-02-19T14:59:44+08:00","publisher": {
+        },"genre": "posts","wordcount":  2059 ,
+        "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/csapp\/cachelab\/","datePublished": "2023-02-19T14:56:21+08:00","dateModified": "2023-07-23T10:38:51+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -109,7 +109,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Cachelab</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">收录于 <a href="/zh-cn/categories/csapp/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>csapp</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-02-19">2023-02-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 2031 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-02-19">2023-02-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 2059 字&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -119,6 +119,7 @@
                 <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
   <ul>
     <li><a href="#等待被翻译">等待被翻译</a></li>
+    <li><a href="#summary">Summary</a></li>
     <li><a href="#introduction">Introduction</a></li>
     <li><a href="#how-to-launchusing-docker">How to launch(Using docker)</a></li>
     <li><a href="#part-a-writing-a-cache-simulator">Part A: Writing a Cache Simulator</a>
@@ -140,6 +141,8 @@
 </nav></div>
             </div><div class="content" id="content"><h2 id="等待被翻译">等待被翻译</h2>
 <p>非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间</p>
+<h2 id="summary">Summary</h2>
+<p>In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]</p>
 <h2 id="introduction">Introduction</h2>
 <p>In this lab, there are two parts:</p>
 <ol>
@@ -803,8 +806,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2023-02-19&nbsp;<a class="git-hash" href="https://github.com/yewentao256/yewentao256.github.io/commit/0c425ddc0f26cc065b391f9cb201500b932b6277" target="_blank" title="commit by yewentao(zhyanwentao@126.com) 0c425ddc0f26cc065b391f9cb201500b932b6277: new post: cachelab">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>0c425dd</a></span>
+                <span>更新于 2023-07-23&nbsp;<a class="git-hash" href="https://github.com/yewentao256/yewentao256.github.io/commit/4e76357067263ff24545aa1ff79f45fa7478b336" target="_blank" title="commit by yewentao(zhyanwentao@126.com) 4e76357067263ff24545aa1ff79f45fa7478b336: adding link to report an issue">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>4e76357</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>
