@@ -8,8 +8,8 @@
 <meta property="og:description" content="This article introduces the process of pytorch 2.0 calling ops, using contiguous as an example." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2023-03-11T09:53:09+08:00" />
-<meta property="article:modified_time" content="2023-03-11T09:53:09+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta property="article:published_time" content="2023-05-13T09:53:09+08:00" />
+<meta property="article:modified_time" content="2023-06-03T11:32:15+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
 
@@ -18,7 +18,7 @@
 <meta name="application-name" content="我的网站">
 <meta name="apple-mobile-web-app-title" content="我的网站"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><link rel="prev" href="https://yewentao256.github.io/posts/pytorch/memory_format/" /><link rel="next" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_3/" /><link rel="prev" href="https://yewentao256.github.io/posts/pytorch/how_pytorch_call_op_2/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
     {
@@ -29,8 +29,8 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_3\/"
-        },"genre": "posts","wordcount":  3049 ,
-        "url": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_3\/","datePublished": "2023-03-11T09:53:09+08:00","dateModified": "2023-03-11T09:53:09+08:00","publisher": {
+        },"genre": "posts","wordcount":  3062 ,
+        "url": "https:\/\/yewentao256.github.io\/posts\/pytorch\/how_pytorch_call_op_3\/","datePublished": "2023-05-13T09:53:09+08:00","dateModified": "2023-06-03T11:32:15+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -109,7 +109,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">How Pytorch 2.0 Call Ops(3)</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">included in <a href="/categories/pytorch/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>pytorch</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-03-11">2023-03-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;3049 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;3062 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;15 minutes&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -1591,11 +1591,14 @@
 <li><a href="https://github.com/pytorch/pytorch" target="_blank" rel="noopener noreffer ">pytorch-github</a></li>
 <li><a href="https://zhuanlan.zhihu.com/p/129778637" target="_blank" rel="noopener noreffer ">Pytorch Tensor 加法实现细节</a></li>
 </ul>
+<hr>
+<p><em>Confused about some of the content? Feel free to report an issue <a href="https://github.com/yewentao256/yewentao256.github.io/issues/new" target="_blank" rel="noopener noreffer ">here</a>.</em></p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>Updated on 2023-03-11</span>
+                <span>Updated on 2023-06-03&nbsp;<a class="git-hash" href="https://github.com/yewentao256/yewentao256.github.io/commit/f8c8bf29df227795279d09e20fced79aa149c081" target="_blank" title="commit by yewentao(zhyanwentao@126.com) f8c8bf29df227795279d09e20fced79aa149c081: update &#34;How Pytorch 2.0 Call Ops&#34;">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>f8c8bf2</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>
@@ -1612,8 +1615,7 @@
         </section>
     </div>
 
-    <div class="post-nav"><a href="/posts/pytorch/memory_format/" class="prev" rel="prev" title="Tensor Memory Format"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Tensor Memory Format</a>
-            <a href="/posts/pytorch/how_pytorch_call_op_2/" class="next" rel="next" title="How Pytorch 2.0 Call Ops(2)">How Pytorch 2.0 Call Ops(2)<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+    <div class="post-nav"><a href="/posts/pytorch/how_pytorch_call_op_2/" class="prev" rel="prev" title="How Pytorch 2.0 Call Ops(2)"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>How Pytorch 2.0 Call Ops(2)</a></div>
 </div>
 </article></div>
             </main><footer class="footer">

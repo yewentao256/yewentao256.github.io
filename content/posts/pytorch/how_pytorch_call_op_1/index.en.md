@@ -726,3 +726,6 @@ OperatorEntry::AnnotatedKernelContainerIterator OperatorEntry::registerKernel(
 随后更新dispatcher的entry，到这里`registerImpl`就将op的kernel注册完成了
 
 最后，返回`*this`指针，`m.impl("contiguous", TORCH_FN(wrapper_CompositeImplicitAutograd__contiguous));`注册完成
+
+---
+*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

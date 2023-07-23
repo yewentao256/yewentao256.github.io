@@ -29,7 +29,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/algorithm\/lightgbm\/"
-        },"genre": "posts","wordcount":  1315 ,
+        },"genre": "posts","wordcount":  1330 ,
         "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/algorithm\/lightgbm\/","datePublished": "2021-12-17T11:01:36+08:00","dateModified": "2023-03-12T19:24:36+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -109,7 +109,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Understand Lightgbm</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">收录于 <a href="/zh-cn/categories/algorithm/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>algorithm</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2021-12-17">2021-12-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1315 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2021-12-17">2021-12-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1330 字&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -184,7 +184,7 @@ $$-[{∂L(y,f(x_i)) \over ∂f(x_i)}]<em>{</em>{f(x) = f_{t-1}(x)}} = y-f(x_i)$$
 <li>训练中连续特征分箱构建直方图，这样虽然精度略微降低，但寻找分割点的内存消耗和训练速度都更为高效。</li>
 <li>复杂度：</li>
 </ul>
-<p>$$O(data <em>features) → O(bins</em> features)$$</p>
+<p>$$O(data * features) → O(bins * features)$$</p>
 <p>而我们知道bins是远小于data数量的，所以更加高效。</p>
 <h3 id="2-带深度限制的leaf-wise叶子生长策略">2. 带深度限制的leaf-wise叶子生长策略</h3>
 <ul>
@@ -223,6 +223,8 @@ $$-[{∂L(y,f(x_i)) \over ∂f(x_i)}]<em>{</em>{f(x) = f_{t-1}(x)}} = y-f(x_i)$$
 <li><a href="https://github.com/microsoft/LightGBM" target="_blank" rel="noopener noreffer ">LightGBM</a></li>
 <li><a href="https://blog.csdn.net/zpalyq110/article/details/79527653" target="_blank" rel="noopener noreffer ">GBDT算法原理以及实例理解</a></li>
 </ul>
+<hr>
+<p><em>Confused about some of the content? Feel free to report an issue <a href="https://github.com/yewentao256/yewentao256.github.io/issues/new" target="_blank" rel="noopener noreffer ">here</a>.</em></p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">

@@ -4,10 +4,10 @@
         <link>https://yewentao256.github.io/zh-cn/posts/</link>
         <description>所有文章 | Yewentao&#39;s Blog</description>
         <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>zhyanwentao@outlook.com (yewentao)</managingEditor>
-            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sat, 11 Mar 2023 11:53:09 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/posts/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>zhyanwentao@outlook.com (yewentao)</webMaster><lastBuildDate>Sat, 13 May 2023 11:53:09 &#43;0800</lastBuildDate><atom:link href="https://yewentao256.github.io/zh-cn/posts/" rel="self" type="application/rss+xml" /><item>
     <title>How Pytorch 2.0 Call Ops(三)</title>
     <link>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_3/</link>
-    <pubDate>Sat, 11 Mar 2023 11:53:09 &#43;0800</pubDate>
+    <pubDate>Sat, 13 May 2023 11:53:09 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_3/</guid>
     <description><![CDATA[本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。]]></description>
@@ -15,7 +15,7 @@
 <item>
     <title>How Pytorch 2.0 Call Ops(二)</title>
     <link>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/</link>
-    <pubDate>Sat, 11 Mar 2023 10:53:09 &#43;0800</pubDate>
+    <pubDate>Wed, 12 Apr 2023 10:53:09 &#43;0800</pubDate>
     <author>yewentao</author>
     <guid>https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/</guid>
     <description><![CDATA[本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。]]></description>
@@ -45,7 +45,7 @@
     <description><![CDATA[In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function.]]></description>
 </item>
 <item>
-    <title>CSAPP_class_notes</title>
+    <title>CSAPP Class Notes</title>
     <link>https://yewentao256.github.io/zh-cn/posts/csapp/csapp_class_notes/</link>
     <pubDate>Fri, 03 Feb 2023 19:52:49 &#43;0800</pubDate>
     <author>yewentao</author>

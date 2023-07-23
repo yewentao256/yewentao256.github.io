@@ -795,3 +795,6 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
 - [pybind11-gil](https://pybind11.readthedocs.io/en/stable/advanced/misc.html)
 - [pytorch-github](https://github.com/pytorch/pytorch)
 - [Pytorch Tensor 加法实现细节](https://zhuanlan.zhihu.com/p/129778637)
+
+---
+*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

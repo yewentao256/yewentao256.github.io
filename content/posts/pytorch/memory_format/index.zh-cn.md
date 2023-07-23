@@ -149,3 +149,6 @@ print(x.storage())  # [ 14 8 29 16 26 21 20 15 10 11 18 3]
 - [NVIDIA Deep Learning cuDNN Documentation](https://docs.nvidia.com/deeplearning/cudnn/developer-guide/index.html)
 - [Pytorch NCHW/NHWC](https://zhuanlan.zhihu.com/p/556222920)
 - [(BETA) CHANNELS LAST MEMORY FORMAT IN PYTORCH](https://pytorch.org/tutorials/intermediate/memory_format_tutorial.html)
+
+---
+*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

@@ -481,3 +481,6 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
 ```
 
 如果源tensor为空，那就直接set zero，如果不是，那么就调用`copy_`算子
+
+---
+*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

@@ -62,7 +62,7 @@ $$-[{∂L(y,f(x_i)) \over ∂f(x_i)}]_{_{f(x) = f_{t-1}(x)}} = y-f(x_i)$$
 - 训练中连续特征分箱构建直方图，这样虽然精度略微降低，但寻找分割点的内存消耗和训练速度都更为高效。
 - 复杂度：
 
-$$O(data *features) → O(bins* features)$$
+$$O(data * features) → O(bins * features)$$
 
 而我们知道bins是远小于data数量的，所以更加高效。
 
@@ -87,9 +87,12 @@ $$O(data *features) → O(bins* features)$$
 
 - 复杂度：
 
-$$O(bins *features) → O(bins* bundle)$$
+$$O(bins * features) → O(bins * bundle)$$
 
 ## Reference
 
 - [LightGBM](https://github.com/microsoft/LightGBM)
 - [GBDT算法原理以及实例理解](https://blog.csdn.net/zpalyq110/article/details/79527653)
+
+---
+*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

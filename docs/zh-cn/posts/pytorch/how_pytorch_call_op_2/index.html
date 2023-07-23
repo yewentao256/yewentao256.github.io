@@ -8,8 +8,8 @@
 <meta property="og:description" content="本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://yewentao256.github.io/zh-cn/posts/pytorch/how_pytorch_call_op_2/" /><meta property="og:image" content="https://yewentao256.github.io/person-circle.svg"/><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2023-03-11T10:53:09+08:00" />
-<meta property="article:modified_time" content="2023-03-11T10:53:09+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
+<meta property="article:published_time" content="2023-04-12T10:53:09+08:00" />
+<meta property="article:modified_time" content="2023-06-03T11:32:15+08:00" /><meta property="og:site_name" content="Yewentao&#39;s Blog" />
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="https://yewentao256.github.io/person-circle.svg"/>
 
@@ -29,8 +29,8 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/pytorch\/how_pytorch_call_op_2\/"
-        },"genre": "posts","wordcount":  4042 ,
-        "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/pytorch\/how_pytorch_call_op_2\/","datePublished": "2023-03-11T10:53:09+08:00","dateModified": "2023-03-11T10:53:09+08:00","publisher": {
+        },"genre": "posts","wordcount":  4055 ,
+        "url": "https:\/\/yewentao256.github.io\/zh-cn\/posts\/pytorch\/how_pytorch_call_op_2\/","datePublished": "2023-04-12T10:53:09+08:00","dateModified": "2023-06-03T11:32:15+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
@@ -109,7 +109,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">How Pytorch 2.0 Call Ops(二)</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://yewentao256.github.io/blog" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>yewentao</a></span>&nbsp;<span class="post-category">收录于 <a href="/zh-cn/categories/pytorch/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>pytorch</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-03-11">2023-03-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 4042 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-04-12">2023-04-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 4055 字&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 9 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -989,11 +989,14 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>如果源tensor为空，那就直接set zero，如果不是，那么就调用<code>copy_</code>算子</p>
+<hr>
+<p><em>Confused about some of the content? Feel free to report an issue <a href="https://github.com/yewentao256/yewentao256.github.io/issues/new" target="_blank" rel="noopener noreffer ">here</a>.</em></p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2023-03-11</span>
+                <span>更新于 2023-06-03&nbsp;<a class="git-hash" href="https://github.com/yewentao256/yewentao256.github.io/commit/f8c8bf29df227795279d09e20fced79aa149c081" target="_blank" title="commit by yewentao(zhyanwentao@126.com) f8c8bf29df227795279d09e20fced79aa149c081: update &#34;How Pytorch 2.0 Call Ops&#34;">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>f8c8bf2</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>
