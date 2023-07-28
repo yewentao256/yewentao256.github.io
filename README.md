@@ -2,12 +2,12 @@
 
 ## 本项目使用说明
 
-基于hugo开发的个人博客项目
+基于[hugo](https://gohugo.io/getting-started/quick-start/)开发的个人博客项目
 
 - 文件目录结构
 
 ```bash
-myblog
+yewentao256.github.io
 ├── archetypes      # 新文章默认模板
 ├── config.toml     # Hugo配置文档
 ├── content         # 存放所有Markdown格式的文章
@@ -17,6 +17,16 @@ myblog
 └── themes          # 主题
 ```
 
+- clone仓库
+
+```bash
+git clone --recurse-submodules git@github.com:yewentao256/yewentao256.github.io.git
+```
+
+- 主题
+
+使用[loveit](https://github.com/dillonzq/LoveIt)的继承项目[doit](https://github.com/HEIGE-PCloud/DoIt)作为主题
+
 - 开始书写博客
 
 ```bash
@@ -25,7 +35,7 @@ hugo new posts/directory/title/index.en.md
 
 该命令以`archetypes/default.md`为模板创建新文章，位于`content/posts`目录下，书写好后删除`draft: true`即可
 
-- 本地启动服务
+- 本地启动服务预览
 
 ```bash
 hugo server -e production
@@ -50,9 +60,3 @@ hugo
 - `hugo`后没有css样式？f12查看前端去哪里找css了，根据相关信息修复`baseUrl`
   - 例如：本地可能用绝对路径来找，`/Users/yewentao/Desktop/myblog/docs`
   - 部署到gitpage后用pageurl来找，如`https://yewentao256.github.io/blog`
-
-## Referrence
-
-- [hugo](https://gohugo.io/getting-started/quick-start/)
-- [loveit](https://github.com/dillonzq/LoveIt)
-- [Doit](https://github.com/HEIGE-PCloud/DoIt)
