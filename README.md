@@ -55,3 +55,4 @@ hugo
 
 - [hugo](https://gohugo.io/getting-started/quick-start/)
 - [loveit](https://github.com/dillonzq/LoveIt)
+- [Doit](https://github.com/HEIGE-PCloud/DoIt)
