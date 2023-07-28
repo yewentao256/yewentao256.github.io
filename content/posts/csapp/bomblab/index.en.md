@@ -795,8 +795,6 @@ So we can use this instructions to get the rules:
 
 So `x=22` is one of the result, you can also find other results using the guides above.
 
-Congratulations!
-
 ## The results for copy
 
 ```c
@@ -809,5 +807,4 @@ ionefg
 22
 ```
 
----
-*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*
+Congratulations, You've finished the task!

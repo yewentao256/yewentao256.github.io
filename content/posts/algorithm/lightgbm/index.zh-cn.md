@@ -87,6 +87,3 @@ $$O(bins * features) → O(bins * bundle)$$
 
 - [LightGBM](https://github.com/microsoft/LightGBM)
 - [GBDT算法原理以及实例理解](https://blog.csdn.net/zpalyq110/article/details/79527653)
-
----
-*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*

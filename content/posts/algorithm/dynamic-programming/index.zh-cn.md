@@ -90,6 +90,3 @@ print(count_paths(3,7))
 ## Reference
 
 [@zhen tan](https://www.zhihu.com/question/39948290/answer/883302989)
-
----
-*Confused about some of the content? Feel free to report an issue [here](https://github.com/yewentao256/yewentao256.github.io/issues/new).*
