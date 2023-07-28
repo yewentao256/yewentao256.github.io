@@ -10,8 +10,8 @@ title = 'Yewentao Hugo Site'
 # hugo主题
 theme = 'DoIt'
 
-# 构建网页的发布目录（如果选择使用gitpage发布，建议用docs）
-publishDir = 'docs'
+# 构建网页的发布目录
+publishDir = 'public'
 
 # 默认每页列表显示的文章数目
 paginate = 12
