@@ -1,13 +1,13 @@
 ---
-title: "Tensor Memory Format"
+title: "Understand Tensor Data Layout"
 date: 2023-03-04T09:52:50+08:00
 categories: ["pytorch"]
-summary: "本文将介绍pytorch中常用的两种内存存储形式**NCHW**和**NHWC**（channel-last）及对应的stride分布含义"
+summary: "本文介绍了pytorch中常用的两种内存存储形式**NCHW**和**NHWC**，深入讨论了**Stride**和**Contiguous**等概念，并解释了改变Tensor描述和内存结构的原理和过程。"
 ---
 
 ## Summary
 
-本文将介绍pytorch中常用的两种内存存储形式**NCHW**和**NHWC**（channel-last）及对应的stride分布含义
+本文介绍了pytorch中常用的两种内存存储形式**NCHW**和**NHWC**，深入讨论了**Stride**和**Contiguous**等概念，并解释了改变Tensor内存结构的原理和过程。
 
 ## 实例引入
 
@@ -107,7 +107,9 @@ for (auto k : {1, 3, 2, 0}) {
 }
 ```
 
-即优先访问C上元素，再访问W、H最后访问N。是怎么通过stride实现这样优先访问的呢？我们首先要了解它是如何取值的
+即优先访问C上元素，再访问W、H最后访问N。
+
+是怎么通过stride实现这样优先访问的呢？我们首先要了解它是如何取值的
 
 ```c++
 // 通过索引取值
@@ -130,7 +132,7 @@ data_t operator[](std::vector<size_t> idxs) const {
 import torch
 
 N, C, H, W = 1, 3, 2, 2
-x = torch.randint(1,30,(N, C, H, W))
+x = torch.randint(1, 30, (N, C, H, W))
 print(x.storage())  # [ 14 16 20 11 8 26 15 18 29 21 10 3]
 x = x.contiguous(memory_format=torch.channels_last)
 print(x.storage())  # [ 14 8 29 16 26 21 20 15 10 11 18 3]
