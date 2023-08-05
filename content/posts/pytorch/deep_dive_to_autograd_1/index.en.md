@@ -1,6 +1,6 @@
 ---
 title: "Deep Dive to Pytorch AutoGrad(1)"
-date: 2023-07-04T10:49:42+08:00
+date: 2023-07-04T10:48:42+08:00
 categories: ["pytorch"]
 summary: "This article introduces the implementation details of pytorch autograd mechanism."
 ---
@@ -9,15 +9,9 @@ summary: "This article introduces the implementation details of pytorch autograd
 
 This article introduces the implementation details of pytorch autograd mechanism.
 
-## To be translated
+## Introduction
 
-Oh Sorry!
-
-This blog has't been translated to English, please wait for a little while...
-
-## 引入
-
-笔者使用pytorch版本：`2.1.0a0+gita3dddae`
+Version of pytorch：`2.1.0a0+gita3dddae`
 
 ```py
 import torch
@@ -26,18 +20,18 @@ x = torch.tensor([3.], requires_grad=True)
 y = x * x
 print(y)       # tensor([9.], grad_fn=<MulBackward0>)
 y.backward()
-print(x.grad)  # tensor([6.])，y = x^2，dy/dx = 2x
+print(x.grad)  # tensor([6.]), y = x^2, dy/dx = 2x
 ```
 
-这是一个基本的autograd运算，新建叶子结点`x`，然后`y = x * x`时构建计算图，最后调用`y.backward()`进行反向运算。
+This is a basic autograd operation. We create a new leaf node `x`, then construct a computation graph when `y = x * x`, and finally call `y.backward()` for the backward operation.
 
-我们将深入c++层面，逐步分析pytorch是如何构建`requires_grad`的tensor，前向运算中如何构建计算图，反向求导时如何根据计算图实现自动微分与梯度累加。
+We will delve into the C++ level, step by step to analyze how PyTorch constructs `requires_grad` tensors, how to construct a computation graph during forward computation, and how to implement automatic differentiation and gradient accumulation based on the computation graph during backward derivation.
 
-## tensor `x`的创建：`x = torch.tensor([3.], requires_grad=True)`
+## Creation of tensor `x`: `x = torch.tensor([3.], requires_grad=True)`
 
-### `tensor_ctor`构造tensor
+### Construction of tensor through `tensor_ctor`
 
-执行`x = torch.tensor([3.], requires_grad=True)`时，首先调用到python层与c++层的tensor creator处：
+When executing `x = torch.tensor([3.], requires_grad=True)`, the tensor creator is first called:
 
 ```c++
 // torch/csrc/autograd/python_torch_functions_manual.cpp
@@ -45,7 +39,7 @@ static PyObject* THPVariable_tensor(
     PyObject* self,
     PyObject* args,
     PyObject* kwargs) {
-  HANDLE_TH_ERRORS      // try-catch宏，处理错误
+  HANDLE_TH_ERRORS      // try-catch micro to handle errors
   static PythonArgParser parser({
       "tensor(PyObject* data, *, ScalarType dtype=None, Device? device=None, bool pin_memory=False, bool requires_grad=False, DimnameList? names=None)",
   });
@@ -54,20 +48,20 @@ static PyObject* THPVariable_tensor(
   ParsedArgs<ctor_num_args> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.has_torch_function()) {
-    // 检查有没有用户重载，详见[document](https://pytorch.org/docs/stable/notes/extending.html#extending-torch)
+    // check overwrite, see [document](https://pytorch.org/docs/stable/notes/extending.html#extending-torch)
     return handle_torch_function(
         r, nullptr, args, kwargs, THPVariableFunctionsModule, "torch");
   }
   // ...
   return THPVariable_Wrap(torch::utils::tensor_ctor(
-      torch::tensors::get_default_dispatch_key(),   // 默认CPU
-      torch::tensors::get_default_scalar_type(),    // 默认float
+      torch::tensors::get_default_dispatch_key(),   // default: CPU
+      torch::tensors::get_default_scalar_type(),    // deafult: float
       r));
   END_HANDLE_TH_ERRORS
 }
 ```
 
-随后调用`tensor_ctor`方法，以构造函数的方式创建tensor
+Then calls for `tensor_ctor`
 
 ```c++
 // torch/csrc/utils/tensor_new.cpp
@@ -77,11 +71,10 @@ Tensor tensor_ctor(
     PythonArgs& r) {
   // ...
   PyObject* data = r.pyobject(0);
-  // 如果用户没传dtype就是true，然后之后internal_new_from_data时会infer tensor的dtype
+  // if dtype not passed by user, `internal_new_from_data` will infer
   bool type_inference = r.isNone(1);
   bool pin_memory = r.toBool(3);
   bool args_requires_grad = r.toBool(4);
-  // 根据参数创建tensor，这里我们不详细展开
   auto new_tensor = internal_new_from_data(
       typeIdWithDefault(r, 2, dispatch_key),
       r.scalartypeWithDefault(1, scalar_type),
@@ -92,18 +85,18 @@ Tensor tensor_ctor(
       /*type_inference=*/type_inference,
       pin_memory);
   // ...
-  new_tensor.detach_();   // 确保new_tensor是一个叶子结点
+  new_tensor.detach_();   // ensure `new_tensor` is a leaf node
   new_tensor.set_requires_grad(args_requires_grad);
   return new_tensor;
   // ...
 }
 ```
 
-上面最关键的就是`new_tensor.detach_()`和`new_tensor.set_requires_grad(args_requires_grad);`
+The key functions are: `new_tensor.detach_()` and `new_tensor.set_requires_grad(args_requires_grad);`
 
-### `detach`与创建`AutogradMeta`
+### `detach` and `AutogradMeta`
 
-`new_tensor.detach_()`调用到
+`new_tensor.detach_()` calls `inline at::Tensor & Tensor::detach_()`
 
 ```c++
 // torch/include/ATen/core/TensorBody.h
@@ -112,7 +105,7 @@ inline at::Tensor & Tensor::detach_() const {
 }
 ```
 
-通过dispatch调用到`VariableTypeManual.cpp`，这里我们不详细展开dispatch的流程，有兴趣的小伙伴可以阅读笔者之前的文档[How_pytorch_call_ops](../how_pytorch_call_op_1/index.en.md)
+Through dispatch, it calls into `VariableTypeManual.cpp`. We won't delve into the dispatch process here. Those interested can read my previous document [deep_dive_into_contiguous(1)](../deep_dive_into_contiguous_1).
 
 ```c++
 // torch/csrc/autograd/VariableTypeManual.cpp
@@ -129,20 +122,22 @@ Tensor& detach_(c10::DispatchKeySet ks, Tensor& self) {
 }
 ```
 
-`detach`首先调用`materialize_autograd_meta`拿到`autograd_meta_`（如果不存在，则会给tensor初始化一个`std::make_unique<AutogradMeta>()`），然后将`requires_grad`, `grad_fn` 和 `output_nr`清空，实现将节点从计算图中detach出来。但此时还没有计算图，所以起到的是一个初始化的作用。
+`detach` first calls `materialize_autograd_meta` to get `autograd_meta_` (if it doesn't exist, it will initialize the tensor with `std::make_unique<AutogradMeta>()`), and then clears `requires_grad`, `grad_fn` and `output_nr` to detach the node from the computation graph. However, there is no computation graph at this point, so this serves an initialization role.
 
-我们看一下`AutogradMeta`的数据结构：
+Let's take a look at the data structure of `AutogradMeta`:
 
 ```c++
 // torch/csrc/autograd/variable.h
 struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
   std::string name_;
 
-  Variable grad_;                           // grad_，本质是一个 tensor
-  std::shared_ptr<Node> grad_fn_;           // 求导函数（节点）
-  std::weak_ptr<Node> grad_accumulator_;    // 梯度累加器，叶子结点使用
+  Variable grad_;                           // grad_, a tensor
+  std::shared_ptr<Node> grad_fn_;           // grad function (node)
+  // to accumulate grad, used by leaf node
+  std::weak_ptr<Node> grad_accumulator_;
 
-  std::shared_ptr<ForwardGrad> fw_grad_;    // 计算高阶导数时使用，存储前向梯度
+  // Used to compute higher-order derivatives, stores forward gradients.
+  std::shared_ptr<ForwardGrad> fw_grad_;
   std::vector<std::unique_ptr<FunctionPreHook>> hooks_;
   std::shared_ptr<hooks_list> cpp_hooks_list_;
 
@@ -150,7 +145,7 @@ struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
   bool retains_grad_{false};
   bool is_view_{false};
 
-  // output索引，如这个variable是一个function的第二个输出，那么output_nr = 1
+  // The output index, for example, if this variable is the second output of a function, then output_nr = 1.
   uint32_t output_nr_;
 
   // ...
@@ -170,11 +165,11 @@ struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
 };
 ```
 
-每个tensor（或者说**Variable**）都有一个**unique**的`autograd_meta`，用其存储自动求导所需的数据（如求导函数`grad_fn_`，梯度值`grad_`等）。值得指出的是，tensor本身声明时并不会初始化AutogradMeta，它是一个`nullptr`以尽可能减少开销，所有的`autograd_meta`都需要通过set方法显式设定，或者像上文那样通过`materialize_autograd_meta`初始化。
+Each tensor (or **Variable**) has a **unique** `autograd_meta`, which is used to store data required for automatic differentiation (such as the derivative function `grad_fn_`, gradient value `grad_`, etc.). It's worth noting that the tensor itself does not initialize AutogradMeta when it is declared. It is a `nullptr` to minimize overhead as much as possible. All `autograd_meta` need to be explicitly set through the set method, or initialized through `materialize_autograd_meta` as mentioned above.
 
-### `set_requires_grad`，tensor构造完成
+### `set_requires_grad`, tensor construction completed
 
-`detach_`执行完后，我们执行`set_requires_grad`给tensor设置属性
+After `detach_` is executed, we perform `set_requires_grad` to set attributes for the tensor.
 
 ```c++
 // torch/include/ATen/core/TensorBody.h
@@ -199,23 +194,23 @@ void TensorImpl::set_requires_grad(bool requires_grad) {
   // ...
   if (!requires_grad && !autograd_meta_)
     return;
-  if (!autograd_meta_)  // 上面detach_执行完后，autograd_meta_已经存在
+  if (!autograd_meta_)  // after detach_, autograd_meta_ has been initialized
     autograd_meta_ = impl::GetAutogradMetaFactory()->make();
   autograd_meta_->set_requires_grad(requires_grad, this);
 }
 ```
 
-即通过`Tensor(TensorBody)` -> `TensorBase` -> `TensorImpl` -> `autograd_meta_->set_requires_grad()`这一路径设置`autograd_meta`的参数，并没有什么特别的。
+Setting the `autograd_meta` parameters through the `Tensor(TensorBody)` -> `TensorBase` -> `TensorImpl` -> `autograd_meta_->set_requires_grad()` path, which is fairly straightforward.
 
-到目前为止，我们的tensor就已经创建好了，并成功在`TensorImpl`里初始化了`requires_grad`为True的`autograd_meta_`。
+Up to this point, our tensor has been created, and the `autograd_meta_` with `requires_grad` set to `True` has been successfully initialized in `TensorImpl`.
 
-## 前向计算`y = x * x`，构建计算图
+## Forward computation `y = x * x`, constructing the computation graph
 
-### dispatch到AutogradCPU：`mul_Tensor`
+### Dispatch to AutogradCPU: `mul_Tensor`
 
-我们看引入例子中的下一条语句`y = x * x`
+Let's look at the next statement in the example, `y = x * x`
 
-经过mul算子的dispatch(dispatch key为`AutogradCPU`)到`torch/csrc/autograd/generated/VariableType_0.cpp`（生成的代码，需要编译才能得到）
+After the dispatch of the mul operator (the dispatch key is `AutogradCPU`), it goes to `torch/csrc/autograd/generated/VariableType_0.cpp` (generated code, you need to compile pytorch to get it).
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_0.cpp
@@ -227,7 +222,7 @@ at::Tensor mul_Tensor(c10::DispatchKeySet ks, const at::Tensor & self, const at:
   
   std::shared_ptr<MulBackward0> grad_fn;
   if (_any_requires_grad) {
-    // 如果有tensor requires_grad，生成grad fn
+    // generate grad_fn
     grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);
     grad_fn->set_next_edges(collect_next_edges( self, other ));
     if (grad_fn->should_compute_output(0)) {
@@ -254,9 +249,9 @@ at::Tensor mul_Tensor(c10::DispatchKeySet ks, const at::Tensor & self, const at:
 }
 ```
 
-### 构建`grad_fn`（`Node`）
+### Construct `grad_fn` (`Node`)
 
-注意`grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);`，这里`MulBackward0`是什么呢？
+Note `grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);`. What is `MulBackward0` here?
 
 ```c++
 // torch/include/torch/csrc/autograd/generated/Functions.h
@@ -285,7 +280,7 @@ struct TraceableFunction : public Node {
 
 struct TORCH_API Node : std::enable_shared_from_this<Node> {
  public:
-  /// 基于next_edges创建node，下一个构造函数调用了上面这个构造函数
+    // A node is created based on next_edges, and the next constructor calls the constructor above.
     explicit Node(uint64_t sequence_nr, edge_list&& next_edges = edge_list())
       : sequence_nr_(sequence_nr), next_edges_(std::move(next_edges)) {
     for (const Edge& edge : next_edges_) {
@@ -299,21 +294,21 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
 }
 ```
 
-这里`MulBackward0`是一个**Node**
+Here, `MulBackward0` is a **Node**.
 
-我们重点介绍一下**Node**：
+Let's focus on the **Node**:
 
-- `Node`是一个抽象基类，所有的pytorch autograd机制中的**function**（如上文的`MulBackward0`）都继承这个类并重写其**apply**方法。
+- `Node` is an abstract base class, all **functions** in the PyTorch autograd mechanism (like `MulBackward0` above) inherit this class and override its **apply** method.
 
-- 在计算图中，`Node`通过**Edge**（<`Node`, `input_nr`>对表示）与其他`Node`连接。`Variable`通过`Edge`在节点间传导。值得指出的是，当有两条或更多来自不同`Node`的`Edge`作为输入指向同一个`Node`时，所有在这些`Edge`上产生的梯度会被`Node`隐式求和。
+- In the computation graph, `Node` connects with other `Nodes` through **Edges** (represented by <`Node`, `input_nr`> pairs). `Variable` is propagated between nodes through `Edge`. It's worth noting that when two or more edges from different `Nodes` point to the same `Node` as inputs, all gradients generated on these edges will be implicitly summed by the `Node`.
 
-- `Node`可支持任意输入输出，如`AccumulateGrad`有多个输入但没有输出，如`GraphRoot`没有输入但有多个输出。输入输出的数量可以通过`num_inputs()`和`num_outputs()`来确定
+- `Node` can support arbitrary inputs and outputs. For example, `AccumulateGrad` has multiple inputs but no outputs, while `GraphRoot` has no inputs but multiple outputs. The number of inputs and outputs can be determined by `num_inputs()` and `num_outputs()`.
 
-- `Node`可以用`next_edge()`方法获取所有的输出边，或调用`next_edge(index)`来获取具体的边，可以用`add_next_edge()`设置边等，这些方法常在**JIT**中使用。
+- `Node` can use the `next_edge()` method to get all output edges, or call `next_edge(index)` to get a specific edge. It can also use `add_next_edge()` to set edges, etc. These methods are often used in **JIT**.
 
-- 每个`Node`都有一个按照`Node`构造顺序单调递增的**sequence number**，但这个单调递增**只在当前线程生效**，如果`Node` A、B 在线程1创建，`Node` C在线程2创建，那么C的sequence number与A、B的完全无关。
+- Each `Node` has a **sequence number** that monotonically increases according to the order in which the `Node` is constructed. However, this monotonic increase **only takes effect in the current thread**. If `Node` A and B are created in thread 1, and `Node` C is created in thread 2, then the sequence number of C is completely unrelated to A and B.
 
-- `Node`有以下数据成员：
+- `Node` has the following data members:
 
 ```c++
 struct TORCH_API Node : std::enable_shared_from_this<Node> {
@@ -322,56 +317,58 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
   uint64_t topological_nr_ = 0;
   mutable bool has_parent_ = false;
 
-  // autograd的Node并非线程安全，用户需要在调用`release_variables()`、`apply()`时考虑
-  // 使用锁，注意这不能保证hook是线程安全的，pytorch需要用户自己注册线程安全的hook代码如果
-  // 用户希望hook在多线程环境中能得到正确的结果。
+  // The Node in autograd is not thread-safe, users need to consider 
+  // using locks when calling `release_variables()`, `apply()`.
+  // Note that this cannot ensure that hooks are thread-safe, 
+  // PyTorch requires users to register thread-safe hook code themselves
+  // if they want the hooks to get correct results in a multi-threaded environment.
   uint64_t thread_id_ = 0;
   std::mutex mutex_;
   
   edge_list next_edges_;
 
-  // 存储一个python对象弱引用，通过此调用在python中定义的自动微分操作
+  // Store a weak reference to a Python object, so we can call autograd operations defined in Python through this.
   PyObject* pyobj_ = nullptr;
-  // 异常元数据，存储异常相关的额外信息
+  // Exception metadata, store additional information related to the exception.
   std::unique_ptr<AnomalyMetadata> anomaly_metadata_ = nullptr;
 
-  // Node被执行时才调用的hook
+  // Hooks that are called when the Node is executed.
   std::vector<std::unique_ptr<FunctionPreHook>> pre_hooks_;
-  // 即使Node没有执行，只要流到此处也会调用
+  // Will be called even if the Node is not executed, as long as the flow reaches here.
   std::vector<std::unique_ptr<FunctionPreHook>> tensor_pre_hooks_;
-  // 类似tensor_pre_hooks_，但在所有tensor_pre_hooks_调用后才会调用
+  // Similar to tensor_pre_hooks_, but will be called after all tensor_pre_hooks_ have been called.
   std::unordered_map<int, std::unique_ptr<FunctionPreHook>> retains_grad_hooks_;
-  // Node执行完后调用
+  // Called after the Node is executed.
   std::vector<std::unique_ptr<FunctionPostHook>> post_hooks_;
   at::SmallVector<InputMetadata, 2> input_metadata_;
 };
 ```
 
-其中，**sequence_nr_**用于确定backward task的优先级，越晚创建的Node `sequence_nr_`越大，意味着在反向执行优先级越高（这一点可以和下文优先队列一起看）。
+Among them, **sequence_nr_** is used to determine the priority of the backward task. The later the Node is created, the larger the `sequence_nr_` is, meaning that it has a higher priority in reverse execution (this can be seen together with the priority queue below).
 
-值得指出的是，`AccumulateGrad`的`sequence_nr_`被显式设定为**UINT64_MAX**，这意味着只要队列中有`AccumulateGrad`（且其他条件相同），那么优先给AccumulateGrad计算梯度，这样可以快速清空队列，提高运行效率。
+It's worth pointing out that the `sequence_nr_` of `AccumulateGrad` is explicitly set to **UINT64_MAX**, which means that as long as there is `AccumulateGrad` in the queue (and other conditions are the same), the gradient is calculated for AccumulateGrad first, which can quickly clear the queue and improve running efficiency.
 
-此外，**topological_nr_**表示这个节点到任何叶节点最长的路径长度，如AccumulateGrad该值就为0。
+In addition, **topological_nr_** represents the longest path length from this node to any leaf node, for example, the value for AccumulateGrad is 0.
 
-对于图中任意节点X、Y，如果存在X到Y的路径则有`topo_nr(X) > topo_nr(Y)`，但反过来不成立。换句话说，我们可以通过`topo_nr(X) <= topo_nr(Y)`来直接判断不存在X到Y的路径
+For any nodes X and Y in the graph, if there is a path from X to Y, `then topo_nr(X) > topo_nr(Y)`, but the reverse is not true. In other words, we can directly determine that there is no path from X to Y through `topo_nr(X) <= topo_nr(Y)`.
 
-但注意，使用`topological_nr`有一个假设，即一旦一个节点被使用过（存在父节点），那么它的`topological_nr`不能改变，pytorch中使用`has_parent_`来强制校验这一点。为什么不能被改变呢？例如：
+But note that using `topological_nr` has an assumption, that is, once a node is used (there is a parent node), its `topological_nr` cannot change. PyTorch uses `has_parent_` to enforce this point. Why can't it change? For example:
 
 ```c++
 //   1) 2 -> 1 -> 0
 //   2)        2 -> 1 -> 0
 //            /
-//      2 -> 1 -> 0        这里添加了一个2作为1的next_edge，尽管1已经有parent了 
+//      2 -> 1 -> 0        Here an additional 2 is added as the next_edge of 1, although 1 already has a parent
 //   3)        2 -> 1 -> 0
 //            /
-//      2 -> 3 -> 0        这里2 < 3，但显然有一条2到3的路径
+//      2 -> 3 -> 0        Here 2 < 3, but there is obviously a path from 2 to 3
 ```
 
-创建好`Node`后，我们回到`grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);`继续往下走
+After the `Node` is created, we go back to `grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);` and continue.
 
-### 给`grad_fn`设置`Edge`
+### Setting `Edge` for `grad_fn`
 
-首先调用`collect_next_edges`，返回variables的所有`next_edges`，注意这里使用了`...`的模板编程，把`(self, other)`封成了一个`variables`传参，随后调用`MakeNextFunctionList`（继承自**IterArgs**）的apply方法递归迭代参数包`variables`。
+First, call `collect_next_edges`, return all `next_edges` of variables. Note that here the template programming of `...` is used to encapsulate `(self, other)` into a `variables` parameter, and then call the apply method of `MakeNextFunctionList` (inherited from **IterArgs**) to recursively iterate the parameter package `variables`.
 
 ```c++
 // torch/include/torch/csrc/autograd/function.h
@@ -379,14 +376,15 @@ template <typename... Variables>
 edge_list collect_next_edges(Variables&&... variables) {
   detail::MakeNextFunctionList make;
   make.apply(std::forward<Variables>(variables)...);
-  return std::move(make.next_edges);    // 这里move转移所有权，使用移动语义而无需copy
+  // Here, move transfers ownership, using move semantics without the need for a copy
+  return std::move(make.next_edges);
 }
 
 // aten/src/ATen/core/Variadic.h
 struct IterArgs {
   template <typename T, typename... Args>
   inline F& apply(T&& arg, Args&&... args) {
-    // 先解析一个arg，然后递归解析所有args
+    // Parse an arg first, then recursively parse all args
     self()(std::forward<T>(arg));
     if (self().short_circuit()) {
       return self();
@@ -397,11 +395,12 @@ struct IterArgs {
 }
 ```
 
-这里经过模板及完美转发后来到`MakeNextFunctionList`的`()`重载符中。
+Here, after template and perfect forwarding, we arrive at the `()` overload symbol in `MakeNextFunctionList`.
 
 ```c++
 // torch/include/torch/csrc/autograd/function.h
-// `collect_next_edges`的实际函数体，经过上面拆包，这里进来的参数已经是单个variable了
+// The actual function body of `collect_next_edges`, after unpacking above,
+// the parameter that comes in here is already a single variable
 struct MakeNextFunctionList : IterArgs<MakeNextFunctionList> {
   edge_list next_edges;
   using IterArgs<MakeNextFunctionList>::operator();
@@ -416,9 +415,10 @@ struct MakeNextFunctionList : IterArgs<MakeNextFunctionList> {
 
 // torch/csrc/autograd/variable.cpp
 Edge gradient_edge(const Variable& self) {
-  // 如果拿到的grad_fn为nullptr（如叶子结点的情况），我们就返回一个`grad_accumulator`
-  // （AccumulateGrad）的edge，它会将所有入边的梯度求和并累积到变量的grad属性中。
-  // 注意只有`requires_grad = True`的叶子节点才会有AccumulateGrad
+  // If the obtained grad_fn is nullptr (such as in the case of leaf nodes),
+  // we return an edge of `grad_accumulator` (AccumulateGrad), 
+  // which will sum all the gradients of the incoming edges and accumulate them into the grad attribute of the variable.
+  // Note that only leaf nodes with `requires_grad = True` will have AccumulateGrad
   if (const auto& gradient = self.grad_fn()) {
     return Edge(gradient, self.output_nr());
   } else {
@@ -427,7 +427,7 @@ Edge gradient_edge(const Variable& self) {
 }
 ```
 
-此处我们会走下面的分支创建给mul的两个tensor参数self和other设置`grad_accumulator`
+At this point, we will go down the else branch to create and set `grad_accumulator` for the two tensor parameters `self` and `other` of the mul operation.
 
 ```c++
 // torch/csrc/autograd/variable.cpp
@@ -435,7 +435,7 @@ std::shared_ptr<Node> grad_accumulator(const Variable& self) {
   auto autograd_meta = get_autograd_meta(self);
   // ...
 
-  // intrusive_ptr是一种pytorch引用计数的智能指针
+  // intrusive_ptr is a kind of smart pointer for PyTorch reference counting
   c10::raw::intrusive_ptr::incref(self.unsafeGetTensorImpl());
   auto intrusive_from_this =
       c10::intrusive_ptr<at::TensorImpl>::reclaim(self.unsafeGetTensorImpl());
@@ -446,7 +446,7 @@ std::shared_ptr<Node> grad_accumulator(const Variable& self) {
 }
 ```
 
-我们这里也介绍一下`Edge`数据结构，其有两个重要数据成员，一个是`function`：指向一个`Node`的智能指针，一个是`input_nr`：用于标识这条边对应的输入在function节点中所有输入中的位置。例如，`function`节点有3个输入（即有三条edge指向这个节点）（这里的输入指的是grad_output，即上一个节点反向传进来的梯度），`input_nr`可能是0、1或2，假设其为1，则表示这条边是这个节点三条入边中的第二条。
+Here, we also introduce the `Edge` data structure, which has two important data members, one is `function`: a `std::shared_ptr` pointing to a `Node`, and the other is `input_nr`: used to identify the position of the input corresponding to this edge among all inputs in the function node. For example, if the `function` node has 3 inputs (i.e., there are three edges pointing to this node) (here the input refers to the gradient passed back from the previous node), `input_nr` could be 0, 1, or 2. If it is 1, it means that this edge is the second of the three incoming edges to this node.
 
 ```c++
 // torch/include/torch/csrc/autograd/edge.h
@@ -461,7 +461,7 @@ struct Edge {
 };
 ```
 
-`grad_accumulator`的Edge创建好后返回，然后解析第二个variable，同样过程后返回到`collect_next_edges`，一共收集到两条edge。
+After the Edge of `grad_accumulator` is created, then the second variable is parsed. After the same process, it is returned to `collect_next_edges`, and two edges are collected in total.
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_0.cpp
@@ -471,13 +471,13 @@ struct Edge {
   }
 ```
 
-随后调用`grad_fn->set_next_edges`给`grad_fn`（mulbackward）设置上这些收集到的edge。注意`update_topological_nr`，其原理我们在上面介绍`Node`数据成员已经介绍。
+Then, call `grad_fn->set_next_edges` to set these collected edges for `grad_fn` (mulbackward). Note `update_topological_nr`, the principle of which we have already introduced when introducing the data members of `Node`.
 
 ```c++
 // torch/include/torch/csrc/autograd/function.h
 struct TORCH_API Node : std::enable_shared_from_this<Node> {
   void set_next_edges(edge_list&& next_edges) {
-    next_edges_ = std::move(next_edges);    // 仍然是移动语义并转移所有权，避免复制
+    next_edges_ = std::move(next_edges);
     for (const auto& next_edge : next_edges_) {
       update_topological_nr(next_edge);
     }
@@ -499,14 +499,15 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
   }
 
   uint64_t topological_nr() const noexcept {
-    // 在设置edge时调用，被调用说明一定有parent，可直接设置变量`has_parent_`
+    // Called when setting an edge. Since it is called, it must have a parent,
+    // so the variable `has_parent_` can be directly set.
     has_parent_ = true;
     return topological_nr_;
   }
 }
 ```
 
-`set_next_edges`后，我们调用`should_compute_output`判断edge是否有function（需要计算梯度），这里特别注意，`should_compute_output(0)`（对应self edge）时我们保存`grad_fn->other_`，`should_compute_output(1)`（对应other edge）时我们保存`grad_fn->self_`，这是因为mul backward本质是梯度互换。
+After `set_next_edges`, we call `should_compute_output` to determine whether the edge has a function (needs to compute gradient). Particularly note that when `should_compute_output(0)` (corresponding to the self edge) we save `grad_fn->other_`, and when `should_compute_output(1)` (corresponding to the other edge) we save `grad_fn->self_`. This is because the essence of mul backward is gradient exchange.
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_0.cpp
@@ -526,7 +527,7 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
   }
 ```
 
-### redispatch与**guard**
+### Redispatch and **Guard**
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_0.cpp
@@ -537,9 +538,9 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
   auto result = std::move(_tmp);
 ```
 
-随后我们调用匿名函数`tmp`来redispatch mul op，首先声明RAII的`at::AutoDispatchBelowADInplaceOrView guard`将`autograd_dispatch_keyset_with_ADInplaceOrView`（包含AutogradFunctionality、AutogradOther、AutogradNestedTensor、ADInplaceOrView四种dispatch key）加入到local thread的exclude list中，确保本次调用全链路都不会再dispatch到这四种key上。
+Next, we call the anonymous function `tmp` to redispatch the mul op. We first declare the RAII `at::AutoDispatchBelowADInplaceOrView guard` to add `autograd_dispatch_keyset_with_ADInplaceOrView` (which includes AutogradFunctionality, AutogradOther, AutogradNestedTensor, ADInplaceOrView four types of dispatch keys) to the exclude list of the local thread, ensuring that this call will not be dispatched to these four types of keys throughout the entire link.
 
-我们举个例子，修改`tools/autograd/gen_variable_type.py`关闭guard后重新编译pytorch，执行`export TORCH_SHOW_DISPATCH_TRACE=1`打印dispatch trace，重新执行我们上面引入的代码，得到其中一段输出
+Let's give an example. We modify `tools/autograd/gen_variable_type.py` to turn off guard and recompile PyTorch, execute `export TORCH_SHOW_DISPATCH_TRACE=1` to print the dispatch trace, and re-execute the example code above to get one part of the output.
 
 ```bash
 # ...
@@ -556,7 +557,7 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
 # ...
 ```
 
-而如果没有关闭guard，原生pytorch执行会得到输出
+However, if we do not turn off the guard, executing the original PyTorch will yield the output.
 
 ```bash
 # ...
@@ -571,13 +572,13 @@ struct TORCH_API Node : std::enable_shared_from_this<Node> {
 # ...
 ```
 
-我们可以很清晰地看出，关闭guard后对于abs操作会重新dispatch到`AutogradCPU`和`ADInplaceOrView`上，产生了不必要的操作。
+We can clearly see that after turning off the guard, the `abs` operation will be redispatched to `AutogradCPU` and `ADInplaceOrView`, generating unnecessary operations.
 
-然后计算新的dispatch key注意此处ks为`DispatchKeySet(CPU, AutogradCPU)`，`c10::after_autograd_keyset`为`"DispatchKeySet(CPU, CUDA, HIP, XLA, ...`，两者相&后得到`DispatchKeySet(CPU)`，即我们下一个mul会调度到cpu的算子上，即`wrapper_CPU_mul_Tensor`
+Then we compute the new dispatch key. Note that here ks is `DispatchKeySet(CPU, AutogradCPU)`, `c10::after_autograd_keyset` is `"DispatchKeySet(CPU, CUDA, HIP, XLA, ...`, and the bitwise AND of the two yields `DispatchKeySet(CPU)`. That is, our next mul will be dispatched to the CPU operator, i.e., `wrapper_CPU_mul_Tensor`.
 
-### Structured kernel与stub
+### Structured kernel and Stub
 
-`wrapper_CPU_mul_Tensor`本质是一个**structured kernel**，其关键方法为`.meta`和`.impl`
+The `wrapper_CPU_mul_Tensor` is essentially a **structured kernel**, with its key methods `.meta` and `.impl`.
 
 ```c++
 // build/aten/src/ATen/RegisterCPU.cpp
@@ -599,15 +600,16 @@ struct TORCH_API structured_mul_Tensor : public TensorIteratorBase {
 };
 ```
 
-`structured_mul_out_functional`本质是继承**TensorIterator**，它的两个function`meta`和`impl`通过宏定义重写。
+The `structured_mul_out_functional` is essentially an inheritance from **TensorIterator**. Its two functions, `meta` and `impl`, are overridden via macro definitions.
 
 ```c++
 // aten/src/ATen/native/BinaryOps.cpp
 TORCH_META_FUNC2(mul, Tensor) (
-// 本质是void structured_mul_Tensor::meta (
+// void structured_mul_Tensor::meta (
   const Tensor& self, const Tensor& other
 ) {
-  // maybe_get_output()拿到structured_mul_out_functional op默认的output_(undefined), 然后走`build_borrowing_binary_op`即tensor iterator infer使其defined
+  // maybe_get_output() retrieves the default output_ (undefined) of the structured_mul_out_functional op
+  // then follows `build_borrowing_binary_op`, i.e., tensor iterator infer, to make it defined
   build_borrowing_binary_op(maybe_get_output(), self, other);
 }
 
@@ -621,20 +623,20 @@ void TensorIteratorBase::build_borrowing_binary_op(
 }
 ```
 
-`meta`调用后创建好了**TensorIterator**，这也是个很重要的类，我们这里不具体展开，有兴趣的同学可以参考笔者之前的文章[How_pytorch_call_ops](../how_pytorch_call_op_3/index.en.md)
+After calling `meta`, a **TensorIterator** is created. This is also a very important class, which we will not go into detail here. Those interested can refer to my previous article [deep_dive_into_contiguous(3)](../deep_dive_into_contiguous_3).
 
-随后调用`impl`方法，这里`mul_stub`是一个`struct`，继承自**DispatchStub**并填写好了对应模板。
+Then call the `impl` method. Here, `mul_stub` is a `struct` that inherits from **DispatchStub** and has the corresponding template filled in.
 
 ```c++
 // aten/src/ATen/native/BinaryOps.cpp
-DEFINE_DISPATCH(mul_stub);      // 宏展开：struct mul_stub mul_stub
+DEFINE_DISPATCH(mul_stub);      // struct mul_stub mul_stub
 
 TORCH_IMPL_FUNC(mul_out) (
-  // 宏展开：void structured_mul_out::impl(
+  // void structured_mul_out::impl(
   const Tensor& self, const Tensor& other, const Tensor& result
 ) {
-  // device_type()直接取tensor iterator里拿infer好的device
-  // this是structured_mul_out实例
+  // device_type() directly retrieves the inferred device from within the tensor iterator
+  // `this` is an instance of structured_mul_out
   mul_stub(device_type(), *this);
 }
 
@@ -648,7 +650,7 @@ DECLARE_DISPATCH(structured_binary_fn, mul_stub);
 extern __attribute__((__visibility__("default"))) struct mul_stub mul_stub */
 ```
 
-对于pytorch的各种stub，统一会走到`aten/src/ATen/native/DispatchStub.h`，根据设备选择合适的调用方法。
+For all kinds of **stub** in PyTorch, they will uniformly go to `aten/src/ATen/native/DispatchStub.h`, and choose the appropriate call method based on the device.
 
 ```c++
 template <typename rT, typename T, typename... Args>
@@ -660,7 +662,8 @@ private:
     return reinterpret_cast<FnPtr>(
       impl.get_call_ptr(device_type
       , reinterpret_cast<void*>(DEFAULT)
-// 选择指令集，对于CPU，AVX2、AVX512这种都是intel的指令集，pytorch会自动选择更优化的指令集
+// Select the instruction set. CPU, AVX2, AVX512, etc. are all Intel's instruction sets.
+// PyTorch will automatically select the more optimized instruction set.
 #ifdef HAVE_AVX2_CPU_DEFINITION
       , reinterpret_cast<void*>(AVX2)
 #endif
@@ -680,7 +683,7 @@ private:
 }
 ```
 
-通过`get_call_ptr`我们拿到了`mul_kernel`的指针，随后调用
+Through `get_call_ptr`, we get the pointer to `mul_kernel`, and then call it.
 
 ```c++
 // aten/src/ATen/native/cpu/BinaryOpsKernel.cpp
@@ -704,11 +707,11 @@ void mul_kernel(TensorIteratorBase& iter) {
 }
 ```
 
-这里传了`tensor iterator`和若干匿名函数给到`cpu_kernel_vec`向量化方法，然后拆分loop进行循环vec调用，这一部分内容在笔者之前的文章中有详细介绍，我们这里也不进行展开。
+Here, `tensor iterator` and several anonymous functions are passed to the `cpu_kernel_vec` vectorization method, and then the loop is split and vectorized calls are made. This part of the content has been detailed in my previous articles, so we will not expand on it here.
 
-### `set_history`，计算图构建完成
+### `set_history`, Completion of Calculation Graph Construction
 
-我们这么多调用栈下来，外围还在`_tmp`方法中，执行完`_tmp`方法后，我们拿到了前向result
+After executing the `_tmp` method, we get the forward result.
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_0.cpp
@@ -721,7 +724,7 @@ at::Tensor mul_Tensor(c10::DispatchKeySet ks, const at::Tensor & self, const at:
   auto result = std::move(_tmp);
   // ...
   if (grad_fn) {
-      // 将tensor封成一个variable list
+      // Encapsulate the tensor into a variable list
       set_history(flatten_tensor_args( result ), grad_fn);
   }
   // ...
@@ -729,7 +732,7 @@ at::Tensor mul_Tensor(c10::DispatchKeySet ks, const at::Tensor & self, const at:
 }
 ```
 
-随后我们调用`set_history`，这一步在构建计算图中很关键，它给`result`设置了`autograd_meta`存储`grad_fn`用于检索。
+Then we call `set_history`, which is a key step in building the computation graph. It sets `grad_fn` of `result` for retrieval.
 
 ```c++
 // torch/csrc/autograd/functions/utils.h
@@ -738,13 +741,13 @@ inline void set_history(
     const std::shared_ptr<Node>& grad_fn) {
   AT_ASSERT(grad_fn);
   if (variable.defined()) {
-    // 检查tensor是可求导的dtype
+    // Check if the tensor has a differentiable dtype
     TORCH_INTERNAL_ASSERT(isDifferentiableType(variable.scalar_type()));
-    // 将variable存储进grad_fn(Node)的input_metadata_，返回其索引
-    // 我们这里得到0，即意味着variable是该node的第一个输入
+    // Store the variable in the input_metadata_ of grad_fn and return its index
+    // Here we get 0, which means that variable is the first input of this node
     auto output_nr = grad_fn->add_input_metadata(variable);
-    // {grad_fn, output_nr}构造了一个新edge
-    // 然后用这个edge给variable设置 autograd_meta
+    // {grad_fn, output_nr} constructs a new edge
+    // Then use this edge to set autograd_meta for the variable
     impl::set_gradient_edge(variable, {grad_fn, output_nr});
   } else {
     grad_fn->add_input_metadata(Node::undefined_input());
@@ -753,7 +756,7 @@ inline void set_history(
 
 // torch/csrc/autograd/variable.cpp
 void set_gradient_edge(const Variable& self, Edge edge) {
-  // 如果variale self没有定义autograd meta，那么这里进行设置
+  // If the variable self has not defined autograd meta, then set it here
   auto* meta = materialize_autograd_meta(self);
   meta->grad_fn_ = std::move(edge.function);
   meta->output_nr_ = edge.input_nr;
@@ -761,10 +764,10 @@ void set_gradient_edge(const Variable& self, Edge edge) {
 }
 ```
 
-到此为止，乘法算子的前向运算就全部执行完成了，包括
+Up to this point, the forward computation of the multiplication operator has been fully executed, including:
 
-1. `grad_fn`的`next_edges`指向前向输入`self`和`other`（`AccumulateGrad`）
-2. `grad_fn`的`input_metadata_`存储了前向`result`
-3. `grad_fn`绑定到前向`result` Tensor的**autograd_meta_**上
+1. The `next_edges` of `grad_fn` point to the forward inputs `self` and `other` (`AccumulateGrad`)
+2. The `input_metadata_` of `grad_fn` stores the forward `result`
+3. `grad_fn` is bound to the **autograd_meta_** of the forward `result` Tensor
 
-完成这些操作后，我们就可以调用`result.backward()`，即通过tensor的`autograd_meta_`找到`grad_fn`并进行反向运算了。
+After these operations are completed, we can call `result.backward()`, i.e., find `grad_fn` through the `autograd_meta_` of the tensor and perform backward computation.

@@ -1,6 +1,6 @@
 ---
 title: "Deep Dive to Pytorch AutoGrad(1)"
-date: 2023-07-04T10:49:42+08:00
+date: 2023-07-04T10:48:42+08:00
 categories: ["pytorch"]
 summary: "本文深入pytorch autograd底层，详细介绍了autograd机制的实现细节。"
 ---
@@ -31,7 +31,7 @@ print(x.grad)  # tensor([6.])，y = x^2，dy/dx = 2x
 
 ### `tensor_ctor`构造tensor
 
-执行`x = torch.tensor([3.], requires_grad=True)`时，首先调用到python层与c++层的tensor creator处：
+执行`x = torch.tensor([3.], requires_grad=True)`时，首先调用到tensor creator处：
 
 ```c++
 // torch/csrc/autograd/python_torch_functions_manual.cpp
@@ -108,7 +108,7 @@ inline at::Tensor & Tensor::detach_() const {
 }
 ```
 
-通过dispatch调用到`VariableTypeManual.cpp`，这里我们不详细展开dispatch的流程，有兴趣的小伙伴可以阅读笔者之前的文档[How_pytorch_call_ops](../how_pytorch_call_op_1/index.en.md)
+通过dispatch调用到`VariableTypeManual.cpp`，这里我们不详细展开dispatch的流程，有兴趣的小伙伴可以阅读笔者之前的文档[deep_dive_into_contiguous(1)](../deep_dive_into_contiguous_1)
 
 ```c++
 // torch/csrc/autograd/VariableTypeManual.cpp
@@ -640,7 +640,7 @@ void TensorIteratorBase::build_borrowing_binary_op(
 }
 ```
 
-`meta`调用后创建好了**TensorIterator**，这也是个很重要的类，我们这里不具体展开，有兴趣的同学可以参考笔者之前的文章[How_pytorch_call_ops](../how_pytorch_call_op_1/index.en.md)
+`meta`调用后创建好了**TensorIterator**，这也是个很重要的类，我们这里不具体展开，有兴趣的同学可以参考笔者之前的文章[deep_dive_into_contiguous(3)](../deep_dive_into_contiguous_3)
 
 随后调用`impl`方法，这里`mul_stub`是一个struct，继承自`DispatchStub`并填写好了对应模板。
 

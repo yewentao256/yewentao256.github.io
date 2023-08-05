@@ -5,17 +5,11 @@ categories: ["pytorch"]
 summary: "This article introduces the implementation details of pytorch autograd mechanism."
 ---
 
-## To be translated
+## Backward Propagation, `y.backward()`
 
-Oh Sorry!
+### Python Layer `Tensor.backward` Encapsulation
 
-This blog has't been translated to English, please wait for a little while...
-
-## 反向求导，`y.backward()`
-
-### python层`Tensor.backward`封装
-
-python层调用`tensor.backward()`不会直接调用到c++层，而是在python层做了一些处理
+When we call `tensor.backward()`, it does not directly call the C++ layer, but does some processing in the Python layer.
 
 ```py
 # torch/_tensor.py
@@ -24,13 +18,13 @@ class Tensor(torch._C._TensorBase):
         self, gradient=None, retain_graph=None, create_graph=False, inputs=None
     ):
       r"""
-        Args:
-            gradient (Tensor or None): grad_output，没传可以当成1，如本文例子中
-              如果传入`torch.tensor([2.0])`，则x.grad结果会变为12
-            retain_graph (bool, optional): 是否保留计算图，一般情况下都不需要设置
-            create_graph (bool, optional): 是否为导数创建计算图，以用于计算高阶导数，我们下文用一个例子来展开说明此参数
-            inputs (sequence of Tensor): 只计算指定inputs的梯度，其他tensor（即使是叶子节点）的梯度会被忽略
+      Args:
+          gradient (Tensor or None): grad_output, if not passed, can be considered as 1
+          retain_graph (bool, optional): Whether to retain the computation graph, it is generally not necessary to set this
+          create_graph (bool, optional): Whether to create a computation graph for derivatives to compute higher-order derivatives, we will explain this parameter with an example below
+          inputs (sequence of Tensor): Only computes the gradients of specified inputs, the gradients of other tensors (even if they are leaf nodes) will be ignored
         """
+
       # ...
         torch.autograd.backward(
             self, gradient, retain_graph, create_graph, inputs=inputs
@@ -54,7 +48,7 @@ def backward(
         allow_unreachable=True, accumulate_grad=True)
 ```
 
-`create_graph`参数用于指明是否为导数创建计算图以计算高阶导数，例如：
+The `create_graph` parameter is used to indicate whether to create a computation graph for derivatives to compute higher-order derivatives, for example:
 
 ```py
 import torch
@@ -64,17 +58,19 @@ y = x * x
 y.backward(create_graph=True)
 print(x.grad)   # tensor([6.])
 
-grad1 = x.grad.clone()  # 在新的计算图上计算二阶导
-# x.grad.zero_()  清空x的梯度
+# Calculate the second derivative on a new computation graph
+grad1 = x.grad.clone() 
+# x.grad.zero_()  # Clear the gradient of x
 grad1.backward()
 
-# y = x^2，二阶导结果为2
-print(x.grad)    # 根据是否清空x的梯度，得到tensor([2.])或tensor([8.])
+# y = x^2, the result of the second derivative is 2
+# Depending on whether the gradient of x is cleared, the result is either tensor([2.]) or tensor([8.])
+print(x.grad)
 ```
 
-### 解析python参数，调用`Engine::execute`
+### Parsing Python Parameters, Calling `Engine::execute`
 
-然后运行到`python_engine.cpp`，解析python参数，拆成cpp所需数据结构
+Then it runs to `python_engine.cpp`, parses the Python parameters, and breaks them down into data structures required by C++ internal functions.
 
 ```c++
 // torch/csrc/autograd/python_engine.cpp
@@ -83,7 +79,6 @@ PyObject* THPEngine_run_backward(
     PyObject* args,
     PyObject* kwargs) {
 
-  // 解析python参数...
   bool backward_api_called = accumulate_grad;
   // ...
 
@@ -91,7 +86,7 @@ PyObject* THPEngine_run_backward(
   roots.reserve(num_tensors);
   variable_list grads;
   grads.reserve(num_tensors);
-  // 将参数存储在`edge_list roots`和`variable_list grads`中
+  // Store params in `edge_list roots` and `variable_list grads`
   for (const auto i : c10::irange(num_tensors)) {
     PyObject* _tensor = PyTuple_GET_ITEM(tensors, i);
     // ...
@@ -106,8 +101,7 @@ PyObject* THPEngine_run_backward(
       // ...
       grads.push_back(grad_var);
     }
-
-    // 如果backward时有指定inputs（只计算这些inputs的梯度），收集output edges
+    // If inputs are specified during backward (only compute the gradients of these inputs), collect output edges
     std::vector<Edge> output_edges;
     if (inputs != nullptr) {
       // ...
@@ -127,7 +121,7 @@ PyObject* THPEngine_run_backward(
           output_edges);
     }
 
-    // 如果backward时指定了inputs且accumulate_grad为false，生成返回值返回
+    // If inputs are specified and accumulate_grad is false, generate return values and return
     if (!backward_api_called && inputs != nullptr) {
       // ...
       return py_outputs.release();
@@ -139,7 +133,7 @@ PyObject* THPEngine_run_backward(
 }
 ```
 
-注意`auto gradient_edge = torch::autograd::impl::gradient_edge(variable);`，此处variable的`grad_fn`为`MulBackward0`，`output_nr`为0（可以和上文对照`set_history`起来看），随后将这条新边加入到`edge_list roots`中
+Note `auto gradient_edge = torch::autograd::impl::gradient_edge(variable);`, here the `grad_fn` of the variable is `MulBackward0`, `output_nr` is 0 (you can get it with `set_history` in the previous section), then this new edge is added to `edge_list roots`.
 
 ```c++
 Edge gradient_edge(const Variable& self) {
@@ -151,9 +145,9 @@ Edge gradient_edge(const Variable& self) {
 }
 ```
 
-准备好参数后，调用`Engine::execute()`正式执行反向逻辑
+After preparing the parameters, call `Engine::execute()` to formally execute the backward.
 
-### 准备`graph_task`、计算依赖数
+### Preparing `graph_task`, Calculating Dependency Count
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -166,36 +160,36 @@ auto Engine::execute(
     const edge_list& outputs) -> variable_list {
   // ...
 
-  // 在cpu上初始化一个thread local queue，或者复用现有的queue
+  // Initialize a thread local queue on the CPU, or reuse an existing queue
   init_local_ready_queue();
-  // not_reentrant_backward_call标记当前反向传播是否是重入调用
-  // 重入调用指的是在某个反向传播中，由于某些操作（如hooks或自定义的autograd function）
-  // 导致新的反向传播任务在当前任务结束前就开始了。
+  // not_reentrant_backward_call marks whether the current backward propagation is a reentry call
+  // Reentry calls refer to new backward propagation tasks that start before the current task ends due to certain operations (such as hooks or custom autograd functions).
   bool not_reentrant_backward_call = worker_device == NO_DEVICE;
 
-  // 用vector存储root node
+  // Use a vector to store root nodes
   c10::SmallVector<Node*, 4> temp_roots{root_edges.size()};
   for (const auto i : c10::irange(root_edges.size())) {
     temp_roots[i] = root_edges[i].function.get();
   }
 
-  // GraphTask 包含反向传播所需的metadata
+  // GraphTask contains metadata required by backward
   auto graph_task = std::make_shared<GraphTask>(
       /* keep_graph */ keep_graph,
       /* create_graph */ create_graph,
       /* depth */ not_reentrant_backward_call ? 0 : total_depth + 1,
       /* cpu_ready_queue */ local_ready_queue,
       /* graph_roots */ std::move(temp_roots));
-
-  // 如果root节点只有一个，不需要额外创建root node
-  // 在本文语境中，这里root节点为`torch::autograd::generated::MulBackward0`
+  
+  // If there is only one root node, there is no need to create an additional root node
+  // In the context of this article, the root node here is `torch::autograd::generated::MulBackward0`
   bool skip_dummy_node = root_edges.size() == 1;
   auto graph_root = skip_dummy_node
       ? root_edges.at(0).function
       : std::make_shared<GraphRoot>(root_edges, inputs);
 
-  // 遍历计算并取出outputs（这里outputs是python层backward中传进来的inputs参数）
-  // 中最小的topo_nr，如果outputs为空则为0。
+  // Iterate over and retrieve the smallest topo_nr from outputs
+  // (here outputs are the inputs parameter passed in from the Python layer `backward`),
+  // if outputs are empty, then min_topo_nr is 0 here.
   auto min_topo_nr = compute_min_topological_nr(outputs);
   compute_dependencies(graph_root.get(), *graph_task, min_topo_nr);
   if (!outputs.empty()) {
@@ -205,12 +199,11 @@ auto Engine::execute(
 
   if (skip_dummy_node) {
     InputBuffer input_buffer(root_edges.at(0).function->num_inputs());
-    // 这里input是backward传进来的gradient参数，没传默认是tensor([1.])
+    // Here input is the gradient parameter passed in by backward, if not passed by user, the default is tensor([1.])
     auto input = inputs.at(0);
-
-    // pytorch中，stream是一个独立的任务队列，任务按照被添加的顺序执行
+    // In PyTorch, a stream is an independent task queue where tasks are executed in the order they are added
     const auto input_stream = InputMetadata(input).stream();
-    // 尝试获得根节点的cuda stream（如果有的话），没有则仍是cpu stream
+    // Try to get the CUDA stream of the root node (if there is one), if not, it is still a CPU stream
     const auto opt_next_stream =
         root_edges.at(0).function->stream(c10::DeviceType::CUDA);
     input_buffer.add(
@@ -225,7 +218,7 @@ auto Engine::execute(
     execute_with_graph_task(
         graph_task, std::move(graph_root), InputBuffer(variable_list()));
   }
-  // 阻塞直到graph_task整体结果完成
+  // Block until the overall result of graph_task is complete
   auto& fut = graph_task->future_result_;
   fut->wait();
   graph_task->warning_handler_.replay_warnings();
@@ -233,9 +226,9 @@ auto Engine::execute(
 }
 ```
 
-其中比较重要的是`compute_dependencies`，用于计算每个需要梯度的节点的依赖数，构建`task.nodes_in_graph_`数据结构，便于执行backward。
+Among them, `compute_dependencies` is quite important. It is used to calculate the number of dependencies of each node that needs gradients, and to build the `task.nodes_in_graph_` data structure, which facilitates the execution of backward.
 
-这里依赖数和下文中`evaluate_function`对照起来一起看可更好地理解：对于需要执行的next而言，构建时有一个node指向它，则增加它的依赖；当指向它的node执行完成后，依赖数便减1。如果依赖数减为0，则表示这个next准备好执行了。
+Here, the number of dependencies and `evaluate_function` in the following sections can be looked at together for a better understanding: for the next that needs to be executed, if a node points to it during construction, its dependency is increased; when the node pointing to it has completed execution, its dependency is reduced by 1. If the number of dependencies decreases to 0, it means that this next is ready to be executed.
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -251,15 +244,15 @@ auto Engine::compute_dependencies(
     auto fn = queue.back();
     queue.pop_back();
     if (fn->topological_nr() < min_topo_nr) {
-      // 例如我们传了一个topo_nr为2的output，并计算出min_topo_nr=2
-      // 说明我们需要计算的output距离叶子节点有2的距离
-      // 根据本文之前对topo_nr的描述（即到任意叶子结点的最小距离）
-      // 我们可以跳过topo_nr小于2的节点不再考虑计算梯度
+      // For example, we passed an output with a topo_nr of 2 and calculated that min_topo_nr=2
+      // It indicates that the output we need to calculate is at a distance of 2 from the leaf node
+      // According to the previous description of topo_nr in this article (i.e., the minimum distance to any leaf node)
+      // We can skip nodes with a topo_nr less than 2 and no longer consider calculating their gradients
       continue;
     }
     // ...
-    // task.nodes_in_graph_是一个`unordered_set`
-    // 这里是依照顺序添加下一个要运行的function到set中，并添加依赖数
+    // task.nodes_in_graph_ is an `unordered_set`
+    // Here is to add the next function to be run to the set in order, and add dependencies
     for (const auto& edge : fn->next_edges()) {
       if (auto next_ptr = edge.function.get()) {
         dependencies[next_ptr] += 1;
@@ -273,9 +266,9 @@ auto Engine::compute_dependencies(
 }
 ```
 
-### 执行graph_task：`execute_with_graph_task`与`thread_main`循环
+### Execute graph_task: `execute_with_graph_task` and the `thread_main` Loop
 
-准备好依赖和所需stream后，执行`execute_with_graph_task`
+After preparing the dependencies and the required stream, `execute_with_graph_task` is executed.
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -283,45 +276,45 @@ c10::intrusive_ptr<at::ivalue::Future> Engine::execute_with_graph_task(
     const std::shared_ptr<GraphTask>& graph_task,
     std::shared_ptr<Node> graph_root,
     InputBuffer&& input_buffer) {
-  // 使用`c10::call_once`调用`Engine::start_device_threads`，初始化线程池，启动多线程
-  // 每个子线程都会初始化一个空的graph task，然后执行`thread_main`函数
+  // Use `c10::call_once` to call `Engine::start_device_threads`, initialize the thread pool, and start multithreading
+  // Each child thread will initialize an empty graph task, and then execute the `thread_main` function
   initialize_device_threads_pool();
 
   std::unique_lock<std::mutex> lock(graph_task->mutex_);
 
-  // 对于cpu而言，每个graph task单独一个queue，而cuda所有的task都共享ready queue
+  // For the CPU, each graph task has a separate queue, while all CUDA tasks share the ready queue
   auto queue = ready_queue(graph_task->cpu_ready_queue_, input_buffer.device());
 
   if (worker_device == NO_DEVICE) {
-    // 此时是一个cpu thread，非重入调用
+    // This is a CPU thread, non-reentrant call
     set_device(CPU_DEVICE);
     graph_task->owner_ = worker_device;
 
-    // 现在所有非线程安全的字段都被正确地初始化，可以放入队列中(std::priority_queue)了
-    // push的过程中还会调用condition_variable not_empty_唤醒其他线程来执行任务
+    // Now all non-thread-safe fields have been correctly initialized and can be put into the queue (std::priority_queue)
+    // `push` will also call the condition_variable not_empty_ to wake up other threads to execute tasks
     queue->push(
         NodeTask(graph_task, std::move(graph_root), std::move(input_buffer)));
 
     lock.unlock();
     thread_main(graph_task);
     TORCH_INTERNAL_ASSERT(graph_task->future_result_->completed());
-    // 将worker_device重置为初始状态
-    // 不需要重置`local_ready_queue`因为它可以在每次call backward的时候重复使用
+    // Reset the worker_device to its initial state
+    // There is no need to reset `local_ready_queue` because it can be reused each time call backward is called
     worker_device = NO_DEVICE;
   } else {
-    // device已经被设置，如CPU、CUDA等，则意味着这是一个重入调用
+    // The device has been set, such as CPU, CUDA, etc., which means that this is a reentrant call
     graph_task->owner_ = worker_device;
 
     queue->push(
         NodeTask(graph_task, std::move(graph_root), std::move(input_buffer)));
 
     if (current_depth >= max_recursion_depth_) {
-      // 抵达最大深度，启动一个新线程
+      // Reach the maximum depth, start a new thread
       add_thread_pool_task(graph_task);
     } else {
-      // 所有线程的重入调用次数
+      // The number of reentrant calls of all threads
       ++total_depth;
-      // 当前线程的重入调用次数
+      // The number of reentrant calls of the current thread
       ++current_depth;
       lock.unlock();
       thread_main(graph_task);
@@ -334,9 +327,9 @@ c10::intrusive_ptr<at::ivalue::Future> Engine::execute_with_graph_task(
 }
 ```
 
-在`execute_with_graph_task`函数中，pytorch初始化了很多子线程执行`thread_main`函数，而主线程也执行`thread_main`函数，直到所有队列里的任务被完成，随后子线程放一个dummy task到queue中，主线程接受后退出，`execute_with_graph_task`函数执行完成。
+In the `execute_with_graph_task` function, PyTorch initializes many child threads to execute the `thread_main` function, and the main thread also executes the `thread_main` function until all the tasks in the queue are completed. Then the child thread puts a dummy task into the queue. When the main thread accepts it, it exits, and the `execute_with_graph_task` function is completed.
 
-`thread_main`函数本身是一个block循环，会不断执行任务直到graph_task被标记完成
+The `thread_main` function itself is a block loop, which will continuously execute tasks until the graph_task is marked as completed.
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -345,30 +338,30 @@ auto Engine::thread_main(const std::shared_ptr<GraphTask>& graph_task) -> void {
   while (graph_task == nullptr || !graph_task->future_result_->completed()) {
     std::shared_ptr<GraphTask> local_graph_task;
     {
-      // 这里划分一个scope是因为NodeTask在该block后可以被完全销毁并释放所有空间
+      // A scope is divided here because NodeTask can be completely destroyed and all space released after this block
       NodeTask task = local_ready_queue->pop();
       if (task.isShutdownTask_) {
         C10_LOG_API_USAGE_ONCE("torch.autograd.thread_shutdown");
         break;
       }
 
-      // `task.base_`为`std::weak_ptr<GraphTask>`，lock()方法尝试创建一个`std::shared_ptr<GraphTask>`
-      // 如果graphtask对象已经销毁，name返回空nullptr跳过该task
+      // `task.base_` is `std::weak_ptr<GraphTask>`, the lock() method tries to create a `std::shared_ptr<GraphTask>`
+      // If the graphtask object has been destroyed, it returns an empty nullptr and skips this task
       if (!(local_graph_task = task.base_.lock())) {
         continue;
       }
 
       set_device(worker_device);
 
-      // has_error_是一个`std::atomic_bool`值，当任何一个线程执行出错时，设置该变量
-      // 并让所有其他线程退出
+      // has_error_ is a `std::atomic_bool` value, when any thread meets an error, 
+      // set this variable and let all other threads exit
       if (task.fn_ && !local_graph_task->has_error_.load()) {
-        // RAII guard，保存tls和warning状态，在这段block代码执行完后恢复之前的状态
+        // RAII guard, save the tls and warning state, and restore the previous state after this block of code is executed
         at::ThreadLocalStateGuard tls_guard(local_graph_task->thread_locals_);
         c10::WarningUtils::WarningHandlerGuard warnings_guard(
             &local_graph_task->warning_handler_);
         try {
-          // guard机理同上，保存current_graph_task状态
+          // The function of the guard is the same as above, saving the current_graph_task state
           GraphTaskGuard guard(local_graph_task);
           NodeGuard ndguard(task.fn_);
           {
@@ -385,16 +378,16 @@ auto Engine::thread_main(const std::shared_ptr<GraphTask>& graph_task) -> void {
       }
     }
 
-    // 后半部分参见下文...
+    // The content is detailed below...
   }
 }
 ```
 
-### `call_function`和各种hook
+### `call_function` and Hooks
 
-上文调用了`evaluate_function`，再调用到`call_function`，`call_function`会调用实际进行backward运算的算子，并进行各种hook的调用
+The above calls `evaluate_function`, then calls `call_function`. `call_function` will call the operator that actually performs the backward operation and invoke various hooks.
 
-各种hook包括：
+hooks include:
 
 - `call_tensor_pre_hooks`
 - `call_pre_hooks`
@@ -407,21 +400,24 @@ void Engine::evaluate_function(
     Node* func,
     InputBuffer& inputs,
     const std::shared_ptr<ReadyQueue>& cpu_ready_queue) {
-  // 尝试获取cuda流，如果设备是cpu就是空的，guard在析构时能恢复原来的流。
+  // Try to get the CUDA stream, if the device is CPU, it's empty.
+  // The guard can restore the original stream when it is destructed.
   const auto opt_parent_stream = (*func).stream(c10::DeviceType::CUDA);
   c10::OptionalStreamGuard parent_stream_guard{opt_parent_stream};
 
-  // 如果exec_info_非空，会执行一些额外操作如pre-hook，根据need变量判断是否执行backward等
-  // 还有一些废弃的capture hook（捕获变量使用，但由于现在引入了tensor hook，这就没必要了）
+  // If exec_info_ is not empty, some additional operations such as pre-hook will be performed,
+  // and whether to execute backward is determined based on the `need` variable.
+  // There are also some deprecated capture hooks
+  // (capturing variable usage, but now that tensor hooks have been introduced, it is unnecessary)
   auto& exec_info_ = graph_task->exec_info_;
   if (!exec_info_.empty()) {
     // ...
   }
 
-  // 实际调用backward函数的地方，包括对tensor pre/post hook的调用
+  // The actual place to call the backward function, including the call to pre/post hooks
   auto outputs = call_function(graph_task, func, inputs);
 
-  // ...后半部分，参见下文
+  // The content is detailed below...
 }
 
 static variable_list call_function(
@@ -429,14 +425,14 @@ static variable_list call_function(
     Node* func,
     InputBuffer& inputBuffer) {
   CheckpointValidGuard cpvguard(graph_task);
-  auto& fn = *func;     // 本文语境中，fn为Mulbackward0
-  // 调用tensor本身的prehook
+  auto& fn = *func;
+  // calls tensor prehook
   auto inputs =
       call_tensor_pre_hooks(fn, InputBuffer::variables(std::move(inputBuffer)));
-  // 调用fn的prehook
+  // calls fn prehook
   inputs = call_pre_hooks(fn, std::move(inputs));
   if (!graph_task->keep_graph_) {
-    // 如果没有keep_graph_设置的话，将释放中间variable
+    // if keep_graph_ not set, release variables
     fn.will_release_variables();
   }
 
@@ -444,7 +440,7 @@ static variable_list call_function(
   variable_list outputs;
 
   if (has_post_hooks) {
-    // 这里是一个浅拷贝，使引用计数+1
+    // This is a shallow copy, making the reference count +1
     auto inputs_copy = inputs;
     outputs = fn(std::move(inputs_copy));
   } else {
@@ -452,7 +448,7 @@ static variable_list call_function(
   }
 
   // ...
-  // 最后调用post_hooks返回
+  // finally calls post_hooks and returns
   if (has_post_hooks) {
     return call_post_hooks(fn, std::move(outputs), inputs);
   }
@@ -460,9 +456,9 @@ static variable_list call_function(
 }
 ```
 
-### backward实际执行：`MulBackward0::apply`
+### Execution of Backward: `MulBackward0::apply`
 
-`fn()`调度到实际执行backward的地方，如MulBackward0::apply，在这里进行实际梯度的运算。
+`fn()` dispatches to the actual place where backward is executed, such as `MulBackward0::apply`, where gradient computation is performed.
 
 ```c++
 // torch/csrc/autograd/generated/Functions.cpp
@@ -474,20 +470,22 @@ variable_list MulBackward0::apply(variable_list&& grads) {
   auto other_ix = gen.range(1);   // {1, 2}
   variable_list grad_inputs(gen.size());    // output: 2
   const auto& grad = grads[0];
-  auto other = other_.unpack();   // MulBackward0 Node声明的变量other_, self_
-  // unpack()根据saved variable拿到或生成variable，此外检查版本等操作也在此处进行
+  // Variables `other_`, `self_` declared by MulBackward0 Node structure
+  // unpack() retrieves or generates variables based on saved variables.
+  // In addition, operations such as version checking are also performed here
+  auto other = other_.unpack();   
   auto self = self_.unpack();
   bool any_grad_defined = any_variable_defined(grads);
   if (task_should_compute_output({ other_ix })) {
-    // 用self算出other的grad
+    // uses self to calculate other's grad
     auto grad_result = any_grad_defined ? (mul_tensor_backward(grad, self, other_scalar_type)) : Tensor();
-    // 相当于grad_inputs[1] = grad_result
+    // equals to grad_inputs[1] = grad_result
     copy_range(grad_inputs, other_ix, grad_result);
   }
   if (task_should_compute_output({ self_ix })) {
-    // 用other算出self的grad
+    // use `other` to calculate self's grad
     auto grad_result = any_grad_defined ? (mul_tensor_backward(grad, other, self_scalar_type)) : Tensor();
-    // 相当于grad_inputs[0] = grad_result
+    // equals to grad_inputs[0] = grad_result
     copy_range(grad_inputs, self_ix, grad_result);
   }
   return grad_inputs;
@@ -496,14 +494,15 @@ variable_list MulBackward0::apply(variable_list&& grads) {
 // torch/csrc/autograd/FunctionsManual.cpp
 template <typename T>
 Tensor mul_tensor_backward(Tensor grad, T other, ScalarType self_st) {
-  auto out = grad * other.conj();   // conj是复数接口，如果没有复数直接return this
+  // `conj` is a complex number interface, if no complex numbers it simply returns `this`
+  auto out = grad * other.conj();
   return handle_r_to_c(self_st, std::move(out));
 }
 ```
 
-### `evaluate_function`与依赖数检查、优先队列`readyQueue`
+### `evaluate_function` with Dependency Check and `readyQueue`
 
-执行完`fn`后，`grad`结果已经运算完成，我们回到`evaluate_function`检查依赖数和并将next推入ready queue中
+After `fn` is executed, the `grad` result has been computed. We return to `evaluate_function` to check the dependencies and push `next` into the `readyQueue`.
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -513,14 +512,14 @@ void Engine::evaluate_function(
     InputBuffer& inputs,
     const std::shared_ptr<ReadyQueue>& cpu_ready_queue) {
 
-  // 实际调用backward函数的地方，包括对tensor pre/post hook的调用
   auto outputs = call_function(graph_task, func, inputs);
 
-  // ...前半部分，参见上文
+  // The content is detailed above...
 
   auto& fn = *func;
   if (!graph_task->keep_graph_) {
-    // 如果不需要retain，释放无关变量（对于mul来说，即other_、self_中间变量的值）
+    // If `retain` is not set, release irrelevant variables
+    // for `mul`, this means the intermediate values of `other_`, `self_`
     fn.release_variables();
   }
 
@@ -530,7 +529,7 @@ void Engine::evaluate_function(
     return;
   }
 
-  // AnomalyMode调试模式检查nan
+  // AnomalyMode mode to check `nan`
   if (AnomalyMode::is_enabled() && AnomalyMode::should_check_nan()) {
     // ...
   }
@@ -548,12 +547,13 @@ void Engine::evaluate_function(
     auto it = dependencies.find(next.function.get());
 
     if (it == dependencies.end()) {
-      // 检查next是否已经在graph_task中被构建好dependencies了，如果没有则报错
+      // Check whether `next` has been built with dependencies in `graph_task`, and if not, an error is reported
       auto name = next.function->name();
       throw std::runtime_error(std::string("dependency not found for ") + name);
     } else if (--it->second == 0) {
-      // 如果在dependencies中，它的依赖数会减1，减1后依赖数为0则从dependencies中删除
-      // 标记is_ready为true，表示准备好执行
+      // If it is in `dependencies`, its number of dependencies will decrease by 1,
+      // and if the number of dependencies becomes 0 after decreasing, it will be removed from `dependencies`
+      // Mark `is_ready` as true, indicating that it is ready to be executed
       dependencies.erase(it);
       is_ready = true;
     }
@@ -561,8 +561,8 @@ void Engine::evaluate_function(
     auto& not_ready = graph_task->not_ready_;
     auto not_ready_it = not_ready.find(next.function.get());
     if (not_ready_it == not_ready.end()) {
-      // 如果next不在not_ready(std::unordered_map)中，创建InputBuffer并根据is_ready
-      // 来加入ready_queue或者not_ready map中
+      // If `next` is not in `not_ready` (a `std::unordered_map`),
+      // create `InputBuffer` and add it to `readyQueue` or `not_ready` map based on `is_ready` variable
       // ...
       InputBuffer input_buffer(next.function->num_inputs());
       const auto opt_next_stream = next.function->stream(c10::DeviceType::CUDA);
@@ -576,7 +576,7 @@ void Engine::evaluate_function(
         not_ready.emplace(next.function.get(), std::move(input_buffer));
       }
     } else {
-      // 如果在not_ready中，一定有input_buffer（走过一次上面的分支）
+      // If it is in `not_ready`, there must be `input_buffer` (having gone through the above branch once)
       auto& input_buffer = not_ready_it->second;
       const auto opt_next_stream = next.function->stream(c10::DeviceType::CUDA);
       input_buffer.add(
@@ -592,14 +592,14 @@ void Engine::evaluate_function(
 }
 ```
 
-我们也介绍一下任务队列**ReadyQueue**这个数据结构：
+We also introduce the data structure of the task queue **ReadyQueue**:
 
 ```c++
 // torch/csrc/autograd/engine.h
 struct ReadyQueue {
  private:
-  // 当t2应该比t1先执行时，return true
-  // 关闭的任务首先考虑执行，其次是空节点任务
+  // Return true when `t2` should be executed before `t1`
+  // Tasks that are closed are considered first, followed by empty node tasks
   struct CompareNodeTaskTime {
     bool operator()(NodeTask const& t1, NodeTask const& t2) {
       if (t2.isShutdownTask_) {
@@ -616,11 +616,11 @@ struct ReadyQueue {
     }
   };
 
-  // 唤醒等待ready queue的线程
+  // Wake up the threads waiting for the `readyQueue`
   std::condition_variable not_empty_;
-  // 用于读写heap_的锁
+  // Lock for reading and writing `heap_`
   mutable std::mutex mutex_;
-  // priority_queue：本质是一个堆
+  // `priority_queue`: essentially a heap
   std::priority_queue<NodeTask, std::vector<NodeTask>, CompareNodeTaskTime> heap_;
 
  public:
@@ -632,13 +632,13 @@ struct ReadyQueue {
 };
 ```
 
-在ready queue中使用`std::priority_queue`优先队列（本质是堆）来作为数据存储的容器，通过`CompareNodeTaskTime`来比较任务优先级。
+In `readyQueue`, a `std::priority_queue` (essentially a heap) is used as the data storage container, and the task priority is compared using `CompareNodeTaskTime`.
 
-在比较时，优先处理已关闭的任务、空任务（处理效率高迅速腾出空间），然后选择深度较浅及`sequence_number`较大的任务。
+When comparing, tasks that have been closed and empty tasks (which are processed quickly to free up space) are prioritized. Then tasks with shallower depth and larger `sequence_number` are selected.
 
-### backward实际执行：`AccumulateGrad::apply`
+### Execution of Backward: `AccumulateGrad::apply`
 
-在`mul_backward`执行完后，我们将`AccumulateGrad`加入了执行队列（这是因为`AccumulateGrad`是`mul_backward`的`next_edge`，不理解的同学可以参考上文前向构建过程），并经过类似的调度过程，最后执行到了`AccumulateGrad::apply`实现梯度累加
+After `mul_backward` is executed, we add `AccumulateGrad` to the execution queue (this is because `AccumulateGrad` is the `next_edge` of `mul_backward`, if you don't understand, you can refer to the previous **forward** section), and after a similar scheduling process, finally execute `AccumulateGrad::apply` to accumulate gradients.
 
 ```c++
 // torch/csrc/autograd/functions/accumulate_grad.cpp
@@ -646,7 +646,7 @@ auto AccumulateGrad::apply(variable_list&& grads) -> variable_list {
   // ...
   at::Tensor new_grad = std::move(grads[0]);
 
-  // 这里variable即我们的tensor参数self/other，前向构建时保存了下来
+  // Here `variable` is our tensor parameter `self/other`, which was saved during the forward process
   at::Tensor& grad = variable.mutable_grad();
   accumulateGrad(
       variable,
@@ -681,29 +681,29 @@ struct TORCH_API AccumulateGrad : public Node {
 }
 ```
 
-最后`accumulateGrad`的逻辑是，如果tensor `variable_grad`没有定义，则直接move赋值。如果有定义了，则进行累加。
+The logic of `accumulateGrad` is that if the tensor `variable_grad` is not defined, it is directly moved and assigned. If it is defined, accumulation is performed.
 
-### 任务执行完成，标记与清理工作
+### Task Execution Complete, Marking and Cleaning Work
 
-处理好后，我们回到`thread_main`循环并再次重复，直到处理好所有任务`thread_main`循环结束。
+After processing, we return to the `thread_main` loop and repeat until all tasks are processed and the `thread_main` loop ends.
 
-`thread_main`收尾处会调用一些标记与清理工作，如
+At the end of `thread_main`, some marking and cleaning work will be called, such as
 
 ```c++
 auto Engine::thread_main(const std::shared_ptr<GraphTask>& graph_task) -> void {
 
-  // 前半部分参见上文...
+  // The content is detailed above...
 
   --local_graph_task->outstanding_tasks_;
 
   if (local_graph_task->completed()) {
-    // local_graph_task->outstanding_tasks_为0或有error退出
+    // Exit if `local_graph_task->outstanding_tasks_` is 0 or there is an error
 
-    // 标记任务完成，lock解锁等操作
+    // Mark the task as complete, unlock operations, etc.
     local_graph_task->mark_as_completed_and_run_post_processing();
 
     auto base_owner = local_graph_task->owner_;
-    // 放一个dummy task到队列中确保所有者线程是唤醒状态
+    // Put a dummy task into the queue to ensure that the owner thread is in an awakened state
     if (worker_device != base_owner) {
       std::atomic_thread_fence(std::memory_order_release);
       ready_queue_by_index(local_graph_task->cpu_ready_queue_, base_owner)
@@ -713,11 +713,11 @@ auto Engine::thread_main(const std::shared_ptr<GraphTask>& graph_task) -> void {
 }
 ```
 
-然后回到`Engine::execute`，再一路返回到最开始的`python_engine.cpp`。`tensor.backward()`调用全流程完成。
+Then return to `Engine::execute`, and then all the way back to the beginning of `python_engine.cpp`. The full process of `tensor.backward()` call is completed.
 
-## 取grad值：`print(x.grad)`
+## Get grad value: `print(x.grad)`
 
-此处调用`x.grad`直接获取tensor的grad属性，对于tensor的属性，pytorch经由**getter**获取
+Here, `x.grad` is called to directly get the grad property of the tensor. For the properties of the tensor, PyTorch gets them through **getter**.
 
 ```c++
 template <typename T>
@@ -729,9 +729,9 @@ struct GetterBase {
 };
 ```
 
-此处`T`为`PropertyGrad`，`THPVariable_Unpack`解析python object，`THPVariable_Wrap`将c++的tensor类封装为python的tensor类
+Here `T` is `PropertyGrad`, `THPVariable_Unpack` parses the Python object, and `THPVariable_Wrap` encapsulates the C++ tensor class into the Python tensor class.
 
-随后调用`fn`方法，并调用到`grad()`方法：
+Then the `fn` method is called, and the `grad()` method is called:
 
 ```c++
 // torch/csrc/autograd/python_variable.cpp
@@ -752,12 +752,12 @@ class TORCH_API Tensor: public TensorBase {
 }
 ```
 
-随后调用到impl_的`grad()`方法并调用到`autograd_meta_`的`grad()`方法直接获取grad变量
+Then it calls the `grad()` method of `impl_`, and then calls the `grad()` method of `autograd_meta_` to directly get the grad variable.
 
 ```c++
 // c10/core/TensorImpl.cpp
 const at::Tensor& TensorImpl::grad() const {
-  // 没有`autograd_meta_`则return空tensor
+  // if `autograd_meta_` is not set, return undefined tensor
   if (!autograd_meta_)
     return impl::GetAutogradMetaFactory()->undefined_tensor();
   return autograd_meta_->grad();
@@ -771,23 +771,23 @@ struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
 }
 ```
 
-## 总结与review
+## Summary and Review
 
-进行一次autograd全流程，主要步骤有三步
+The whole process of autograd mainly consists of three steps:
 
-1. 创建`requires_grad=True`的tensor
-2. 前向计算，构建计算图
-3. 反向求导，累加梯度
+1. Create tensor with `requires_grad=True`
+2. Forward computation, construct computation graph
+3. Backward derivation, accumulate gradients
 
-对于本文用例（mul）来说，计算图全流程可以用下面这张图表示
+For the example in this article (mul), the entire computation graph can be represented by the following figure:
 
 ![image](resources/graph.png)
 
-在前向计算中，我们介绍了如何创建**grad_fn**、**edge**，构建计算图，并提到了dispatch和structure kernel相关概念。
+In the forward computation, we introduced how to create **grad_fn**, **edge**, and construct the computation graph, and mentioned concepts related to **dispatch** and **structure kernel**.
 
-在反向求导时，我们介绍了engine运行的细节：启动多线程，构建**graph_task**，`thread_main`循环，依赖数检查，**任务队列**等，并深入探究了**accumulateGrad**如何进行累加。
+During the backward derivation, we introduced the details of engine running: starting multithreading, constructing **graph_task**, `thread_main` loop, dependency check, **task queue**, etc., and deeply explored how **accumulateGrad** performs accumulation.
 
-希望本文能帮助你理解pytorch autograd底层运行机制！
+Hope this article can help you understand the underlying operation mechanism of PyTorch's autograd!
 
 ## Refference
 
