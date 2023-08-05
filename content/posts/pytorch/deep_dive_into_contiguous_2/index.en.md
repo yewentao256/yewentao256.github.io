@@ -1,27 +1,27 @@
 ---
-title: "How Pytorch 2.0 Call Ops(二)"
-date: 2023-04-12T10:53:09+08:00
+title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(2)"
+date: 2023-04-12T09:53:09+08:00
 categories: ["pytorch"]
-summary: "本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。"
+summary: "Uncover the inner workings of PyTorch through a deep dive into the `contiguous` operator, from its Python interface to its dispatching and registration process, and finally how it is executed."
 ---
 
 ## Summary
 
-本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。
+Uncover the inner workings of PyTorch through a deep dive into the `contiguous` operator, from its Python interface to its dispatching and registration process, and finally how it is executed.
 
-## 6. register和dispatch的回顾
+## 6. Review of register and dispatch
 
-我们纵观register和dispatch的过程，总结其大体流程为：
+Looking at the processes of register and dispatch, we can summarize their overall procedures as:
 
-1. 注册op schema
-2. 注册op下的具体kernel实现（基于dispatch key）
-3. 查找op schema
-4. 查找op下具体kernel实现并调用（基于dispatch key）
+1. Registering op schema
+2. Registering specific kernel under the op schema (based on dispatch key)
+3. Looking up op schema
+4. Looking up and invoking specific kernel of the op (based on dispatch key)
 
-中间几个重要的数据类型：`Dispatcher`, `OperatorHandle`, `OperatorEntry`
+Several important data types in the middle: `Dispatcher`, `OperatorHandle`, `OperatorEntry`
 
 - **Dispatcher**
-  - `operatorLookupTable_`维护了OperatorName->OperatorHandle的映射
+  - `operatorLookupTable_` maintains a mapping from `OperatorName` to `OperatorHandle`
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.h
@@ -58,8 +58,8 @@ private:
 ```
 
 - **OperatorHandle**
-  - 其内部的`operatorDef_`本质是上面Dispatcher中的`OperatorDef`，是对`OperatorEntry`的封装
-  - 更多时候用的是`TypedOperatorHandle`，`OperatorHandle`的子类，可以理解为针对op参数模板化的`OperatorHandle`
+  - Its internal `operatorDef_` is essentially the `OperatorDef` in the above Dispatcher, which is a wrapper for `OperatorEntry`
+  - More often, `TypedOperatorHandle` is used, which is a subclass of `OperatorHandle` and can be understood as an `OperatorHandle` templated for op parameters
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.h
@@ -94,8 +94,8 @@ private:
 };
 ```
 
-- **OperatorEntry**：
-  - 实际存储op信息的数据结构
+- **OperatorEntry**
+  - The data structure that actually stores op information
 
 ```c++
 
@@ -145,13 +145,13 @@ private:
 };
 ```
 
-通过 **Library** -> **Dispatcher** -> **OperatorHandle** -> **OperatorEntry** 这样的调用链路，pytorch完成了op和对应kernel的注册。之后，pytorch就可以基于这条链路查找到所需算子的kernel并轻松实现调用。
+Through the calling chain of **Library** -> **Dispatcher** -> **OperatorHandle** -> **OperatorEntry**, PyTorch completes the registration of the op and its corresponding kernel. After that, PyTorch can easily call kernel functions based on this chain.
 
-## 7. `is_contiguous`判断是否连续
+## 7. `is_contiguous` determines whether it is contiguous
 
-大致了解了pytorch算子的注册和调用流程之后，我们终于进入了contiguous算子实际执行的流程了，这部分相对而言简单很多。
+Having roughly understood the registration and invocation process of PyTorch operators, we finally enter the actual execution process of the contiguous operator, which is relatively simple.
 
-我们将调用路径拉回到上文dispatch末端
+We bring the call path back to the end of the dispatch section mentioned earlier.
 
 ```c++
 // build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
@@ -160,7 +160,7 @@ at::Tensor wrapper_CompositeImplicitAutograd__contiguous(const at::Tensor & self
 }
 ```
 
-这里调用aten native的contiguous算子
+Here, we call the `contiguous` operator of aten native.
 
 ```c++
 // aten/src/ATen/native/TensorProperties.cpp
@@ -176,7 +176,7 @@ Tensor contiguous(const Tensor& self, MemoryFormat memory_format) {
 }
 ```
 
-首先判断`is_contiguous(memory_format)`，即在指定memory format下是否已经连续，经过`TensorBase.h`中转来到`TensorImpl.h`中
+First, it judges `is_contiguous(memory_format)`, that is, whether it is already contiguous under the specified memory format. After going through `TensorBase.h`, we come to `TensorImpl.h`.
 
 ```c++
 // c10/core/TensorImpl.h
@@ -208,9 +208,9 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
 }
 ```
 
-可以看到，pytorch的判断`is_contiguous`并没有计算，而是将数据直接存储在`TensorImpl`里，每次直接取用即可，这样省去了计算量，但也要求在更改tensor stride或者初始化的时候算出相关bool并存储。
+As we can see, PyTorch's `is_contiguous` judgment does not involve computation. Instead, it directly stores the data in `TensorImpl`, and each time it is directly taken and used. This saves computation, but it also requires calculating the related boolean value and storing it when initializing or changing the tensor stride.
 
-那么，它是如何被设置的呢？我们溯源该变量的set流程，发现它被`refresh_contiguous()`设置，每次修改tensor的shape或stride的时候都要调用该方法。
+So, how is it set? Tracing the set process of this variable, we find that it is set by `refresh_contiguous()`. This method must be called every time the tensor's shape or stride is modified.
 
 ```c++
 // c10/core/TensorImpl.h
@@ -243,7 +243,7 @@ void _refresh_contiguous() {
   }
 ```
 
-我们挑一个`_compute_channels_last_contiguous_2d`展开看看，其本质就是在contiguous（NCHW）标准下，是否符合NHWC（1320置换）：
+Let's look at `_compute_channels_last_contiguous_2d`. Essentially, it determines whether it conforms to NHWC (a permutation of `1 3 2 0`) under the contiguous (NCHW) standard:
 
 ```c++
 template <typename T>
@@ -253,7 +253,7 @@ bool _compute_channels_last_contiguous_2d(
   switch (sizes.size()) {
     case 4: {
       T expected = 1;
-      // const array可以被编译器自动展开加速
+      // const array can be `unrolling` and accelerated by compiler
       for (auto& d : {1, 3, 2, 0}) {
         const auto& size_d = sizes[d];
         if (size_d != 1) {
@@ -272,11 +272,11 @@ bool _compute_channels_last_contiguous_2d(
 }
 ```
 
-例如一个`N, C, H, W = 2, 2048, 1, 1`的tensor，它的stride为`[2048, 1, 1, 1]` 就是一个channels last的tensor（同时也是contiguous的tensor，因为内存排布刚好h、w都是1）
+For example, a tensor with `N, C, H, W = 2, 2048, 1, 1` has a stride of `[2048, 1, 1, 1]`. It is a channels last tensor (and also a contiguous tensor, because the memory layout happens to have h, w all being 1).
 
-## 8. clone算子：自动微分与empty tensor
+## 8. Clone Operator: Empty Tensor and Copy
 
-继续我们的调用流程，如果tensor在指定memory format下已经连续，那就直接返回，如果不连续，那就按照指定memory format进行`clone`
+Let's continue our call process, if the tensor is already `contiguous` under the specified memory format, it is directly returned. If it is not `contiguous`, it will be `clone` according to the specified memory format.
 
 ```c++
 // build/aten/src/ATen/core/TensorBody.h
@@ -290,18 +290,18 @@ at::Tensor clone::call(const at::Tensor & self, c10::optional<at::MemoryFormat> 
 }
 ```
 
-是不是很熟悉？是的，这就是我们上面调用contiguous算子的入口，再经过类似的dispatch流程（找op schema，然后找kernel）后我们来到了实际clone处。由于上面contiguous的dispatch key是`CompositeImplicitAutograd`，这里clone算子也调用到该disptach key并需要处理自动微分相关逻辑。
+Look familiar? Yes, this is the entry point we used to call the `contiguous` operator above. After a similar dispatch process (finding the op schema and then the kernel), we arrive at the actual clone function. Since the dispatch key of the above contiguous operation is **CompositeImplicitAutograd**, the `clone` operator also calls this dispatch key and needs to handle the related logic of automatic differentiation.
 
-这与我们对clone算子的印象也是一致的：完全独立的副本，保留`requires_grad`属性并支持自动求导（`CloneBackward0`放入`grad_fn`中）。
+This is consistent with our impression of the clone operator: a completely independent copy that retains the `requires_grad` attribute and supports automatic derivation (`CloneBackward0` is put into `grad_fn`).
 
 ```c++
 // torch/csrc/autograd/generated/VariableType_1.cpp
 at::Tensor clone(c10::DispatchKeySet ks, const at::Tensor & self, c10::optional<at::MemoryFormat> memory_format) {
-  // 此处调用`checked_cast_variable`检查tensor是否defined
-  // self_和self地址相同
+  // Here `checked_cast_variable` is called to check whether the tensor is defined
+  // self_ and self have the same address
   auto& self_ = unpack(self, "self", 0);
 
-  // 自动求导相关，如果需要自动求导，则设置grad_fn到graph里
+  // If automatic differentiation is required, set grad_fn into the graph
   auto _any_requires_grad = compute_requires_grad( self );
   (void)_any_requires_grad;
   auto _any_has_forward_grad_result = (isFwGradDefined(self));
@@ -312,14 +312,14 @@ at::Tensor clone(c10::DispatchKeySet ks, const at::Tensor & self, c10::optional<
     grad_fn->set_next_edges(collect_next_edges( self ));
   }
   #ifndef NDEBUG
-  // 拿到self的storage和impl
+  // get storage and impl pointer of self
   c10::optional<Storage> self__storage_saved =
     self_.has_storage() ? c10::optional<Storage>(self_.storage()) : c10::nullopt;
   c10::intrusive_ptr<TensorImpl> self__impl_saved;
   if (self_.defined()) self__impl_saved = self_.getIntrusivePtr();
   #endif
-  // 将当前dispatchkey和c10::after_autograd_keyset运算后，redisptach clone算子
-  // redispatch的结果是拿到了clone的正确结果，redisptach的过程我们下文展开
+  // After computing the current dispatchkey and c10::after_autograd_keyset, the clone operator is redispatched
+  // redispatch is to get the actual result of the clone. We will expand on the process of redispatch below
   auto _tmp = ([&]() {
     at::AutoDispatchBelowADInplaceOrView guard;
     return at::redispatch::clone(ks & c10::after_autograd_keyset, self_, memory_format);
@@ -330,9 +330,9 @@ at::Tensor clone(c10::DispatchKeySet ks, const at::Tensor & self, c10::optional<
 }
 ```
 
-值得指出的是，在上面代码中redisptach的过程中，在重新计算dispatchkey之后，redisptach到aten的clone算子。`redispatch`和`call`有什么区别呢？
+It's worth noting that in the process of **redispatch**, after recalculating the dispatchkey, the clone operator of aten is redispatched. What's the difference between `redispatch` and `call`?
 
-一方面，是函数签名上的差异，`redispatch`带了一个`currentDispatchKeySet`，就不用像call那样从op里取dispatchkey，直接用参数传进来的就好。
+On the one hand, it's a difference in function signatures. `redispatch` carries a `currentDispatchKeySet` parameter, so it doesn't need to take the dispatchkey from the op like `call` does.
 
 ```c++
 Return Dispatcher::call(const TypedOperatorHandle<Return(Args...)>& op, Args... args) const
@@ -340,9 +340,9 @@ Return Dispatcher::call(const TypedOperatorHandle<Return(Args...)>& op, Args... 
 inline Return Dispatcher::redispatch(const TypedOperatorHandle<Return (Args...)>& op, DispatchKeySet currentDispatchKeySet, Args... args) const
 ```
 
-另一方面，是`redispatch`调用中，一般会将当前dispatchkey再下调一个优先级（如与`c10::after_autograd_keyset`进行与操作），然后调度到实际执行clone的算子上（此处已经处理了自动微分，之后就不再需要考虑自动微分），做了一层分级
+On the other hand, in the `redispatch` call, the current dispatchkey is generally downgraded one priority level (such as performing an AND operation with `c10::after_autograd_keyset`), and then scheduled to the operator that actually performs the clone (after handling automatic differentiation, automatic differentiation is no longer needed).
 
-redispatch后到`CompositeExplicitAutograd.cpp`
+After redispatch, we go to `CompositeExplicitAutograd.cpp`.
 
 ```c++
 // build/aten/src/ATen/RegisterCompositeExplicitAutograd.cpp
@@ -357,7 +357,7 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
   if (memory_format == MemoryFormat::Preserve) {
     // ...
   } else {
-    // 创建空tensor
+    // create empty tensor
     self = at::empty_like(src, src.options(), memory_format);
   }
 
@@ -370,7 +370,7 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
 }
 ```
 
-创建tensor时调用了`empty_like`算子，创建一个和src相同（但memory format为新memory format）的空tensor，一样经过dispatch后来到`TensorFactories.cpp`，然后`empty_like`又调用了empty算子（先call到`build/aten/src/ATen/RegisterBackendSelect.cpp`处，然后redispatch到CPU上——redispatch到哪根据编译选项不同会有差异）
+The `empty_like` operator is called to create an empty tensor the same as the src (but the memory format is new). After going through dispatch, we come to `TensorFactories.cpp`, and then `empty_like` calls the `empty` operator (first call to `build/aten/src/ATen/RegisterBackendSelect.cpp`, and then redispatch to **CPU** —— where it redispatches to will vary depending on compilation options and device).
 
 ```c++
 // aten/src/ATen/native/TensorFactories.cpp
@@ -393,7 +393,7 @@ Tensor empty_like(
 }
 ```
 
-`empty`最终dispatch到`empty_cpu上`，首先拿一个cpu的allocator，然后调用`empty_generic`方法
+`empty` finally dispatches to `empty_cpu`, first getting a CPU allocator, and then calling the `empty_generic` method.
 
 ```c++
 // aten/src/ATen/EmptyTensor.cpp
@@ -408,14 +408,14 @@ TensorBase empty_cpu(IntArrayRef size, ScalarType dtype, bool pin_memory,
 C10_API at::Allocator* allocator_array[at::COMPILE_TIME_MAX_DEVICE_TYPES];
 
 at::Allocator* GetAllocator(const at::DeviceType& t) {
-  // 这里根据devicetype拿到对应类型的allocator，cpu就拿cpu，cuda就拿cuda
+   // Here, based on the device type, the corresponding type of allocator is obtained. If it's CPU, get CPU
   auto* alloc = allocator_array[static_cast<int>(t)];
   TORCH_INTERNAL_ASSERT_DEBUG_ONLY(alloc, "Allocator for ", t, " is not set.");
   return alloc;
 }
 ```
 
-`empty_generic`调用到`_empty_generic`方法
+And then calls `_empty_generic`
 
 ```c++
 // pytorch/aten/src/ATen/EmptyTensor.cpp
@@ -427,7 +427,7 @@ TensorBase _empty_generic(
     ScalarType scalar_type,
     c10::optional<c10::MemoryFormat> memory_format_opt) {
   // ...
-  // 计算需要分配的空间，然后实行分配，拿到storage指针
+  // Calculate the space needed to be allocated, then allocate and get the storage pointer.
   caffe2::TypeMeta dtype = scalarTypeToTypeMeta(scalar_type);
   auto size_bytes = computeStorageNbytesContiguous(size, dtype.itemsize());
   auto storage_impl = c10::make_intrusive<StorageImpl>(
@@ -436,16 +436,17 @@ TensorBase _empty_generic(
       allocator,
       /*resizeable=*/true);
 
-  // 使用storage指针创建tensor(实际上是TensorBase类型)
-  // 此时shape，stride等已经计算好并填入了（NCHW的形式）
-  // 我们按照文章一开始的用例，此处stride为 [1280,20,4,1]
+  // Use the storage pointer to create a tensor (actually of type TensorBase)
+  // At this point, shape, stride, etc. have been calculated and filled in (in NCHW format)
+  // According to our use case, the stride here is [1280,20,4,1].
   auto tensor = detail::make_tensor_base<TensorImpl>(
       std::move(storage_impl), ks, dtype);
   // ...
 
   if (memory_format_opt.has_value()) {
-    // 此处仅仅改了stride，并不需要改变tensor内存排布（因为只是空tensor）
-    // 如一开始用例的话，此处stride改变为[1280, 1, 256, 64]
+    // Here, only the stride is changed, and the memory layout of the tensor
+    // does not need to be changed (because it is just an empty tensor)
+    // the stride here changes to [1280, 1, 256, 64].
     if (*memory_format_opt != MemoryFormat::Contiguous) {
       tensor.unsafeGetTensorImpl()->empty_tensor_restride(*memory_format_opt);
     }
@@ -455,9 +456,9 @@ TensorBase _empty_generic(
 }
 ```
 
-`_empty_generic`调用完毕后，新tensor便创建好了，对于stride计算有疑问的小伙伴们可以看笔者的另外一篇文章[memory_format](../memory_format/index.zh-cn.md)
+After `_empty_generic` is called, the new tensor is created. If you have any questions about stride calculation, you can refer to another article I wrote [tensor_data_layout](../tensor_data_layout).
 
-创建好后，一路返回到redispatch的clone算子处
+After creation, we go back to the redispatched clone operator location.
 
 ```c++
 // aten/src/ATen/native/TensorFactories.cpp
@@ -467,7 +468,6 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
   if (memory_format == MemoryFormat::Preserve) {
     // ...
   } else {
-    // 创建空tensor
     self = at::empty_like(src, src.options(), memory_format);
   }
 
@@ -480,4 +480,4 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
 }
 ```
 
-如果源tensor为空，那就直接set zero，如果不是，那么就调用`copy_`算子
+If the source tensor is empty, it is directly set to zero. If not, the `copy_` operator is called.

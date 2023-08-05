@@ -1,19 +1,13 @@
 ---
-title: "How Pytorch 2.0 Call Ops(3)"
-date: 2023-05-13T09:53:09+08:00
+title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(3)"
+date: 2023-05-13T11:53:09+08:00
 categories: ["pytorch"]
-summary: "This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example."
+summary: "本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。"
 ---
 
 ## Summary
 
-This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example.
-
-## To be translated
-
-Oh Sorry!
-
-This blog has't been translated to English, please wait for a little while...
+本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。
 
 ## 9. copy_算子与TensorIterator
 
@@ -104,7 +98,7 @@ void TensorIteratorBase::build(TensorIteratorConfig& config) {
   compute_types(config);
   // 尝试快速构建output tensor（比如如果所有tensor都是contiguous、channals last，那就可以快速infer output/resize（如果需要），set name等）
   if (!fast_set_up(config)) {
-    // 计算每个tensor广播后的stride（实际上是计算出op.stride_bytes（stride * element_size）如本例中，shape_为[1, 64, 5, 4], output.stride_bytes = [5120, 4, 1024, 256]
+    // 计算每个tensor广播后的stride（实际上是计算出op.stride_bytes（stride * element_size）如本例中，shape_为[1, 64, 5, 4], output.stride_bytes = [5120, 4, 1024, 256]（NHWC）
     compute_strides(config);
     // 此处对tensor的shape、stride进行重排序，将stride[0]作为最快的步进维度（stride升序排列），如本例中，shape_变为[64, 4, 5, 1], output.stride_bytes = [4, 256, 1024, 5120]
     reorder_dimensions();
@@ -224,7 +218,7 @@ void TensorIteratorBase::coalesce_dimensions() {
 
   // 最后resize 如我们上例的tensor：
   // shape_ = [64, 4, 5, 1], output.stride_bytes = [4, 256, 1024, 5120], input.stride_bytes = [80, 4, 16, 5120]
-  // 变为 shape_ = [64, 20], input.stride_bytes = [80, 4]
+  // 变为 shape_ = [64, 20], output.stride_bytes = [4, 256], input.stride_bytes = [80, 4]
   shape_.resize(prev_dim + 1);
   for (const auto i : c10::irange(ntensors())) {
     operands_[i].stride_bytes.resize(ndim());
@@ -233,11 +227,11 @@ void TensorIteratorBase::coalesce_dimensions() {
 }
 ```
 
-合并相邻维度后，`TensorIterator`就构建完成了，注意此时已经没有了`input`和`output`的参数，之后所有操作全部基于该iterator展开。
+合并相邻维度后，`TensorIterator`就构建完成了，注意此时已经没有了`input`和`output`的参数，之后所有操作全部基于该iterator展开（本质是指针和`stride_bytes`）。
 
 ## 10. copy算子：kernel执行
 
-回到上文，`copy_stub`进行一轮dispatch后调用到`copy_kernel`(device_type用于dispatch到不同的kernel，到具体kernel时已经没有了这个参数)。此外，
+回到上文，`copy_stub`进行一轮dispatch后调用到`copy_kernel`
 
 ```c++
 // aten/src/ATen/native/cpu/CopyKernel.cpp
@@ -251,12 +245,6 @@ void copy_kernel(TensorIterator& iter, bool /*non_blocking*/) {
   } else if (/* bfloat16 */) {
     float_bfloat16_copy_kernel(iter, requires_neg);
   } else {
-    // 如果类型不一致，走到该分支
-    // AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4 宏 switch 处理数据类型
-    // 如果`has_contiguous_first_dim`为true（两tensor的 stride[0] == elementsize）
-    // 则直接调用iter.for_each直接传入一个带类型转化的匿名函数
-    // 否则调用cpu_kernel(aten/src/ATen/native/cpu/Loops.h)，本质是调用`iter.for_each`传入`basic_loop`的匿名函数（basic_loop可以支持任意stride的1d slice）
-    // basic loop为何能支持任意stride呢？请继续阅读本文，之后会进行介绍
     AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4(ScalarType::ComplexHalf, ScalarType::Half, ScalarType::Bool, ScalarType::BFloat16, dtype, "copy_", [&] {
       using dest_t = scalar_t;
       AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4(ScalarType::ComplexHalf, ScalarType::Half, ScalarType::Bool, ScalarType::BFloat16, iter.dtype(1), "copy_", [&] {
@@ -282,7 +270,13 @@ void copy_kernel(TensorIterator& iter, bool /*non_blocking*/) {
 }
 ```
 
-我们重点看类型一致的情况（`contiguous`到这里一定是类型一致的），因为我们不需要取负也不需要共轭，所以调用到`direct_copy_kernel`函数
+如果类型不一致，走到`AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND4`，这是个switch宏处理数据类型
+
+如果**has_contiguous_first_dim**为true（输入tensor都满足`stride[0] == elementsize`），则直接调用`iter.for_each`直接传入一个带`reinterpret_cast`类型转化的匿名函数，否则调用`cpu_kernel`，其本质也是调用`iter.for_each`传入带`c10::convert`的匿名函数。
+
+这里两个匿名函数的区别是，前者只是改变了数据解释方式，原数据位模式并没有变化，后者实际执行了向量化的类型转换。
+
+我们重点看类型一致的情况（`contiguous`到这里一定是类型一致的），在`copy_same_dtype`中，我们调用到`direct_copy_kernel`函数
 
 ```c++
 // aten/src/ATen/native/cpu/CopyKernel.cpp
@@ -346,6 +340,15 @@ void direct_copy_kernel(TensorIteratorBase &iter) {
 
 到这里copy kernel本身的内容已经调用完成，将两个匿名函数传给了`cpu_kernel_vec`
 
+```c++
+cpu_kernel_vec(
+    iter,
+    [=](scalar_t a) -> scalar_t { return a; },
+    [=](Vectorized<scalar_t> a) -> Vectorized<scalar_t> {
+      return a;
+    });
+```
+
 ## 11. `cpu_kernel_vec`底层运行原理
 
 `cpu_kernel_vec`支持标量化函数和向量化函数作参数，我们展开其细节
@@ -397,7 +400,7 @@ void TensorIteratorBase::serial_for_each(loop2d_t loop, Range range) const {
   // 此处总strides长4
   c10::SmallBuffer<int64_t, 8> strides(ntensors * std::max(ndim, 2));
   
-  // 这里operands_是 TensorIteratorBase的tensor op列表
+  // 这里operands_是 TensorIteratorBase的tensor列表
   // `get_base_ptrs`拿到了所有tensor的storage指针，转化为char*类型，存储在指针列表中
   at::get_base_ptrs(ptrs.data(), operands_);
   // `get_strides`则将所有tensor stride按序存储到strides中（低维到高维排列）
@@ -506,7 +509,7 @@ inline void get_data_ptrs(
 }
 ```
 
-然后走到`max_2d_step`方法，这里无论有多少维度，只取二维，即获取到当前batch应处理数据的step `(m, n)`，我们希望尽可能快地取完数据，理想情况下（没有offset时），比如shape为`[64, 2000, 10]`，我们取step = `{64, 2000}`，那么取10次就能取完数据（但本例中第三维开始offset已经是8了，所以取三次正好取完）。
+然后走到`max_2d_step`方法，这里无论有多少维度，只取二维，即获取到当前batch应处理数据的step `(m, n)`，我们希望尽可能快地取完数据，理想情况下（没有offset时），比如shape为`[64, 2000, 10]`，我们取step = `{64, 2000}`，那么取10次就能取完数据
 
 但由于offset限制，所以我们不一定能取满`{64, 2000}`那么大，但经过一次取少量数据`shape[0] - values[0]`一次调整对齐之后，第一维就对齐了，之后第一维都能取满64。同理，第二维可能需要经过`shape[1] - values[1]`调整一次后才能对齐。
 
@@ -563,8 +566,8 @@ void DimCounter::increment(const std::array<int64_t, 2>& step) {
 
 `loop2d`本质上是根据step0和step1进行二重循环：
 
-- 首先循环step0，如果可以向量化展开（如stride恰好等于type size）就尽可能调用`vectorized_loop`展开（类似for循环展开，在一次循环中处理多个数据），否则调用`basic_loop`for循环step0，每次步进第一维的stride实现逐元素处理。
-- 然后 `advance` 第二维的stride，实现step1的loop。
+- 首先循环`step0`，如果可以向量化展开（如stride恰好等于type size）就尽可能调用`vectorized_loop`展开（类似for循环展开，在一次循环中处理多个数据），否则调用`basic_loop`for循环`step0`，每次步进第一维的stride实现逐元素处理。
+- 然后 `advance` 第二维的stride，实现`step1`的loop。
 
 ```c++
 // aten/src/ATen/native/cpu/Loops.h
@@ -581,7 +584,6 @@ struct VectorizedLoop2d {
 
     // using traits = function_traits<op_t>;
     // 注意这里op_t为[=](scalar_t a) -> scalar_t { return a; }，
-    // 这里is contiguous是在做什么呢？我们下文展开
     if (is_contiguous<traits>(strides)) {
       for (const auto i C10_UNUSED : c10::irange(size1)) {
         vectorized_loop(data.data(), size0, 0, op, vop);
@@ -589,10 +591,9 @@ struct VectorizedLoop2d {
       }
     } else {
       // Indices是一个模板类，模板参数为traits::arity（func_t参数数量，我们copy kernel arity为1）
-      // 构造了indices数值序列（左闭右开），即{0}
+      // 构造了indices数值序列，这里是{0}
       using Indices = std::make_index_sequence<traits::arity>;
       unroll_contiguous_scalar_checks<traits>(strides, Indices{}, [&](size_t idx) {
-        // 这一部分{}内都是匿名函数体的内容
         if (idx) {
           // idx非0，进行向量化loop
           for (const auto i C10_UNUSED : c10::irange(size1)) {
@@ -674,7 +675,7 @@ static inline void unroll_contiguous_scalar_checks(
 
 ```c++
 // aten/src/ATen/native/cpu/Loops.h
-// size1即我们的上文的step[1]，这里的意思是for 第二维数据，loop第一维数据
+// size1即我们的上文的step[1]，这里的意思是for循环第二维数据，loop第一维数据
 // data即我们上文处理好的指针首地址
 for (const auto i C10_UNUSED : c10::irange(size1)) {
   basic_loop(data.data(), strides, 0, size0, op);

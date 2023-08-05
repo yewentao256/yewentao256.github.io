@@ -1,19 +1,13 @@
 ---
-title: "How Pytorch 2.0 Call Ops(2)"
-date: 2023-04-12T09:53:09+08:00
+title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(2)"
+date: 2023-04-12T10:53:09+08:00
 categories: ["pytorch"]
-summary: "This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example."
+summary: "本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。"
 ---
 
 ## Summary
 
-This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example.
-
-## To be translated
-
-Oh Sorry!
-
-This blog has't been translated to English, please wait for a little while...
+本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。
 
 ## 6. register和dispatch的回顾
 
@@ -214,7 +208,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
 }
 ```
 
-可以看到，pytorch的判断`is_contiguous`并没有计算，而是将数据直接存储在`TensorImpl`里，每次直接取用即可，这样省去了计算量，但也要求在更改tensor stride或者初始化的时候算出相关bool并存储。
+可以看到，pytorch的判断`is_contiguous`并没有计算，而是将数据直接存储在`TensorImpl`里，每次直接取用即可，这样省去了计算量，但也要求在初始化tensor或更改stride的时候算出相关bool并存储。
 
 那么，它是如何被设置的呢？我们溯源该变量的set流程，发现它被`refresh_contiguous()`设置，每次修改tensor的shape或stride的时候都要调用该方法。
 
@@ -280,7 +274,7 @@ bool _compute_channels_last_contiguous_2d(
 
 例如一个`N, C, H, W = 2, 2048, 1, 1`的tensor，它的stride为`[2048, 1, 1, 1]` 就是一个channels last的tensor（同时也是contiguous的tensor，因为内存排布刚好h、w都是1）
 
-## 8. clone算子：自动微分与empty tensor
+## 8. clone算子：empty tensor与copy
 
 继续我们的调用流程，如果tensor在指定memory format下已经连续，那就直接返回，如果不连续，那就按照指定memory format进行`clone`
 
@@ -325,7 +319,7 @@ at::Tensor clone(c10::DispatchKeySet ks, const at::Tensor & self, c10::optional<
   if (self_.defined()) self__impl_saved = self_.getIntrusivePtr();
   #endif
   // 将当前dispatchkey和c10::after_autograd_keyset运算后，redisptach clone算子
-  // redispatch的结果是拿到了clone的正确结果，redisptach的过程我们下文展开
+  // redispatch拿到了clone的正确结果，redisptach的过程我们下文展开
   auto _tmp = ([&]() {
     at::AutoDispatchBelowADInplaceOrView guard;
     return at::redispatch::clone(ks & c10::after_autograd_keyset, self_, memory_format);
@@ -338,7 +332,7 @@ at::Tensor clone(c10::DispatchKeySet ks, const at::Tensor & self, c10::optional<
 
 值得指出的是，在上面代码中redisptach的过程中，在重新计算dispatchkey之后，redisptach到aten的clone算子。`redispatch`和`call`有什么区别呢？
 
-一方面，是函数签名上的差异，`redispatch`带了一个`currentDispatchKeySet`，就不用像call那样从op里取dispatchkey，直接用参数传进来的就好。
+一方面，是函数签名上的差异，`redispatch`带了一个`currentDispatchKeySet`参数，就不用像`call`那样从op里取dispatchkey。
 
 ```c++
 Return Dispatcher::call(const TypedOperatorHandle<Return(Args...)>& op, Args... args) const
@@ -376,7 +370,7 @@ Tensor clone(const Tensor& src, c10::optional<c10::MemoryFormat> optional_memory
 }
 ```
 
-创建tensor时调用了`empty_like`算子，创建一个和src相同（但memory format为新memory format）的空tensor，一样经过dispatch后来到`TensorFactories.cpp`，然后`empty_like`又调用了empty算子（先call到`build/aten/src/ATen/RegisterBackendSelect.cpp`处，然后redispatch到CPU上——redispatch到哪根据编译选项不同会有差异）
+创建tensor时调用了`empty_like`算子，创建一个和src相同（但memory format为新memory format）的空tensor，一样经过dispatch后来到`TensorFactories.cpp`，然后`empty_like`又调用了empty算子（先call到`build/aten/src/ATen/RegisterBackendSelect.cpp`处，然后redispatch到CPU上——redispatch到哪根据编译选项和设备不同会有差异）
 
 ```c++
 // aten/src/ATen/native/TensorFactories.cpp
@@ -461,7 +455,7 @@ TensorBase _empty_generic(
 }
 ```
 
-`_empty_generic`调用完毕后，新tensor便创建好了，对于stride计算有疑问的小伙伴们可以看笔者的另外一篇文章[memory_format](../memory_format/index.zh-cn.md)
+`_empty_generic`调用完毕后，新tensor便创建好了，对于stride计算有疑问的小伙伴们可以看笔者的另外一篇文章[tensor_data_layout](../tensor_data_layout)
 
 创建好后，一路返回到redispatch的clone算子处
 

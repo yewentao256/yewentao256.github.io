@@ -1,23 +1,17 @@
 ---
-title: "How Pytorch 2.0 Call Ops(1)"
+title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(1)"
 date: 2023-03-11T09:53:09+08:00
 categories: ["pytorch"]
-summary: "This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example."
+summary: "Uncover the inner workings of PyTorch through a deep dive into the `contiguous` operator, from its Python interface to its dispatching and registration process, and finally how it is executed."
 ---
 
 ## Summary
 
-This article introduces the process of pytorch 2.0 calling ops, using `contiguous` as an example.
+Uncover the inner workings of PyTorch through a deep dive into the `contiguous` operator, from its Python interface to its dispatching and registration process, and finally how it is executed.
 
-## To be translated
+## 0. Introduction
 
-Oh Sorry!
-
-This blog has't been translated to English, please wait for a little while...
-
-## 0. 引入
-
-我们首先看这么一段代码
+Let's begin with code:
 
 ```py
 import torch
@@ -30,13 +24,13 @@ print(x.stride())           # (1280, 1, 256, 64)
 print(x.is_contiguous())    # False
 ```
 
-它会将NCHW的内存分布转换为NHWC（channel last）的内存分布，进而在一些特定场景下取得更好的性能提升（如conv2d）
+It converts the NCHW memory layout to the NHWC (channel last) memory layout, thereby achieving better performance improvement in certain specific scenarios (such as `conv2d`).
 
-`contiguous`是如何被导出到python层的？其底层实际运行逻辑是怎样的呢？我们将一层层往下走，并最终将调用链路串联起来，揭开pytorch调用算子流程的面纱。
+How is `contiguous` exported to the Python layer? What is the underlying logic of its actual operation? We will go down layer by layer and finally link up the call chain to unveil the process of PyTorch calling operators.
 
-## 1. c++ 到 python：contiguous如何被导出
+## 1. C++ to Python: How is `contiguous` exported
 
-python层对于contiguous没有额外封装，直接使用c++导出的pyi声明
+The Python layer does not have any extra encapsulation for `contiguous`, and directly uses the pyi declaration exported by C++.
 
 ```py
 # torch/_C/__init__.pyi
@@ -49,9 +43,9 @@ class _TensorBase(metaclass=_TensorMeta):
     def contiguous(self, memory_format=torch.contiguous_format) -> Tensor: ...
 ```
 
-可以看到，`contiguous`是`_TensorBase`的一个类方法。`_TensorBase`使用`_TensorMeta`作为元类（一种python机制，可以动态地修改类内部的属性或方法）。
+As we can see, `contiguous` is a class method of `_TensorBase`. `_TensorBase` uses `_TensorMeta` as a metaclass (a Python mechanism that can dynamically modify the properties or methods inside a class).
 
-`_TensorBase`是如何被导出到python层的呢？pytorch使用python自带的**PyModuleDef**机制创建了`torchmodule`，随后调用`THPVariable_initModule`并通过`PyModule_AddObject`导出
+How is `_TensorBase` exported to the Python layer? PyTorch uses the built-in **PyModuleDef** mechanism of Python to create the `torchmodule`, then calls `THPVariable_initModule` and exports through `PyModule_AddObject`.
 
 ```c++
 // torch/csrc/Module.cpp
@@ -72,7 +66,7 @@ bool THPVariable_initModule(PyObject* module) {
   static std::vector<PyMethodDef> methods;
   THPUtils_addPyMethodDefs(methods, torch::autograd::variable_methods);
   THPUtils_addPyMethodDefs(methods, extra_methods);
-  // 将`variable_methods`并放到`THPVariableType.tp_methods`中
+  // add `methods` to `THPVariableType.tp_methods`
   THPVariableType.tp_methods = methods.data();
   if (PyType_Ready(&THPVariableType) < 0)
     return false;
@@ -83,11 +77,11 @@ bool THPVariable_initModule(PyObject* module) {
 }
 ```
 
-我们的`contiguous`方法便位于`variable_methods`中，进而作为`_TensorBase`的成员方法被导出到python层。
+Our `contiguous` method is located in `variable_methods`, and is then exported to the Python layer as a member method of `_TensorBase`.
 
-## 2. 代码生成简述：`native_functions.yaml`和`variable_methods`
+## 2. Brief introduction to code generation: `native_functions.yaml` and `variable_methods`
 
-`variable_methods`被定义在`tools/autograd/templates/python_variable_methods.cpp`中。
+`variable_methods` is defined in `tools/autograd/templates/python_variable_methods.cpp`.
 
 ```c++
 // tools/autograd/templates/python_variable_methods.cpp
@@ -98,9 +92,9 @@ PyMethodDef variable_methods[] = {
 }
 ```
 
-但注意，此处仅仅是模板，并不是实际被编译运行的代码。实际上，算子开发中有很多函数代码相似，pytorch为了减少重复的工作量，引入了一种**代码生成机制**，简单来说是基于`native.yaml`和模板来生成代码，具体逻辑可见`torchgen/gen.py`，我们不过多展开。
+However, note that this is just a template and not the actual code that is compiled and run. There is a lot of similar function code in operator development. To reduce the amount of duplicate work, PyTorch introduces a **code generation mechanism**. Simply put, it generates code based on `native_functions.yaml` and templates. The specific logic can be seen in `torchgen/gen.py`, but we will not delve into it here.
 
-在编译pytorch后，我们可以在generated文件夹下看到更多内容，如新生成的`unsqueeze`
+After compiling PyTorch, we can see more content in the generated folder, such as the newly generated `unsqueeze`.
 
 ```c++
 // torch/csrc/autograd/generated/python_variable_methods.cpp
@@ -114,7 +108,7 @@ PyMethodDef variable_methods[] = {
 }
 ```
 
-`unsqueeze_`来自`native_functions.yaml`中的定义，替换了在模板中的`${py_method_defs}`
+`unsqueeze_` comes from the definition in `native_functions.yaml`, replacing `${py_method_defs}` in the template.
 
 ```yaml
 - func: unsqueeze_(Tensor(a!) self, int dim) -> Tensor(a!)
@@ -126,22 +120,22 @@ PyMethodDef variable_methods[] = {
     CompositeExplicitAutograd: unsqueeze_
 ```
 
-- `func`：描述函数名称及参数、输出类型等
-- `variants`：`method`或`function`，指生成tensor method或单独function
-- `device_check`：确保传递给kernel的所有tensor在同一device上
-- `device_guard`：确保kernel在指定设备下执行（匹配第一个tensor参数的设备）
-- `dispatch`：指定后端与对应的函数。`CompositeExplicitAutograd`指的是显式自动微分dispatch key，需要在`derivative.yaml`写明微分规则。如果是`CompositeImplicitAutograd`则不需要，这是基于该算子底层算子都支持自动微分实现的，如`conv2d`。
-- `tags`：算子标签，详见[链接](https://github.com/pytorch/pytorch/blob/main/aten/src/ATen/native/tags.yaml)
+- `func`: Describes the function name, parameters, output types, etc.
+- `variants`: `method` or `function`, indicating whether to generate tensor methods or standalone functions.
+- `device_check`: Ensures that all tensors passed to the kernel are on the same device.
+- `device_guard`: Ensures that the kernel is executed on the specified device (matching the device of the first tensor argument).
+- `dispatch`: Specifies the backend and corresponding function. `CompositeExplicitAutograd` refers to the explicit automatic differentiation dispatch key, and the differentiation rule needs to be stated in `derivative.yaml`. If it is `CompositeImplicitAutograd`, it is not necessary, as this is based on the underlying operators of the operator supporting automatic differentiation, such as `conv2d`.
+- `tags`: Operator tags, see [link](https://github.com/pytorch/pytorch/blob/main/aten/src/ATen/native/tags.yaml) for details.
 
-值得指出的是，由于`contiguous`代码较为复杂，所以在`tools/autograd/templates/python_variable_methods.cpp`中已经有了完整内容，并不是通过`{py_method_defs}`生成出来的。
+It's worth noting that, due to the complexity of the `contiguous` code, the full content is already in `tools/autograd/templates/python_variable_methods.cpp`, and is not generated via `{py_method_defs}`.
 
-## 3. contiguous的调用：在dispatch前
+## 3. Calling `contiguous`: Before dispatch
 
-注意：我们调用流程走的是aten算子，而不是`torchprim`的版本算子。笔者是基于cpu编译的pytorch，没有走cuda（cudnn/triton）
+Note: The operator we are following is the ATen operator, not the `torchprim` version. The author compiled PyTorch based on **CPU**, so we are not following the CUDA (cuDNN/Triton) path.
 
-如果读者想要gdb调试CPP部分，请设置环境变量`export DEBUG=1`再编译。如果希望运行时看到调用链路，可以设置`export TORCH_SHOW_DISPATCH_TRACE=1`。
+If you want to debug the CPP part using gdb, please set the environment variable `export DEBUG=1` before compiling. If you want to see the call chain during runtime, you can set `export TORCH_SHOW_DISPATCH_TRACE=1`.
 
-由上文可知，我们放到`tensorbase`里的contiguous函数为`THPVariable_contiguous`，这里是直接与python层交互的函数，负责解析参数、执行调用等。
+As mentioned earlier, the `contiguous` function we put into `tensorbase` is `THPVariable_contiguous`. This is the function that directly interacts with the Python layer, responsible for parsing parameters, executing calls, etc.
 
 ```c++
 // torch/csrc/autograd/generated/python_variable_methods.cpp
@@ -152,7 +146,7 @@ static PyObject * THPVariable_contiguous(PyObject* self, PyObject* args, PyObjec
   });
   ParsedArgs<1> parsed_args;
   auto r = parser.parse(self, args, kwargs, parsed_args);
-  // 将self参数解析成`at::Tensor`
+  // parse self to `at::Tensor`
   auto& self_ = THPVariable_Unpack(self);
   auto memory_format = r.memoryformat(0);
   if (self_.is_contiguous(memory_format)) {
@@ -163,23 +157,23 @@ static PyObject * THPVariable_contiguous(PyObject* self, PyObject* args, PyObjec
 }
 ```
 
-简单而言就是解析python参数，随后判断当前tensor对于所需的`memory_format`是否`contiguous`，如果是的话直接返回，否则调用`dispatch_contiguous`。`is_contiguous()`的具体内容我们下文展开
+It parses Python parameters, then checks if the current tensor `is_contiguous` for the required `memory_format`. If it is, it returns directly, otherwise it calls `dispatch_contiguous`. We will expand on the specifics of `is_contiguous()` later.
 
 ```c++
 // torch/csrc/autograd/generated/python_variable_methods.cpp
 static Tensor dispatch_contiguous(const Tensor & self, at::MemoryFormat memory_format) {
-  // 释放`Global Interpreter Lock (GIL)`
+  // release `Global Interpreter Lock (GIL)`
   pybind11::gil_scoped_release no_gil;
   OptionalDeviceGuard device_guard(device_of(self));
   return self.contiguous(memory_format);
 }
 ```
 
-`pybind11::gil_scoped_release`释放了`Global Interpreter Lock (GIL)`来提高性能（pybind11不会隐式释放，一切由用户操作，如果在释放后还需要访问python object，那么就必须require，详见[pybind11-gil](https://pybind11.readthedocs.io/en/stable/advanced/misc.html)。在此处由于我们已经把参数全部解析成c++参数，所以可以自由释放gil了。
+`pybind11::gil_scoped_release` releases the `Global Interpreter Lock (GIL)` to improve performance (pybind11 does not release it implicitly, everything is controlled by the user. If you need to access Python objects after release, you must require it, see [pybind11-gil](https://pybind11.readthedocs.io/en/stable/advanced/misc.html)). Here, since we have parsed all parameters into C++ parameters, we can release the GIL.
 
-`OptionalDeviceGuard device_guard`是一种**RAII**（Resource Acquisition Is Initialization，资源获取即初始化）的guard，在构造函数中设置为某一设备，在析构函数中取消设置。相对`DeviceGuard`，`OptionalDeviceGuard`允许传一个nullopt，等效于`optional<DeviceGuard>`。这里我们不做展开，有兴趣的读者可以参考`c10/core/DeviceGuard.h`
+`OptionalDeviceGuard device_guard` is a type of **RAII** (Resource Acquisition Is Initialization) guard, which is set to a certain device in the constructor and unset in the destructor. Compared to `DeviceGuard`, `OptionalDeviceGuard` allows passing a nullopt, equivalent to `optional<DeviceGuard>`. We won't expand on this here. Interested readers can refer to `c10/core/DeviceGuard.h`.
 
-之后调用`self.contiguous()`
+Then it calls `self.contiguous()`.
 
 ```c++
 // build/aten/src/ATen/core/TensorBody.h
@@ -203,11 +197,11 @@ class TORCH_API TensorBase {
 }
 ```
 
-细心的读者可能发现，在tensorbase里它再次调用了`is_contiguous`方法，这是否和上面`THPVariable_contiguous`中重复了呢？对于我们例子中从python中调用下来确实是重复了，但contiguous并不是只有python层一个入口，c++层其他tensor也可能调用，所以这里需要加上。
+Attentive readers may notice that it calls the `is_contiguous` method again in `tensorbase`. Is this a repetition of what's in `THPVariable_contiguous`? For our example where it's called from Python, it is indeed redundant, but `contiguous` doesn't just have one entry point at the Python layer, other tensors in the C++ layer may also call it, so it's necessary to include it here.
 
-那能不能python层不检查呢，都到此处来检查？理论上也是可以的，但相对而言就会多走一些调用流，降低运行效率。而后文我们会展开`is_contiguous`的判断逻辑，由于其采取了变量形式存储，所以`is_contiguous`运行效率非常高的，因此权衡之下将`is_contiguous`多次调用。
+Can't we just skip the check at the Python layer and check it here instead? In theory, we can, but that would add some overhead to the call flow and reduce efficiency. We will go over the logic of `is_contiguous` later. Since it's stored as a variable, `is_contiguous` runs very efficiently, so it's ok to call `is_contiguous` multiple times.
 
-随后调用`TensorBase`的`__dispatch_contiguous()`方法
+Then it calls the `__dispatch_contiguous()` method of `TensorBase`.
 
 ```c++
 // aten/src/ATen/core/Tensor.cpp
@@ -217,15 +211,15 @@ TensorBase TensorBase::__dispatch_contiguous(c10::MemoryFormat memory_format) co
 }
 ```
 
-注意此处将tensorbase转成了`OptionalTensorRef self`，这将使成员方法调用变成函数方法调用，即self变成了之后调用contiguous算子的**参数**
+Note that here, `tensorbase` is converted to `OptionalTensorRef self`, which changes the call from a member method to a function method, i.e., `self` becomes a **parameter** for the subsequent call to the `contiguous` operator.
 
-这也和`native_functions.yaml`中参数声明对应起来了`aten::contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format) -> Tensor(a)`
+This also corresponds to the parameter declaration in `native_functions.yaml`: `aten::contiguous(Tensor(a) self, *, MemoryFormat memory_format=contiguous_format) -> Tensor(a)`.
 
-## 4. dispatch contiguous算子：找schema与call kernel
+## 4. Dispatch `contiguous` operator: Find schema and call kernel
 
-调用`at::_ops::contiguous::call()`来到基于`native_functions.yaml`生成的文件`Operators_4.cpp`中
+We call `at::_ops::contiguous::call()` to get to the file `Operators_4.cpp`, which is generated based on `native_functions.yaml`.
 
-dispatch分为两步，第一步找到function schema，第二步调用schema中符合条件的kernel（如cpu tensor调度到cpu kernel、cuda tensor到cuda kernel等，该过程后面详细展开）
+**Dispatching** is a two-step process: first, find the function schema, and second, call the kernel that meets the conditions in the schema (e.g., dispatch the CPU tensor to the CPU kernel, dispatch the CUDA tensor to the CUDA kernel, etc. We will expand on this process later).
 
 ```c++
 // build/aten/src/ATen/Operators_4.cpp
@@ -241,7 +235,7 @@ static C10_NOINLINE c10::TypedOperatorHandle<contiguous::schema> create_contiguo
 }
 ```
 
-这里的`contiguous::name/overload_name`来自`continuous_ops.h`（生成代码）
+The `contiguous::name/overload_name` here comes from `continuous_ops.h` (generated code).
 
 ```c++
 // build/aten/src/ATen/ops/contiguous_ops.h
@@ -256,7 +250,7 @@ struct TORCH_API contiguous {
 };
 ```
 
-我们展开说明op的获取流程，首先拿到一个`Dispatcher`的singleton（单例）
+We'll expand on the process of obtaining an op. First, we get a singleton of `Dispatcher`.
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.h
@@ -273,12 +267,12 @@ C10_EXPORT Dispatcher& Dispatcher::realSingleton() {
 }
 ```
 
-随后拿着dispatcher的单例去`findSchemaOrThrow()`
+Then we take the singleton of the dispatcher to `findSchemaOrThrow()`.
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.cpp
 OperatorHandle Dispatcher::findSchemaOrThrow(const char* name, const char* overload_name) {
-  // 这里name = "aten::contiguous", overload_name = ""
+  // here name = "aten::contiguous", overload_name = ""
   auto it = findSchema({name, overload_name});
   if (!it.has_value()) {
     auto it2 = findOp({name, overload_name});
@@ -312,7 +306,7 @@ c10::optional<OperatorHandle> Dispatcher::findOp(const OperatorName& overload_na
 }
 ```
 
-这里的`operatorLookupTable_`是`Dispatcher.h`中声明的一个私有变量`LeftRight<ska::flat_hash_map<OperatorName, OperatorHandle>> operatorLookupTable_;`，简单来说是一个哈希表，这里传了一个匿名函数进去，在哈希表中查找name，如果有则返回找到的`OperatorHandle`，如果没有则返回`nullopt`
+The `operatorLookupTable_` here is a private variable declared in `Dispatcher.h`: `LeftRight<ska::flat_hash_map<OperatorName, OperatorHandle>> operatorLookupTable_;`. In simple terms, it's a hash table. We pass an anonymous function into it to look up the name in the hash table. If it's found, the function returns the found `OperatorHandle`; if it's not found, it returns `nullopt`.
 
 ```c++
 template <class T>
@@ -321,15 +315,15 @@ class LeftRight final {
   auto read(F&& readFunc) const -> typename c10::invoke_result_t<F, const T&> {
     // ...
 
-    // _data[_foregroundDataIndex.load()]拿到了所需的 operatorLookupTable
+    // through _data[_foregroundDataIndex.load()] we get operatorLookupTable
     return readFunc(_data[_foregroundDataIndex.load()]);
   }
 }
 ```
 
-这里我们找到了对应的`c10::OptionalBase<c10::OperatorHandle>`op并返回，随后经过`typed()`最终生成了`c10::TypedOperatorHandle<at::Tensor (const at::Tensor &, c10::MemoryFormat)>`给到外层static变量op。
+Here we find the corresponding `c10::OptionalBase<c10::OperatorHandle>` op and return it. After going through `typed()`, it eventually generates `c10::TypedOperatorHandle<at::Tensor (const at::Tensor &, c10::MemoryFormat)>` for the outer static variable `op`.
 
-到这里第一步查找schema步骤完成，我们接着开始查找并调用kernel。
+At this point, the first step of finding the schema is complete. We then start to find and call the kernel.
 
 ```c++
 // build/aten/src/ATen/Operators_4.cpp
@@ -339,7 +333,7 @@ at::Tensor contiguous::call(const at::Tensor & self, at::MemoryFormat memory_for
 }
 ```
 
-随后就调用call方法
+Then we call the `call` method.
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.h
@@ -355,13 +349,13 @@ class TypedOperatorHandle<Return (Args...)> final : public OperatorHandle {
 template<class Return, class... Args>
 C10_ALWAYS_INLINE_UNLESS_MOBILE Return Dispatcher::call(const TypedOperatorHandle<Return(Args...)>& op, Args... args) const {
   // ...
-  // 基于tensor等参数算出一个最佳的dispatch key set
+  // Calculate the optimal dispatch key set based on tensor and other parameters
   auto dispatchKeySet = op.operatorDef_->op.dispatchKeyExtractor()
     .template getDispatchKeySetUnboxed<Args...>(args...);
-  // 根据disptach key set去operatorHandle中找kernel
+  // Find the kernel in operatorHandle based on the dispatch key set
   const KernelFunction& kernel = op.operatorDef_->op.lookup(dispatchKeySet);
   // ...
-  // 最后调用kernel
+  // Finally, call the kernel
   return kernel.template call<Return, Args...>(op, dispatchKeySet, std::forward<Args>(args)...);
 }
 
@@ -372,17 +366,16 @@ const KernelFunction& lookup(DispatchKeySet ks) const {
     // ... some check
     return kernel;
   }
-
 ```
 
-在`call`方法中，首先算出一个`dispatchKeySet`，随后进入到 `op.lookup`中根据`dispatchKeySet`再算出`idx`，随后在`dispatchTable_`中找到最终调度到的kernel function，并调用其模板函数 `call`。
+In the `call` method, we first calculate a `dispatchKeySet`, then enter `op.lookup` to calculate `idx` based on the `dispatchKeySet`, and finally find the final dispatched kernel function in the `dispatchTable_`, and call its template function `call`.
 
-`dispatchKeySet`是一个`uint64_t`位集，每个dispatch key代表一个bit位，越大的bit索引代表优先级越高，例如一个tensor的device指定为`cuda`，disptach key set可能为`{AutogradCUDA | CUDA | ADInplaceOrView}`，那么会先进行dispatch到`AutogradCUDA`上，进行一些自动微分处理，然后再`redispatch`到`CUDA`上。
+`dispatchKeySet` is a `uint64_t` bitset, where each dispatch key represents a bit, and a larger bit index indicates a higher priority. For example, if a tensor's device is specified as `cuda`, the dispatch key set might be `{AutogradCUDA | CUDA | ADInplaceOrView}`, and it will first dispatch to `AutogradCUDA` for some automatic differentiation processing, and then `redispatch` to `CUDA`.
 
-这里特别指出，`ADInplaceOrView`是一个比较特殊的dispatchkey，专门针对inplace以及view操作时注册，为后续autograd计算提供额外设置。
+Here it is worth pointing out that `ADInplaceOrView` is a special dispatch key, registered specifically for inplace and view operations, to provide additional settings for subsequent autograd calculations.
 
-- 如对inplace操作增加`version counter`，后续autograd engine执行backward的时候会检查version，如果需要执行梯度计算的tensor被inplace操作过，则报错避免不正确的梯度计算。这部分代码在`torch/csrc/autograd/generated/ADInplaceOrViewTypeEverything.cpp`中。
-- `view`则同理防止对生成view的tensor做任何修改以确保避免不正确的梯度计算（因为`view`的tensor和原tensor共享存储）。
+- For inplace operations, it adds a `version counter`. When the autograd engine performs a backward operation, it checks the version. If the tensor that needs to perform gradient calculation has been operated on inplace, it will report an error to avoid incorrect gradient calculation. This part of the code is in `torch/csrc/autograd/generated/ADInplaceOrViewTypeEverything.cpp`.
+- The same principle applies to `view`, which prevents any modifications to the view tensor to avoid incorrect gradient calculations (because the `view` tensor and the original tensor share storage).
 
 ```c++
 // aten/src/ATen/core/boxing/KernelFunction_impl.h
@@ -404,9 +397,9 @@ C10_ALWAYS_INLINE Return KernelFunction::call(const OperatorHandle& opHandle, Di
 }
 ```
 
-这里如果`unboxed_kernel_func_`非空，就从`boxed_kernel_func_`处拿到`functor`，然后调用`callUnboxedKernelFunction<Return, Args...>`。
+Here, if `unboxed_kernel_func_` is not null, it retrieves the `functor` from `boxed_kernel_func_`, and then calls `callUnboxedKernelFunction<Return, Args...>`.
 
-`unboxed`指的是未打包的函数，包含完整的签名和参数等，打包的`boxed`函数直观上理解为把所有参数压成一个整体，例如`void conjugateFallback(const c10::OperatorHandle& op, DispatchKeySet dispatch_keys, torch::jit::Stack* stack)`中的`stack`，这样不用针对每个参数变体都单独写一个函数签名，可以最大程度复用代码，编译出来的binary占用空间也小一些，方便在移动端部署，但相对解包封包的过程会一定程度上影响效率。
+`unboxed` refers to unpackaged functions, which include complete signatures and parameters, etc. Packaged `boxed` functions are intuitively understood as compressing all parameters into a whole, such as the `stack` in `void conjugateFallback(const c10::OperatorHandle& op, DispatchKeySet dispatch_keys, torch::jit::Stack* stack)`. This way, you don't have to write a function signature for each parameter variant, you can reuse code to the maximum extent, the compiled binary occupies less space, and it's convenient for deployment on mobile devices, but the process of packing and unpacking can affect efficiency to some extent.
 
 ```c++
 // aten/src/ATen/core/boxing/KernelFunction_impl.h
@@ -414,19 +407,19 @@ template<class Return, class... Args>
 inline Return callUnboxedKernelFunction(void* unboxed_kernel_func, OperatorKernel* functor, DispatchKeySet dispatchKeySet, Args&&... args) {
     using ActualSignature = Return (OperatorKernel*, DispatchKeySet, Args...);
     ActualSignature* func = reinterpret_cast<ActualSignature*>(unboxed_kernel_func);
-    // 此时functor：&(at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd__contiguous(at::Tensor const&, c10::MemoryFormat))>
+    // here functor: &(at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd__contiguous(at::Tensor const&, c10::MemoryFormat))>
     return (*func)(functor, dispatchKeySet, std::forward<Args>(args)...);
 }
 ```
 
-随后来到`wrap_kernel_functor_unboxed_`中调用`call`函数
+Then it enters `wrap_kernel_functor_unboxed_` and calls the `call` function.
 
 ```c++
 // aten/src/ATen/core/boxing/impl/make_boxed_from_unboxed_functor.h
 template<class KernelFunctor, class ReturnType, class... ParameterTypes>
 struct wrap_kernel_functor_unboxed_<KernelFunctor, ReturnType(ParameterTypes...)> final {
   static ReturnType call(OperatorKernel* functor, DispatchKeySet, ParameterTypes... args) {
-    // 注意此处已经不再有dispatch key了
+    // Note that there are no dispatch keys here
     KernelFunctor* functor_ = static_cast<KernelFunctor*>(functor);
     return (*functor_)(std::forward<ParameterTypes>(args)...);
   }
@@ -442,9 +435,9 @@ public:
 };
 ```
 
-随后我们就剥开了层层封装，调度到了实际的functor上（根据编译选项、tensor类型等此处调度到的kernel会有所差异）。
+After that, we peel off the layers of encapsulation and dispatch to the actual functor (depending on the compilation options, tensor types, etc., the kernel dispatched here will differ).
 
-这里调度到了**CompositeImplicitAutograd**上，该dispatch key的含义是组合非显式自动微分，不需要如`ExplicitAutograd`那样单独写微分函数，依赖于底层的其他算子都能实现自动微分来实现
+Here it dispatches to **CompositeImplicitAutograd**. The meaning of this dispatch key is a combination of non-explicit automatic differentiation. It does not need to write a separate differentiation function like `ExplicitAutograd`. It depends on the underlying other operators being able to implement automatic differentiation.
 
 ```c++
 // build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
@@ -453,13 +446,13 @@ at::Tensor wrapper_CompositeImplicitAutograd__contiguous(const at::Tensor & self
 }
 ```
 
-最后便调用到了native的contiguous中（`aten/src/ATen/native/TensorProperties.cpp`），至此算子dispatch流程结束
+Finally, it calls into the native contiguous (`aten/src/ATen/native/TensorProperties.cpp`), and the operator dispatch process is complete.
 
-## 5. 为什么能在表里找到contiguous算子：算子register
+## 5. Why can we find the `contiguous` operator in the table: Operator registration
 
-上文中我们梳理了contiguous的dispatch流程，但有分发就一定有注册，contiguous算子的schema是如何注册到`OperatorHandle`中的，其kernel又是如何注册到`dispatchTable_`中的呢？
+In the previous sections, we traced the dispatch process of `contiguous`. But dispatching necessarily implies registration. How is the schema of the `contiguous` operator registered in the `OperatorHandle`? How is its kernel registered in the `dispatchTable_`?
 
-在开始说明contiguous算子注册流程前，我们先简单了解一下通用的pytorch算子注册流程，即通过`TORCH_LIBRARY(ns, m)`和`TORCH_LIBRARY_IMPL(ns, k, m)`两个宏进行两步注册。
+Before we explain the registration process of the `contiguous` operator, let's first get a brief understanding of the general PyTorch operator registration process, which is done through the `TORCH_LIBRARY(ns, m)` and `TORCH_LIBRARY_IMPL(ns, k, m)` macros in two steps.
 
 ```c++
 // torch/library.h
@@ -476,7 +469,7 @@ at::Tensor wrapper_CompositeImplicitAutograd__contiguous(const at::Tensor & self
 #define TORCH_LIBRARY_IMPL(ns, k, m) _TORCH_LIBRARY_IMPL(ns, k, m, C10_UID)
 ```
 
-首先，会调用`TORCH_LIBRARY(ns, m)`宏在`ns`namespace下注册schema（本质是通过**Dispatcher**写入`OperatorEntry.schema_`字段），此时只有一个空dispatch table，具体kernel还没有注册。
+First, the `TORCH_LIBRARY(ns, m)` macro is called to register the schema under the `ns` namespace (essentially writing into the `OperatorEntry.schema_` field through the **Dispatcher**). At this point, only an empty dispatch table exists, and the specific kernel has not been registered.
 
 ```c++
 // build/aten/src/ATen/RegisterSchema.cpp
@@ -486,9 +479,9 @@ TORCH_LIBRARY(aten, m) {
 }
 ```
 
-随后，会调用`TORCH_LIBRARY_IMPL(ns, k, m)`注册算子具体实现（本质是通过**Dispatcher**写入`OperatorEntry.dispatchTable_`字段），绑定具体dispatch key，如`CompositeImplicitAutograd`、`CPU`、`CUDA`等。有一些特殊的设计如`catchall`等会扩散写入所有disptachkey，基于`BackendSelect`实现`fallback`会redispatch到下一个优先级的dispatch key等。
+Then, `TORCH_LIBRARY_IMPL(ns, k, m)` is called to register the specific implementation of the operator (essentially writing into the `OperatorEntry.dispatchTable_` field through the **Dispatcher**), binding the specific dispatch key, such as `CompositeImplicitAutograd`, `CPU`, `CUDA`, etc. There are some special designs, like **catchall**, will spread and write into all dispatch keys. Using `BackendSelect` to implement `fallback` will redispatch to the next priority dispatch key, etc.
 
-例如：
+For example:
 
 ```c++
 // build/aten/src/ATen/RegisterCompositeImplicitAutograd.cpp
@@ -499,13 +492,13 @@ TORCH_LIBRARY_IMPL(aten, CompositeImplicitAutograd, m) {
 }
 ```
 
-了解了基本算子注册方式后，我们详细展开算子注册流程：
+Having understood the basic operator registration method, we'll detail the operator registration process:
 
-首先对`TORCH_LIBRARY_IMPL`我们进行宏展开
+First, let's expand the macro for `TORCH_LIBRARY_IMPL`.
 
 ```c++
 // torch/library.h
-// C10_UID是一个unique identifier，自增 counter
+// `C10_UID` is an unique identifier
 #define _TORCH_LIBRARY_IMPL(ns, k, m, uid)  \
   static void C10_CONCATENATE(   \
       TORCH_LIBRARY_IMPL_init_##ns##_##k##_, uid)(torch::Library&); \
@@ -544,7 +537,7 @@ void TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12(
 }
 ```
 
-`TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12`会在我们`import torch`的时候被**TorchLibraryInit**调用，此处不详细展开，我们重点看`m.impl`发生了什么
+`TORCH_LIBRARY_IMPL_init_aten_CompositeImplicitAutograd_12` will be called by **TorchLibraryInit** when we `import torch`. We won't go into detail here, but let's focus on what happens with `m.impl`.
 
 ```c++
 // torch/library.h
@@ -576,11 +569,11 @@ class TORCH_API CppFunction final {
 }
 ```
 
-这里用CppFunction初始化了`func_`, `cpp_signature_`, `schema_`三个变量
+Here, `func_`, `cpp_signature_`, and `schema_` are initialized using `CppFunction`.
 
-`func_`即函数指针，待会我们重点展开，`cpp_signature_`即函数签名，如果kernel是以一种我们可以知道函数签名的方式创建的（例如`unboxed c++ function`），那我们就存储下来并在之后的kernel注册和调用中用于检查。
+`func_` is a function pointer, which we'll focus on later. `cpp_signature_` is the function signature. If the kernel is created in a way where we can know the function signature (for example, an `unboxed c++ function`), then we store it and use it for checking in later kernel registration and calls.
 
-我们重点看`func_`的构造
+We'll focus on the construction of `func_`.
 
 ```c++
 // aten/src/ATen/core/boxing/KernelFunction_impl.h
@@ -607,14 +600,14 @@ inline KernelFunction KernelFunction::makeFromUnboxedFunctor(std::unique_ptr<Ope
 }
 ```
 
-最终，我们将`raw_f`封装成了`KernelFunction`，返回给了外层的`CppFunction`并让其完成了初始化。随后我们便调用`_impl(name, std::move(f), rv)`进行进一步处理
+Eventually, we encapsulate `raw_f` into `KernelFunction`, return it to the outer `CppFunction`, and let it complete the initialization. Then, we call `_impl(name, std::move(f), rv)` for further processing.
 
 ```c++
 // aten/src/ATen/core/library.cpp
 Library& Library::_impl(const char* name_str, CppFunction&& f, _RegisterOrVerify rv) & {
   at::OperatorName name = _parseNameForLib(name_str);
   auto dispatch_key = f.dispatch_key_.has_value() ? f.dispatch_key_ : dispatch_key_;
-  // 按照contiguous调用到此处：dispatch_key为c10::OptionalBase<c10::DispatchKey> = { init_ = true, storage_ = (dummy_ = '|', value_ = CompositeImplicitAutograd)}
+  // here dispatch_key is c10::OptionalBase<c10::DispatchKey> = { init_ = true, storage_ = (dummy_ = '|', value_ = CompositeImplicitAutograd)}
   switch (rv) {
     case _RegisterOrVerify::REGISTER:
       registrars_.emplace_back(
@@ -636,7 +629,7 @@ Library& Library::_impl(const char* name_str, CppFunction&& f, _RegisterOrVerify
 }
 ```
 
-我们发现了很熟悉的对象`c10::Dispatcher::singleton()`，在注册这里我们调用了`c10::Dispatcher::singleton().registerImpl()`将我们封装好的kernelfunction（`f.func_`）及signature、schema等信息注册进dispatcher
+We find the familiar object `c10::Dispatcher::singleton()`. Here in registration, we call `c10::Dispatcher::singleton().registerImpl()` to register our encapsulated kernel function (`f.func_`) and signature, schema, etc. into the dispatcher.
 
 ```c++
 // aten/src/ATen/core/dispatch/Dispatcher.cpp
@@ -650,10 +643,10 @@ RegistrationHandleRAII Dispatcher::registerImpl(
 ) {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  // 第一步注册schema
+  // 1. register schema
   auto op = findOrRegisterName_(op_name);
 
-  // 第二步注册kernel
+  // 2. register kernel
   auto handle = op.operatorDef_->op.registerKernel(
     *this,
     dispatch_key,
@@ -666,8 +659,10 @@ RegistrationHandleRAII Dispatcher::registerImpl(
   ++op.operatorDef_->def_and_impl_count;
 
   cond_var_.notify_all();
-
-  // RegistrationHandleRAII自动回收机制，该对象注册了匿名函数`deregisterImpl_`，会在对象销毁时自动将op的kernel函数deregister，是很标准的RAII设计
+  // RegistrationHandleRAII automatically recycles resources.
+  // This object registers the anonymous function `deregisterImpl_`,
+  // which will automatically deregister the kernel function of the operator when the object is destroyed.
+  // It's a standard RAII design.
   return RegistrationHandleRAII([this, op, op_name, dispatch_key, handle] {
     deregisterImpl_(op, op_name, dispatch_key, handle);
   });
@@ -689,9 +684,9 @@ OperatorHandle Dispatcher::findOrRegisterName_(const OperatorName& op_name) {
 }
 ```
 
-首先会查找该op是否已经在`operatorLookupTable_`注册，如果已经注册则直接返回，如果没有则写入table（注意此时还没有注册具体的kernel实现，即第一步schema注册）
+First, **register schema**: Check if the operator has already been registered in `operatorLookupTable_`. If it has been registered, it returns directly; if not, it writes into the table.
 
-随后调用`op.operatorDef_->op.registerKernel()`将之前封装好的kernelfunction注册进该`OperatorEntry`（第二步kernel注册）
+Then, **register kernel**: Call `op.operatorDef_->op.registerKernel()` to register the previously encapsulated kernel function into this `OperatorEntry`.
 
 ```c++
 // aten/src/ATen/core/dispatch/OperatorEntry.cpp
@@ -705,13 +700,13 @@ OperatorEntry::AnnotatedKernelContainerIterator OperatorEntry::registerKernel(
 ) {
   // check schema ...
 
-  // 将kernel加入到kernel list中，如果是第一个kernel则创建list
-  // 重定向 catchAll 注册到 CompositeImplicitAutograd.
+  // Add the kernel to the kernel list. If it's the first kernel, create the list.
+  // Redirect catchAll registration to CompositeImplicitAutograd.
   auto& k = dispatch_key.has_value() ? kernels_[*dispatch_key] : kernels_[DispatchKey::CompositeImplicitAutograd];
 
   k.emplace_front(std::move(kernel), std::move(inferred_function_schema), std::move(debug));
   AnnotatedKernelContainerIterator inserted = k.begin();
-  // 更新dispatch table
+  // update dispatch table
   if (dispatch_key.has_value()) {
     updateDispatchTable_(dispatcher, *dispatch_key);
   } else {
@@ -721,8 +716,8 @@ OperatorEntry::AnnotatedKernelContainerIterator OperatorEntry::registerKernel(
 }
 ```
 
-此处先通过`dispatch_key`找到`kernels_`中找到`k`（kernel的列表：`(std::list<c10::impl::AnnotatedKernel, std::allocator<c10::impl::AnnotatedKernel> >)`），将kernel插入首位
+Here, it finds `k` (the list of kernels: `(std::list<c10::impl::AnnotatedKernel, std::allocator<c10::impl::AnnotatedKernel> >)`) in `kernels_` through `dispatch_key`, and inserts the kernel at the beginning of the list.
 
-随后更新dispatcher的entry，到这里`registerImpl`就将op的kernel注册完成了
+Then it updates the dispatcher's entry. At this point, `registerImpl` has completed the registration of the kernel for the operator.
 
-最后，返回`*this`指针，`m.impl("contiguous", TORCH_FN(wrapper_CompositeImplicitAutograd__contiguous));`注册完成
+Finally, it returns the `*this` pointer. `m.impl("contiguous", TORCH_FN(wrapper_CompositeImplicitAutograd__contiguous));` completes.

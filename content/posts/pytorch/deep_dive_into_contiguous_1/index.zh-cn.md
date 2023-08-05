@@ -1,13 +1,13 @@
 ---
-title: "How Pytorch 2.0 Call Ops(一)"
+title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(1)"
 date: 2023-03-11T09:53:09+08:00
 categories: ["pytorch"]
-summary: "本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。"
+summary: "本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。"
 ---
 
 ## Summary
 
-本文以contiguous调用为例，介绍pytorch 2.0 调用算子的流程，并展开说明具体算子底层实现原理。
+本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。
 
 ## 0. 引入
 
@@ -24,7 +24,7 @@ print(x.stride())           # (1280, 1, 256, 64)
 print(x.is_contiguous())    # False
 ```
 
-它会将NCHW的内存分布转换为NHWC（channel last）的内存分布，进而在一些特定场景下取得更好的性能提升（如conv2d）
+它会将NCHW的内存分布转换为NHWC（channel last）的内存分布，进而在一些特定场景下取得更好的性能提升（如`conv2d`）
 
 `contiguous`是如何被导出到python层的？其底层实际运行逻辑是怎样的呢？我们将一层层往下走，并最终将调用链路串联起来，揭开pytorch调用算子流程的面纱。
 
@@ -66,7 +66,7 @@ bool THPVariable_initModule(PyObject* module) {
   static std::vector<PyMethodDef> methods;
   THPUtils_addPyMethodDefs(methods, torch::autograd::variable_methods);
   THPUtils_addPyMethodDefs(methods, extra_methods);
-  // 将`variable_methods`并放到`THPVariableType.tp_methods`中
+  // 将`methods`放到`THPVariableType.tp_methods`中
   THPVariableType.tp_methods = methods.data();
   if (PyType_Ready(&THPVariableType) < 0)
     return false;
@@ -92,7 +92,7 @@ PyMethodDef variable_methods[] = {
 }
 ```
 
-但注意，此处仅仅是模板，并不是实际被编译运行的代码。实际上，算子开发中有很多函数代码相似，pytorch为了减少重复的工作量，引入了一种**代码生成机制**，简单来说是基于`native.yaml`和模板来生成代码，具体逻辑可见`torchgen/gen.py`，我们不过多展开。
+但注意，此处仅仅是模板，并不是实际被编译运行的代码。实际上，算子开发中有很多函数代码相似，pytorch为了减少重复的工作量，引入了一种**代码生成机制**，简单来说是基于`native_functions.yaml`和模板来生成代码，具体逻辑可见`torchgen/gen.py`，我们不过多展开。
 
 在编译pytorch后，我们可以在generated文件夹下看到更多内容，如新生成的`unsqueeze`
 
@@ -131,7 +131,7 @@ PyMethodDef variable_methods[] = {
 
 ## 3. contiguous的调用：在dispatch前
 
-注意：我们调用流程走的是aten算子，而不是`torchprim`的版本算子。笔者是基于cpu编译的pytorch，没有走cuda（cudnn/triton）
+注意：我们调用流程走的是aten算子，而不是`torchprim`的版本算子。笔者是基于**cpu**编译的pytorch，没有走cuda（cudnn/triton）
 
 如果读者想要gdb调试CPP部分，请设置环境变量`export DEBUG=1`再编译。如果希望运行时看到调用链路，可以设置`export TORCH_SHOW_DISPATCH_TRACE=1`。
 
@@ -376,7 +376,7 @@ const KernelFunction& lookup(DispatchKeySet ks) const {
 这里特别指出，`ADInplaceOrView`是一个比较特殊的dispatchkey，专门针对inplace以及view操作时注册，为后续autograd计算提供额外设置。
 
 - 如对inplace操作增加`version counter`，后续autograd engine执行backward的时候会检查version，如果需要执行梯度计算的tensor被inplace操作过，则报错避免不正确的梯度计算。这部分代码在`torch/csrc/autograd/generated/ADInplaceOrViewTypeEverything.cpp`中。
-- `view`则同理防止对生成view的tensor做任何修改以确保避免不正确的梯度计算（因为`view`的tensor和原tensor共享存储）。
+- `view`则同理防止对生成的tensor view做任何修改以确保避免不正确的梯度计算（因为`view`的tensor和原tensor共享存储）。
 
 ```c++
 // aten/src/ATen/core/boxing/KernelFunction_impl.h
@@ -683,9 +683,9 @@ OperatorHandle Dispatcher::findOrRegisterName_(const OperatorName& op_name) {
 }
 ```
 
-首先会查找该op是否已经在`operatorLookupTable_`注册，如果已经注册则直接返回，如果没有则写入table（注意此时还没有注册具体的kernel实现，即第一步schema注册）
+首先，**注册schema**：查找该op是否已经在`operatorLookupTable_`注册，如果已经注册则直接返回，如果没有则写入table
 
-随后调用`op.operatorDef_->op.registerKernel()`将之前封装好的kernelfunction注册进该`OperatorEntry`（第二步kernel注册）
+随后，**注册kernel**：调用`op.operatorDef_->op.registerKernel()`将之前封装好的kernelfunction注册进该`OperatorEntry`
 
 ```c++
 // aten/src/ATen/core/dispatch/OperatorEntry.cpp
