@@ -1,5 +1,5 @@
 ---
-title: "CSAPP Class Notes"
+title: "CSAPP Class Notes(1)"
 date: 2023-02-03T19:52:49+08:00
 categories: ["csapp"]
 summary: "My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory. Source: [https://github.com/yewentao256/CSAPP_15213]"
@@ -29,9 +29,9 @@ My note while learning through CSAPP-15213 videos. Including Overview, Bits,Byte
   - learning about assembly
 - **memory matters**
   - memory management
-  - eg：![image](resources/overview-memory.png)
+  - eg：![image](/csapp/resources/overview-memory.png)
 - **there's more to performance than asymptotic complexity**
-  - eg：![image](resources/overview-performance.png)
+  - eg：![image](/csapp/resources/overview-performance.png)
 - **computers do more than execute programs**
   - IO/network
 
@@ -71,7 +71,7 @@ build up the base for another courses.
 - Bit-level options in C: & | ~ ^
 - Logic Operations in C: && || !
 - Shift operations
-  - eg: ![image](resources/bit-shift.png)
+  - eg: ![image](/csapp/resources/bit-shift.png)
 
 ### Integers
 
@@ -125,7 +125,7 @@ build up the base for another courses.
 - Machine words: 32bits, 64bits
 - Word-Oriented Memory Organization
 - Byte Ordering
-  ![image](resources/bytes-order.png)
+  ![image](/csapp/resources/bytes-order.png)
 
 ## 3. Floating Point
 
@@ -139,7 +139,7 @@ eg:
 
 ### IEEE Floating Point
 
-![image](resources/floating-point.png)
+![image](/csapp/resources/floating-point.png)
 
 - **f = (-1)^s^  M  2^E^**
   - `E = exp - Bias`
@@ -175,7 +175,7 @@ eg:
 
 - Examples together
 
-![image](resources/floating-point2.png)
+![image](/csapp/resources/floating-point2.png)
 
 - Note: when closing to 0, the numbers get denser
 
@@ -240,7 +240,7 @@ double d < 0 -> d*2 <0 (YES! even if overflow, it's `negative inf`)
 
 The process of compiling C:
 
-![image](resources/turning-c-into-object-code.png)
+![image](/csapp/resources/turning-c-into-object-code.png)
 
 Compiler: GCC, to make assembly code: `gcc -Og -S ...`
 
@@ -290,7 +290,7 @@ For example: **leaq**
 - `testq`: compare number (`a&b`) but only set `ZF` and `SF`
 - `setX`: set the low-order byte of destination to `0` or `1` based on the condition codes above
 
-![image](resources/setX-instructions.png)
+![image](/csapp/resources/setX-instructions.png)
 
 - example
 
@@ -316,7 +316,7 @@ ret
 
 - `jX`: jump to different part of code depending on condition codes
 
-![image](resources/jX-instruction.png)
+![image](/csapp/resources/jX-instruction.png)
 
 - Note: Sometimes like `Test? x+y:x-y` in C, it's efficient to calculate `x+y` and `x-y` both, then choose one using `conditional move` rather than using branches. Since **branches are very disruptive to instruction flow through pipelines**
 
@@ -332,11 +332,11 @@ Using branches and control introduced above to realize `do-while`, `while` and `
 
 - Structure:
 
-![image](resources/switch-jump-table.png)
+![image](/csapp/resources/switch-jump-table.png)
 
 - How to form a jump table?
 
-![image](resources/switch-form-table.png)
+![image](/csapp/resources/switch-form-table.png)
 
 Normally to make an array, and for some holes like `x=0`, `x=4`, let it go to the default part.
 
@@ -358,25 +358,25 @@ jmp *.L4(, %rdi, 8)
 
 ### Stack Structure
 
-![image](resources/memory-stack.png)
+![image](/csapp/resources/memory-stack.png)
 
 ### Calling Conventions
 
 - passing control: when calling a function, push the next instruction address to the stack, when ret, get the address back then jump to the address.
 
-![image](resources/procedure-control-flow.png)
+![image](/csapp/resources/procedure-control-flow.png)
 
 - passing data:
 
-![image](resources/procedure-passing-data.png)
+![image](/csapp/resources/procedure-passing-data.png)
 
 - save local data:
 
-![image](resources/procedure-stack-frame.png)
+![image](/csapp/resources/procedure-stack-frame.png)
 
 Normally, use `%rsp` directly, sub some value at the beginning, then add it back before `return`.
 
-![image](resources/procedure-stack-frame-eg.png)
+![image](/csapp/resources/procedure-stack-frame-eg.png)
 
 It's OK to use `movl` to `%esi`, since the rest of 32 bits would be set to zero. This depends on the compiler
 
@@ -392,31 +392,31 @@ callee saved: the callee make sure not to affect any data used in the caller--`%
 
 - recursive function example:
 
-![image](resources/procedure-recursive-function.png)
+![image](/csapp/resources/procedure-recursive-function.png)
 
 ### Arrays
 
-![image](resources/array-memory.png)
+![image](/csapp/resources/array-memory.png)
 
-![image](resources/array-access.png)
+![image](/csapp/resources/array-access.png)
 
 ### Structures
 
-![image](resources/structure-alignment.png)
+![image](/csapp/resources/structure-alignment.png)
 
 ### Floating Point
 
 float add(param passed in `%xmm0`, `%xmm1`):
 
-![image](resources/floating-point-add.png)
+![image](/csapp/resources/floating-point-add.png)
 
 double add:
 
-![image](resources/floating-point-add2.png)
+![image](/csapp/resources/floating-point-add2.png)
 
 ### Memory Layout
 
-![image](resources/memory-layout.png)
+![image](/csapp/resources/memory-layout.png)
 
 - **stack** for local variable (if more than 8MB, segmentation fault)
 - **heap** memory is dynamically allocated for `malloc`、`new` ...
@@ -425,7 +425,7 @@ double add:
 
 ### Buffer Overflow
 
-![image](resources/buffer-overflow-example.png)
+![image](/csapp/resources/buffer-overflow-example.png)
 
 If you input 23 characters in `gets()`, it's ok (a default `\0` at the end of line)
 
@@ -449,197 +449,6 @@ Ways to avoid:
 
 #### Return-Oriented Programming attacks
 
-![image](resources/ROP-attack.png)
+![image](/csapp/resources/ROP-attack.png)
 
 Use existing codes(gadgets) to attack, see **attacklab** for more details.
-
-## 5. Program Optimization
-
-### Generally Useful Optimizations
-
-- Code motion/pre-computation
-
-![image](resources/code-motion.png)
-
-- strength reduction
-
-Core: replace costly operation with simpler one (eg. 16 * x -> x <<4)
-
-- sharing of common sub-expressions
-
-eg: `f = func(param)`, then use f directly, instead of `a = func(param) + 2, b = func(param)*3 ...`
-
-- removing unnecessary procedure calls
-
-![image](resources/procedure-call-reduction.png)
-
-Why compiler doesn't optimize this? Remember compiler always considers the procedure as **black box**. (It doesn't know whether the procedure will change the pointer or global variable, etc.)
-
-Note: in **python**, `len(str)` is a O(1) func, so it doesn't really matter.
-
-- Remove memory accessing
-
-![image](resources/memory-accessing.png)
-
-As you can see the `b[i]` has to read from memory **each time**
-
-It's better using a local variable to cal the sum
-
-Why compiler can't optimize it? **Memory Aliasing**
-
-![image](resources/memory-aliasing.png)
-
-### Exploiting instruction-level parallelism
-
-- CPE (cycles per element (OP like `add`) )
-
-- modern cpu design
-
-![image](resources/mordern-cpu-design.png)
-
-- ideas of pipeline
-
-![image](resources/pipeline-ideas.png)
-
-(`p1 = a*b`, dependency)
-
-- Loop Unrolling
-
-For making use of multi-core processor
-
-```c
-for (i = 0; i < limit; i += 2){
-  // x = x + array[i] + array[i+1];
-  x = x + (array[i] + array[i+1]);  // can break the sequential dependency
-  
-  // another idea
-  // x0 = x0 + array[i];
-  // x1 = x1 + array[i+1];
-}
-```
-
-Note: Not always useful, based on the processor
-
-- SIMD operations
-
-Based on wide registers:
-
-![image](resources/SIMD-op.png)
-
-Also called **AVX instructions**
-
-### Dealing with Conditionals
-
-In order to making instructions run smoothly. We introduce the **branch predict**
-
-![image](resources/branch-prediction.png)
-
-- Simply **guess** the branch to go
-- Begin executing instructions at predicted position
-
-![image](resources/branch-misprediction.png)
-
-- It can recover when mis-prediction, causing huge performance cost
-
-### C Review
-
-- Be careful when `unsigned u > -1`: `-1` is the biggest when unsigned
-- Initialize array with exact value
-- Remember there is a `\0` at the end of string
-- When `sizeof(xx)`, make sure xx is not a pointer
-- Remember to `free` after `malloc`
-- Don't return a pointer pointing at a local variable
-- `int *a;` when `a + 1`, address of a actually add `sizeof(int) * 1 = 4`
-
-## 6. Memory
-
-### Storage technologies and trends
-
-- Random-Access Memory(RAM)
-  - SRAM(static, expensive, cache, volatile: lose information when power off)
-  - DRAM(dynamic, main memory, volatile)
-
-- Read-only memory(ROM)
-  - nonvolatile: keep information when power off
-  - BIOS, firmware programs saved in ROM
-
-- Bus(collection of parallel wires) structure
-
-![image](resources/bus-structure.png)
-
-- Disk
-
-![image](resources/disk-view.png)
-
-![image](resources/disk-view2.png)
-
-capacity: `512 bytes/sector * 300 sectors/track(on average) * 20000 tracks/surface * 2 surfaces/platter * 5 platters/ disk = 30.72GB`
-
-disk access:
-
-![image](resources/disk-access.png)
-
-Normally `disk access time = seek time(4~9ms) + rotation(2~5ms) + transfer(0.02ms)`, much slower than RAM(`ns`)
-
-- Bus structure expand
-
-![image](resources/bus-structure-expand.png)
-
-Note: this is not the modern design, which use point to point connection instead of a public wire
-
-- **interrupt**: cpu never waits for disk, when data is carried from disk to memory, it will notify cpu and let cpu continue to work on that data.
-
-- solid state disk(ssd): much faster than normal disk
-
-![image](resources/ssd.png)
-
-- cpu-memory-gap
-
-![image](resources/cpu-memory-gap.png)
-
-### Locality of reference
-
-- **principle** programs tend to use data and instructions with addresses near or equal to those they have used recently
-
-### Caching in memory hierarchy
-
-![image](resources/memory-hierarchy.png)
-
-### Cache memory organization and operation
-
-- general cache organization
-
-![image](resources/cache-organization.png)
-
-`cache_size = S * E * B bytes`
-
-- cache read
-
-![image](resources/cache-read.png)
-
-1. locate **set**
-2. check all lines in set to match **tag**
-3. **tag** matches and **valid** is true: **hit**
-4. locate data by **offset**
-
-Note: if not match, old line is **evicted and replaced**
-
-- simple example
-
-![image](resources/cache-example.png)
-
-When there comes a `8 [1000]`, it will miss, and set 0 is evicted
-
-![image](resources/cache-example-2.png)
-
-And when there comes a `0 [0000]`, it will miss again
-
-![image](resources/cache-example-3.png)
-
-However, if we change the bits of lines, it will change.
-
-- block size: hyperparameter of memory system
-  - if too small: locality principle(easily use nearby bytes) is not used
-  - if too large: long time to evict memory
-
-to be continued ...
