@@ -1,62 +1,76 @@
-# yewentao256的个人博客
+# yewentao256's Personal Blog
 
-## 本项目使用说明
+English | [简体中文](README.zh-cn.md)
 
-基于[hugo](https://gohugo.io/getting-started/quick-start/)开发的个人博客项目
+## Preview
 
-- 文件目录结构
+![image](static/resources/website-preview.png)
+
+My personal blog (website example): [https://wentao.site/], welcome to fork and star
+
+## Fork Guide
+
+File directory structure introduction
 
 ```bash
 yewentao256.github.io
-├── archetypes      # 新文章默认模板
-├── config.toml     # Hugo配置文档
-├── content         # 存放所有Markdown格式的文章
-├── data            # 资源目录
-├── layouts         # 存放自定义的view
-├── static          # 存放图像、CNAME、css、js等资源，发布后为网页根目录
-└── themes          # 主题
+├── archetypes      # Default template for new posts
+├── config.toml     # Hugo configuration document
+├── content         # Store all articles in Markdown format
+├── static          # Store images, css, js, and other resources
+└── themes          # Themes
 ```
 
-- clone仓库
+1. Set the project name and branch required for gitpage
+   It should be `username.github.io`'s main branch or master branch
 
-```bash
-git clone --recurse-submodules git@github.com:yewentao256/yewentao256.github.io.git
-```
+2. Modify the configuration
+   Update the configuration in `config.toml`, and change the personal information to your own.
 
-- 主题
+3. Delete old articles and images
+   Delete my articles and images.
 
-使用[loveit](https://github.com/dillonzq/LoveIt)的继承项目[doit](https://github.com/HEIGE-PCloud/DoIt)作为主题
+4. Set up your domain(optional)
+   Set your domain on the GitHub `settings-Pages` page.
 
-- 开始书写博客
+5. Start writing your blog
+   `hugo new posts/directory/title/index.en.md`
+   This command creates a new article with `archetypes/default.md` as the template, located in the `content/posts` directory. After writing, delete `draft: true`.
 
-```bash
-hugo new posts/directory/title/index.en.md
-```
+6. Start the local service for preview
+   `hugo server -e production`
 
-该命令以`archetypes/default.md`为模板创建新文章，位于`content/posts`目录下，书写好后删除`draft: true`即可
+## Frequently Asked Questions
 
-- 本地启动服务预览
+- There are two ways to index static files. One is to put them in the post folder, for example:
 
-```bash
-hugo server -e production
-```
+    ```bash
+    # content/posts/pytorch/deep_dive_to_autograd_2
 
-- 将本地资源换成cdn资源/将cdn资源换成本地资源url
+    ❯ ls
+    index.en.md     index.zh-cn.md  resources
+    ```
 
-```python
-python process_use_cdn.py
-```
+    Then you can index in the markdown with a relative path, e.g., `![image](resources/graph.png)`
 
-- 构建网页
+    Another form is to put them in the **static** folder, for example:
 
-```bash
-hugo
-```
+    ```bash
+    # static/csapp/resources
+    ❯ ls
+    ROP-attack.png                                  io-redirection.png
+    ```
 
-## 常见问题
+    Then you can index in any document as `![image](/csapp/resources/ROP-attack.png)`
 
-- 如果是在mac上启动loveit主题可能会遇到文件数量限制导致fatal error的问题，`sudo launchctl limit maxfiles 100000 500000`修复
+- If you start the loveit theme on a Mac, you may encounter a fatal error due to the file number limit, fix it with `sudo launchctl limit maxfiles 100000 500000`
 
-- `hugo`后没有css样式？f12查看前端去哪里找css了，根据相关信息修复`baseUrl`
-  - 例如：本地可能用绝对路径来找，`/Users/yewentao/Desktop/myblog/docs`
-  - 部署到gitpage后用pageurl来找，如`https://yewentao256.github.io/blog`
+- No CSS style after `hugo`? Press F12 to check where the frontend goes to find CSS, and fix `baseUrl` according to related information.
+  - For example, locally it may use an absolute path to find it, `/Users/yewentao/Desktop/myblog/docs`
+  - After deploying to gitpage, use pageurl to find, like `https://yewentao256.github.io/blog`
+
+## Acknowledgements
+
+- Thanks to **hugo**, an efficient and easy-to-use static page generation tool: [https://github.com/gohugoio/hugo]
+- Thanks to **LoveIt**, a neat and elegant hugo theme: [https://github.com/dillonzq/LoveIt]
+- Thanks to **Doit**, who continued to maintain this hugo theme after the LoveIt project stopped: [https://github.com/HEIGE-PCloud/DoIt]
