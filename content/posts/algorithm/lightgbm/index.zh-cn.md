@@ -83,6 +83,46 @@ $$O(data * features) → O(bins * features)$$
 
 $$O(bins * features) → O(bins * bundle)$$
 
+## 总结
+
+- 决策树 decision tree
+
+    常用如ID3、C4.5、CART（可以分类也可以回归）等
+
+- 梯度提升 gradient boosting
+
+    数学推导发现负梯度即残差，所以，梯度提升意味着残差更小。
+
+- 梯度提升决策树
+
+    decision tree + gradient boosting
+
+- lightgbm——微软提出的梯度提升决策树模型
+
+    相较于xgb，它在性能和效果上都有着更好的表现
+
+light的优点：
+
+1. 基于直方图的决策树算法
+
+    连续特征分箱为离散值，分箱构建直方图，使得复杂度由`O（data * feature）` ->  `O（bins * feature）`
+
+2. 带有深度限制的leaf wise叶子生长策略
+
+    大部分决策树是逐层加深（level-wise）的策略，而lightgbm则是以损失减小最多的方向生长结点，同样叶子数量情况下损失更少。但有过拟合的风险，因此需要通过`max_depth`限制树深
+
+3. GOSS 算法(Gradient-based One-Side Sampling 基于梯度的单侧采样)
+
+    保留较大梯度的样本，小梯度样本仅采样部分。把更多精力放在学习相对难的部分上。
+    为了补偿对数据分布的影响，会相应调大小梯度样本的权重
+    （选a%的大梯度，选b%的小梯度，信息增益计算时`(1-a)/b`这个常数调大权重）。
+
+4. EFB算法(Exclusive Feature Bundling 互斥特征捆绑)
+
+    高维数据稀疏时使用，在稀疏特征空间中，许多特征是互斥的，即它们从不同时取非零值。
+    我们就可以在此时把互斥特征捆绑为一个特征，使得复杂度从`O（bins * feature）`变为`O（bins * bundle）`
+    这样就可以在不损失精度的情况下大大提升训练速度
+
 ## Reference
 
 - [LightGBM](https://github.com/microsoft/LightGBM)
