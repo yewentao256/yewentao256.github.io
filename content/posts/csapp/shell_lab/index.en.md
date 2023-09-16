@@ -2,12 +2,12 @@
 title: "ShellLab"
 date: 2023-06-23T10:41:24+08:00
 categories: ["csapp"]
-summary: "In this lab, we'll become more familiar with the concepts of process control and signal by writing a simple Unix shell program that supports job control. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]"
+summary: "In shell lab, we'll become more familiar with the concepts of process control and signal by writing a simple Unix shell program that supports job control. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]"
 ---
 
 ## Summary
 
-In this lab, we'll become more familiar with the concepts of process control and signal by writing a simple Unix shell program that supports job control. Source code: [https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]
+In shell lab, we'll become more familiar with the concepts of process control and signal by writing a simple Unix shell program that supports job control. Source code: [https://github.com/yewentao256/CSAPP_15213/tree/main/shelllab]
 
 ## How to launch(Using docker)
 
