@@ -1,5 +1,5 @@
 ---
-title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(3)"
+title: "Deep Dive to Pytorch Contiguous Operator(3)"
 date: 2023-05-13T11:53:09+08:00
 categories: ["pytorch"]
 summary: "本文以`contiguous`算子为例，深入探究 PyTorch 的内部运作机制，包括Python接口如何调度到c++代码、算子调度和注册机制、算子执行等内容。"

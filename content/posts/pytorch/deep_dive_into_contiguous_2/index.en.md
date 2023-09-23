@@ -1,5 +1,5 @@
 ---
-title: "PyTorch Under the Hood: A Deep Dive into the Contiguous Operator(2)"
+title: "Deep Dive to Pytorch Contiguous Operator(2)"
 date: 2023-04-12T09:53:09+08:00
 categories: ["pytorch"]
 summary: "Uncover the inner workings of PyTorch through a deep dive into the `contiguous` operator, from its Python interface to its dispatching and registration process, and finally how it is executed."
