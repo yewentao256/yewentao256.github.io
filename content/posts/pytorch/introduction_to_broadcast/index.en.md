@@ -2,12 +2,12 @@
 title: "Introducton to Pytorch Broadcast"
 date: 2023-09-10T14:42:23+08:00
 categories: ["pytorch"]
-summary: "This article introduces the implementation details of pytorch broadcast mechanism."
+summary: "This article introduces the implementation details of pytorch broadcast mechanism, including the forward and backward calculation."
 ---
 
 ## Summary
 
-This article introduces the implementation details of pytorch broadcast mechanism.
+This article introduces the implementation details of pytorch broadcast mechanism, including the forward and backward calculation.
 
 ## Introduction
 
@@ -202,3 +202,151 @@ C10_ALWAYS_INLINE Vectorized<T> add(Vectorized<T> self, Vectorized<T> other, Vec
 A pivotal component enabling PyTorch's TensorIterator to accommodate diverse shapes and strides is the `cpu_kernel_vec`. This leverages the shape computed during the build phase and utilizes functions like `loop2d` and `DimCounter` for its realization.
 
 In this document, we've bypassed these intricate operations. For those keen on delving deeper into these technical specifics, I encourage you to peruse my previous document: [deep_dive_into_contiguous(3)](../deep_dive_into_contiguous_3).
+
+## Understanding Gradient Calculation with Broadcasting
+
+Let's see another code example:
+
+```py
+import torch
+
+A = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+B = torch.tensor([1.0], requires_grad=True)
+
+C = A + B
+C.sum().backward()
+print(A.grad)   # tensor([1., 1., 1.])
+print(B.grad)   # tensor([3.])
+```
+
+It's easy to understand `A.grad = tensor([1., 1., 1.])`, but why does `B.grad = tensor([3.])`?
+
+To intuitively understand this, consider that the value in `B` is utilized three times during the forward `add` operation. Consequently, during the backward pass, this value is similarly involved three times, leading to its accumulation into a total of 3.
+
+**Question**: How does pytorch realize this?
+
+We've introduced the mechanism of autograd engine in [../deep_dive_to_autograd_1]. If you're new to the foundational concepts of autograd in PyTorch, it's recommended to review that article first.
+
+The key point of gradient computation in PyTorch lies within the `validate_outputs` function. Back to our example, the `add_backward(fn)` operation yields outputs `[1, 1, 1]`.
+
+```c++
+// torch/csrc/autograd/engine.cpp
+static variable_list call_function(
+    std::shared_ptr<GraphTask>& graph_task,
+    Node* func,
+    InputBuffer& inputBuffer) {
+  // ...
+  if (has_post_hooks) {
+    auto inputs_copy = inputs;
+    outputs = fn(std::move(inputs_copy));
+  } else {
+    outputs = fn(std::move(inputs));
+  }
+
+  validate_outputs(fn.next_edges(), outputs, [&](const std::string& msg) { /* ... */ });
+  // ...
+  return outputs;
+}
+
+void validate_outputs(
+    const edge_list& edges,
+    variable_list& grads,
+    const std::function<std::string(const std::string&)>& format_error) {
+  // ...
+  for (const auto i : c10::irange(grads.size())) {
+    const auto& edge = edges[i];
+    if (!edge.is_valid())
+      continue;
+
+    const auto& metadata = edge.function->input_metadata(edge.input_nr);
+    auto& grad = grads[i];
+    if (!grad.defined()) {
+      continue;
+    }
+
+    if (!metadata.is_same_shape(grad)) {
+      // Ensuring that the gradient's shape aligns with the original tensor.
+      if (metadata.is_expandable_to_shape(grad)) {
+        // Calculating the rediced gradients of inputs
+        grad = metadata.reduce_grad(grad);
+      } else {
+        const auto message = metadata.incompatible_shape_error_message(i, grad);
+        TORCH_CHECK(false, format_error(message.str()));
+      }
+    }
+    // ...
+  }
+}
+```
+
+In `validate_outputs`, a critical aspect in handling broadcasted tensors during gradient calculation is `reduce_grad`.
+
+```c++
+// torch/include/torch/csrc/autograd/input_metadata.h
+struct InputMetadata {
+  // ...
+
+  at::Tensor reduce_grad(at::Tensor& grad) const {
+    TORCH_INTERNAL_ASSERT(!grad.is_nested() && !is_nested_)
+    return at::sum_to(std::move(grad), shape_as_dim_vector());
+  }
+}
+```
+
+This leads us to comprehend that the operation is accomplished through a summation.
+
+```c++
+// torch/include/ATen/ExpandUtils.h
+inline Tensor sum_to(
+    Tensor tensor,
+    const c10::SymIntArrayRef shape,
+    bool always_return_non_view = false) {
+  // In our example, shape here is [1] (original one)
+  return _sum_to(std::move(tensor), shape, always_return_non_view);
+}
+
+template <typename T>
+inline Tensor _sum_to(
+    Tensor tensor,
+    const c10::ArrayRef<T> shape,
+    bool always_return_non_view = false) {
+  if (shape.size() == 0) {
+    return tensor.sum();
+  }
+
+  // Get the sizes of our gradient tensor, in our example, it's [3]
+  auto sizes = at::symint::sizes<T>(tensor);
+  c10::SmallVector<int64_t, 8> reduce_dims;
+  const int64_t leading_dims = sizes.size() - shape.size();
+  // Add all leading dimensions to the reduction list.
+  for (const auto i : c10::irange(leading_dims)) {
+    reduce_dims.push_back(i);
+  }
+  // Check remaining dimensions and see if they need reduction.
+  for (int64_t i = leading_dims; i < static_cast<int64_t>(sizes.size()); ++i) {
+    if (shape[i - leading_dims] == 1 && sizes[i] != 1) {
+      reduce_dims.push_back(i);
+    }
+  }
+
+  if (!reduce_dims.empty()) {
+    tensor = tensor.sum(reduce_dims, /*keepdim=*/true);
+  }
+
+  if (always_return_non_view) {
+    // ...
+  } else {
+    return leading_dims > 0 ? at::symint::view<T>(tensor, shape) : tensor;
+  }
+}
+```
+
+In our example, the gradient is computed through `[1, 1, 1].sum([0], true)`, resulting in the final gradient `[3]` for Tensor B.
+
+Congratulations! You now have a clearer understanding of PyTorch's mechanism for broadcasting.
+
+## Referrences
+
+- [pytorch](https://github.com/pytorch/pytorch)
+- [autograd](../deep_dive_to_autograd_1)
+- [deep_dive_into_contiguous](../deep_dive_into_contiguous_3)
