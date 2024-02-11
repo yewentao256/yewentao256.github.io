@@ -2,7 +2,7 @@
 title: "CSAPP Class Notes(3)"
 date: 2023-02-03T19:54:49+08:00
 categories: ["csapp"]
-summary: "My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory."
+summary: "My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization, Memory, Concurrency and Network."
 ---
 
 ## 8. Exceptional Control Flow
@@ -529,4 +529,8 @@ When out of space:
 
 Note: mark-and-sweep in C is conservative, you don't know a large number is **a pointer or a long type**. So we can use a balanced tree to keep track of all allocated blocks.
 
-to be continue...
+### 11.6 Recitation
+
+Malloc Lab is out!
+
+Using **gprof** is a good way to analyze efficiency.
