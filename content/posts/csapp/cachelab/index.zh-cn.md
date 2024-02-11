@@ -2,7 +2,7 @@
 title: "Cachelab"
 date: 2023-02-19T14:56:21+08:00
 categories: ["csapp"]
-summary: "In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]"
+summary: "In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function."
 ---
 
 ## 等待被翻译
@@ -11,7 +11,7 @@ summary: "In this lab, we will write a small C program that simulates the behavi
 
 ## Summary
 
-In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab]
+In this lab, we will write a small C program that simulates the behavior of a cache memory and optimize a small matrix transpose function. Source: [Github-Link-Here](https://github.com/yewentao256/CSAPP_15213/tree/main/cachelab)
 
 ## Introduction
 

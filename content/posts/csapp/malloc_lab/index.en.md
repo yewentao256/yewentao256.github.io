@@ -2,12 +2,12 @@
 title: "MallocLab"
 date: 2023-09-16T10:31:24+08:00
 categories: ["csapp"]
-summary: "In malloc lab, we will implement our own versions of `malloc`, `free`, and `realloc`. Source: [https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab]"
+summary: "In malloc lab, we will implement our own versions of `malloc`, `free`, and `realloc`."
 ---
 
 ## Summary
 
-In malloc lab, we will implement our own versions of `malloc`, `free`, and `realloc`. This lab gives us a clear understanding of data layout and organization, and requires us to evaluate different trade-offs between space and time efficiency. When we finish this one, we really understand pointers! [source_code](https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab)
+In malloc lab, we will implement our own versions of `malloc`, `free`, and `realloc`. This lab gives us a clear understanding of data layout and organization, and requires us to evaluate different trade-offs between space and time efficiency. When we finish this one, we really understand pointers!  Source: [Github-Link-Here](https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab)
 
 ## How to launch(Using docker)
 

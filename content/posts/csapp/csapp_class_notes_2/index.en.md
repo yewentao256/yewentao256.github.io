@@ -2,7 +2,7 @@
 title: "CSAPP Class Notes(2)"
 date: 2023-02-03T19:53:49+08:00
 categories: ["csapp"]
-summary: "My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory. Source: [https://github.com/yewentao256/CSAPP_15213]"
+summary: "My note while learning through CSAPP-15213 videos. Including Overview, Bits, Bytes, and Integers, Floating Point, Machine Level Programing, Program Optimization and Memory."
 ---
 
 ## 5. Program Optimization

@@ -2,12 +2,12 @@
 title: "MallocLab"
 date: 2023-09-16T10:31:24+08:00
 categories: ["csapp"]
-summary: "在malloc lab中，我们将开发我们自己的`malloc`、`free`、`realloc`函数。通过这个实验，我们能更好理解内存布局与管理，并在空间利用率和时间效率上做权衡，实现一套高效内存管理机制。源码：[https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab]"
+summary: "在malloc lab中，我们将开发我们自己的`malloc`、`free`、`realloc`函数。通过这个实验，我们能更好理解内存布局与管理，并在空间利用率和时间效率上做权衡，实现一套高效内存管理机制。"
 ---
 
 ## Summary
 
-在malloc lab中，我们将开发我们自己的`malloc`、`free`、`realloc`函数。通过这个实验，我们能更好理解内存布局与管理，并在空间利用率和时间效率上做权衡，实现一套高效内存管理机制。[source_code](https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab)
+在malloc lab中，我们将开发我们自己的`malloc`、`free`、`realloc`函数。通过这个实验，我们能更好理解内存布局与管理，并在空间利用率和时间效率上做权衡，实现一套高效内存管理机制。Source: [Github-Link-Here](https://github.com/yewentao256/CSAPP_15213/tree/main/malloclab)
 
 ## 等待被翻译
 
