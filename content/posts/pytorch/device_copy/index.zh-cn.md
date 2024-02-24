@@ -9,24 +9,25 @@ summary: "这篇文章主要介绍了 PyTorch 设备 copy的细节，包含D2H/H
 
 这篇文章主要介绍了 PyTorch 设备 copy的细节，包含D2H/H2D和D2D（在同一设备与不同设备上）等内容。
 
-## 等待被翻译
+---
+以下内容为机器翻译
 
-非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+---
 
-## 0. Introduction
+## 0. 引言
 
-There are primarily two types of copy operations in PyTorch:
+PyTorch中主要有两种类型的复制操作：
 
-- Copy In host: host to host (cpu to cpu)
-- Copy On device: including D2H/H2D/D2D, etc.
+- 主机内复制：主机到主机（cpu到cpu）
+- 设备上复制：包括D2H/H2D/D2D等
 
-We have introduced the mechanism of H2H in in [deep_dive_into_contiguous](../deep_dive_into_contiguous_3/)
+我们已经在[深入探究连续性](../deep_dive_into_contiguous_3/)中介绍了H2H的机制。
 
-In this article, we will focus primarily on device copy operation.
+在本文中，我们将主要关注设备上的复制操作。
 
-## 1. Copy Stub
+## 1. 复制入口
 
-The entry point for all types of copy operations is located in `Copy.cpp`.
+所有类型复制操作的入口点位于`Copy.cpp`中。
 
 ```c++
 // aten/src/ATen/native/Copy.cpp
@@ -37,7 +38,7 @@ static Tensor & copy_impl(Tensor & self, const Tensor & src, bool non_blocking) 
     return self;
   }
 
-  // Exit early if self and src are views of the same data
+  // 如果self和src是同一数据的视图，则提前退出
   const bool is_same_data = (
       self.is_alias_of(src) &&
       self.storage_offset() == src.storage_offset() &&
@@ -50,7 +51,6 @@ static Tensor & copy_impl(Tensor & self, const Tensor & src, bool non_blocking) 
   if (is_same_data) {
     return self;
   }
-
 
   auto iter = TensorIteratorConfig()
     .add_output(self)
@@ -79,7 +79,7 @@ static Tensor & copy_impl(Tensor & self, const Tensor & src, bool non_blocking) 
 }
 ```
 
-After constructing a **TensorIterator**, the `copy_stub` function is invoked:
+在构建了**TensorIterator**之后，会调用`copy_stub`函数：
 
 ```c++
 // aten/src/ATen/native/DispatchStub.h
@@ -94,7 +94,7 @@ public:
 }
 ```
 
-Note that the kernel(`call_ptr`) is registered through **DispatchStub**. This registration process is declared in both `Copy.cpp` and `Copy.h`.
+注意，通过**DispatchStub**注册的内核（`call_ptr`）是在`Copy.cpp`和`Copy.h`中声明的。
 
 ```c++
 // aten/src/ATen/native/Copy.cpp
@@ -102,7 +102,7 @@ DEFINE_DISPATCH(copy_stub);   // struct copy_stub copy_stub;
 
 // torch/include/ATen/native/Copy.h
 DECLARE_DISPATCH(copy_fn, copy_stub);
-/* `DECLARE_DISPATCH` expands to:
+/* `DECLARE_DISPATCH`扩展为:
 struct copy_stub : DispatchStub<copy_fn, copy_stub> {
   copy_stub() = default;
   copy_stub(const copy_stub&) = delete;
@@ -112,17 +112,17 @@ extern __attribute__((__visibility__("default"))) struct copy_stub copy_stub
 */
 ```
 
-Furthermore, the kernel is specifically registered for a particular device:
+此外，内核是针对特定设备注册的：
 
 ```c++
-// For CPU kernel
+// 对于CPU内核
 // aten/src/ATen/native/cpu/CopyKernel.cpp
 REGISTER_DISPATCH(copy_stub, &copy_kernel);
 
-// For Cuda kernel
+// 对于Cuda内核
 // aten/src/ATen/native/cuda/Copy.cu
 REGISTER_DISPATCH(copy_stub, &copy_kernel_cuda);
-// Expand to: static RegisterCUDADispatch<struct copy_stub> copy_stub__register(copy_stub, &copy_kernel_cuda);
+// 扩展为: static RegisterCUDADispatch<struct copy_stub> copy_stub__register(copy_stub, &copy_kernel_cuda);
 
 // torch/include/ATen/native/DispatchStub.h
 template <typename DispatchStub>
@@ -133,9 +133,9 @@ struct RegisterCUDADispatch {
 };
 ```
 
-## 2. Copy with Device
+## 2. 设备上的复制
 
-Upon dispatch, the `copy_kernel_cuda` function is executed:
+分派后，将执行`copy_kernel_cuda`函数：
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
@@ -145,7 +145,9 @@ static void copy_kernel_cuda(TensorIterator& iter, bool non_blocking) {
   Device dst_device = iter.device(0);
   Device src_device = iter.device(1);
 
-  // Enable p2p access between devices.
+  //
+
+ 启用设备间的p2p访问。
   bool p2p_enabled = maybe_enable_p2p_access(dst_device, src_device);
 
   if (copy_requires_temporaries(iter, p2p_enabled)) {
@@ -153,32 +155,32 @@ static void copy_kernel_cuda(TensorIterator& iter, bool non_blocking) {
     return;
   }
 
-  // Copy on GPU (or between GPUs)
+  // 在GPU上（或GPU间）复制
   if (dst_device.is_cuda() && src_device.is_cuda()) {
     copy_device_to_device(iter, non_blocking, p2p_enabled);
     return;
   }
 
-  // Copy between CPU and GPU
+  // CPU和GPU间复制
   // ...
 }
 ```
 
-This process can generally be segmented into three distinct parts:
+这个过程大致可以分为三个独特的部分：
 
-- Copy utilizing temporaries
-- Copy on the GPU, or between GPUs if **P2P** (Peer-to-Peer, referring to direct memory access between one GPU and another) is enabled
-- Copy between the CPU and GPU, which do not require the use of temporaries
+- 使用临时变量的复制
+- 如果**P2P**（Peer-to-Peer，指一块GPU直接访问另一块GPU的内存）启用，则在GPU上或GPU间复制
+- CPU和GPU间复制，这不需要使用临时变量
 
-### 2.1 Copy with Temporaries
+### 2.1 使用临时变量的复制
 
-We don't need to consider temporaries if:
+如果满足以下条件，我们不需要考虑使用临时变量：
 
-- **Same Device Copy**: No temporaries are needed.
-- **Contiguous and Same Dtype Copy**: No temporaries are needed.
-- **Device-to-Device Copy with P2P Enabled**: No temporaries are needed.
+- **同一设备复制**：不需要临时变量。
+- **连续且相同Dtype复制**：不需要临时变量。
+- **设备到设备复制且P2P启用**：不需要临时变量。
 
-In other cases, `copy_requires_temporaries` returns `True` and we utilize temporary contiguous tensors to facilitate the copy.
+在其他情况下，`copy_requires_temporaries`返回`True`，我们会使用临时连续张量来进行复制。
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
@@ -190,28 +192,28 @@ static void copy_kernel_cuda(TensorIterator& iter, bool non_blocking) {
     Tensor src_contig;
 
     if (iter.device_type(0) == kCUDA || non_blocking) {
-      // if branch: In cuda or non_blocking is set
+      // if分支：在cuda中或non_blocking设置
 
-      // uses dst if dst is contiguous, otherwise uses an empty contiguous tensor
+      // 如果dst是连续的，则使用dst，否则使用一个空的连续张量
       dst_contig = dst.is_contiguous() ? dst : at::empty_like(dst, LEGACY_CONTIGUOUS_MEMORY_FORMAT);
-      // src is the same dtype and shape with dst, contiguous
+      // src与dst具有相同的dtype和形状，是连续的
       src_contig = iter.tensor(1).to(iter.dtype(0)).expand_as(dst).contiguous();
     } else {
-      // else branch: not in cuda and non_blocking is false
+      // else分支：不在cuda中且non_blocking为假
 
       bool same_type = iter.dtype(0) == iter.dtype(1);
-      // uses dst if dst is contiguous and has the same dtype with src
+      // 如果dst是连续的且与src具有相同的dtype，则使用dst
       dst_contig = (dst.is_contiguous() && same_type) ? dst : at::empty_like(dst, iter.dtype(1), LEGACY_CONTIGUOUS_MEMORY_FORMAT);
-      // src has the shape with dst, contiguous
+      // src与dst具有相同的形状，是连续的
       src_contig = iter.tensor(1).expand_as(dst).contiguous();
     }
 
     // ...
 
-    // perform a same-dtype copy on contiguous tensors
+    // 在连续张量上执行相同dtype的复制
     dst_contig.copy_(src_contig, non_blocking);
 
-    // if necessary, copy back into dst
+    // 如果需要，将数据复制回dst
     if (!dst_contig.is_same(dst)) {
       TORCH_INTERNAL_ASSERT(dst_contig.device() == dst.device());
       dst.copy_(dst_contig, non_blocking);
@@ -241,13 +243,13 @@ static bool copy_requires_temporaries(TensorIterator& iter, bool p2p_enabled) {
 }
 ```
 
-Here temporary tensors such as `dst_contig` and `src_contig` are created, followed by the reuse of `copy_`. Now that all inputs are contiguous, we can proceed to other branches below and complete the copy.
+在这里，创建了临时张量如`dst_contig`和`src_contig`，然后重用`copy_`。现在所有输入都是连续的，我们可以继续执行下面的分支并完成复制。
 
-Finally, if necessary, the data is copied back into the dst tensor as outlined in the code.
+最后，如果需要，数据会被复制回dst张量，如代码所示。
 
-### 2.2 Copy on GPU
+### 2.2 在GPU上复制
 
-When both tensors reside on the GPU, a D2D copy occurs.
+当两个张量都位于GPU上时，会发生D2D复制。
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
@@ -331,15 +333,17 @@ void copy_device_to_device(TensorIterator& iter,
 }
 ```
 
-This process is divided into three main stages:
+这个过程分为三个主要阶段：
 
-1. Block and wait for the dst tensor.(synchronization 1)
-2. Perform the copy asynchronously.
-3. Block and wait for the src tensor.(synchronization 2)
+1. 阻塞并等待dst张量。（同步1）
+2. 异步执行复制。
+3. 阻
 
-The logic for asynchronous copying is straightforward: If `memcpy_eligible`, we directly use `cudaMemcpyPeerAsync` or `cudaMemcpyAsync`.
+塞并等待src张量。（同步2）
 
-If not, some other operations are performed. For example, in the case of `direct_copy_kernel_cuda` (for tensors have the same `conj` and `neg` conditions):
+异步复制的逻辑很简单：如果`memcpy_eligible`，我们直接使用`cudaMemcpyPeerAsync`或`cudaMemcpyAsync`。
+
+如果不是，会执行一些其他操作。例如，在`direct_copy_kernel_cuda`的情况下（对于具有相同`conj`和`neg`条件的张量）：
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
@@ -358,9 +362,9 @@ void direct_copy_kernel_cuda(TensorIteratorBase &iter) {
 }
 ```
 
-Here we employ `gpu_kernel` to launch a CUDA kernel using the data pointers calculated in **TensorIterator** and a simple lambda function `return x;`. This section will not be expanded upon here, but for those interested, more information can be found in my document on [TensorIterator](../structured_kernel_and_iterator/).
+在这里，我们使用`gpu_kernel`来启动一个CUDA内核，使用**TensorIterator**计算出的数据指针和一个简单的lambda函数`return x;`。这一部分不会在这里展开，但对于感兴趣的读者，可以在我关于[TensorIterator](../structured_kernel_and_iterator/)的文档中找到更多信息。
 
-Regarding synchronization, there are two blocking points in the code, one at the src stream and one at the dst stream:
+关于同步，代码中有两个阻塞点，一个在src流中，等待dst准备就绪：
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
@@ -369,29 +373,29 @@ void copy_device_to_device(TensorIterator& iter,
                            bool p2p_enabled) {
   // ...
 
-  // device guard is used to set/restore the current device context
+  // 设备保护用于设置/恢复当前设备上下文
   CUDAGuard device_guard(src_device);
   CUDAStream copy_stream = getCurrentCUDAStream(src_device.index());
 
   if (src_device != dst_device) {
     CUDAEvent dst_ready;
     device_guard.set_device(dst_device);
-    // record this event in dst's stream
+    // 在dst的流中记录此事件
     dst_ready.record(getCurrentCUDAStream(dst_device.index()));
 
     device_guard.set_device(src_device);
-    // block until all of the operations in dst before dst_ready event are done
-    // Note: won't block code in CPU here, only block for cuda stream
+    // 阻塞直到dst在dst_ready事件之前的所有操作完成
+    // 注意：这里不会阻塞CPU中的代码，只阻塞cuda流
     dst_ready.block(copy_stream);
   }
 
-  // ... do copy async
+  // ... 执行异步复制
 
   if (src_device != dst_device) {
     CUDAEvent src_ready;
-    // record this event in src's stream
+    // 在src的流中记录此事件
     src_ready.record(copy_stream);
-    // block until all of the operations in src are done
+    // 阻塞直到src中的所有操作完成
     device_guard.set_device(dst_device);
     src_ready.block(getCurrentCUDAStream(dst_device.index()));
   }
@@ -400,24 +404,24 @@ void copy_device_to_device(TensorIterator& iter,
 }
 ```
 
-The first synchronization (at the src stream, waiting for the dst to be ready) ensures that all operations in dst stream preceding the `dst_ready` event are completed, setting the stage for the copy operation.
+第一次同步（在src流中，等待dst准备就绪）确保了dst流中`dst_ready`事件之前的所有操作完成，为复制操作做好了准备。
 
-Then, the copy is performed asynchronously, with a task scheduled in the source stream.
+然后，复制操作异步进行，src流中安排了一个任务。
 
-Finally, synchronization occurs at the dst stream to ensure the completion of the copy operation.
+最后，在dst流中进行同步，以确保复制操作的完成。
 
-With these synchronization, we can ensure the copy process is safe in both src stream and the dst stream.
+通过这些同步，我们可以确保复制过程在src流和dst流中都是安全的。
 
-### 2.3 Copy between CPU and GPU (no temporaries)
+### 2.3 CPU和GPU间的复制（无临时变量）
 
-This section addresses copying for contiguous tensors between hosts and GPUs.
+这一部分处理了在主机和GPU之间的连续张量的复制。
 
 ```c++
 // aten/src/ATen/native/cuda/Copy.cu
 static void copy_kernel_cuda(TensorIterator& iter, bool non_blocking) {
   // ...
 
-  // Copy between CPU and GPU
+  // CPU和GPU间复制
   cuda::OptionalCUDAGuard device_guard;
   cudaMemcpyKind kind;
   if (dst_device.is_cuda() && src_device.is_cpu()) {
@@ -436,20 +440,21 @@ static void copy_kernel_cuda(TensorIterator& iter, bool non_blocking) {
   CUDAStream stream = getCurrentCUDAStream();
 
   if (non_blocking) {
+
+
     AT_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, stream));
     const auto& dst_tensor = iter.tensor(0);
     const auto& src_tensor = iter.tensor(1);
     const auto& host_tensor = (dst_device == kCPU ? dst_tensor : src_tensor);
     auto* ptr = (dst_device == kCPU ? dst : src);
     auto* ctx = host_tensor.storage().data_ptr().get_context();
-    // record an event in current cuda stream based on the context and data ptr
-    // of the host tensor
+    // 基于主机张量的上下文和数据指针，在当前cuda流中记录事件
     CachingHostAllocator_recordEvent(ptr, ctx, stream);
   } else {
     at::cuda::memcpy_and_sync(dst, src, nbytes, kind, stream);
   }
 
-  // ... neg and conj operations
+  // ... neg和conj操作
 }
 
 // torch/include/c10/cuda/CUDAFunctions.h
@@ -459,20 +464,20 @@ C10_CUDA_API void __inline__ memcpy_and_sync(
     int64_t nbytes,
     cudaMemcpyKind kind,
     cudaStream_t stream) {
-  // ... gpu trace
+  // ... gpu追踪
   C10_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, stream));
   C10_CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 ```
 
-Here using TensorIterator, we obtain the pointers for the src and dst tensors. Depending on `non_blocking`, we either directly call `cudaMemcpyAsync` and record an event or opt for `memcpy_and_sync`.
+在这里使用TensorIterator，我们获得了src和dst张量的指针。根据`non_blocking`，我们要么直接调用`cudaMemcpyAsync`并记录事件，要么选择`memcpy_and_sync`。
 
-Note: The recorded event pertains to **CUDAHostAllocator** (managing the memory of host tensors). Typically, a tensor's memory block is not reused until the event is marked ready. For those interested in Memory Cache, further details can be found in `aten/src/ATen/cuda/CachingHostAllocator.cpp`.
+注意：记录的事件关联于**CUDAHostAllocator**（管理主机张量的内存）。通常，直到事件标记为准备好之前，张量的内存块不会被重用。对于对内存缓存感兴趣的人，可以在`aten/src/ATen/cuda/CachingHostAllocator.cpp`中找到更多细节。
 
-## Graph Summary
+## 图表总结
 
 ![image](resources/copy.png)
 
-## Referrence
+## 参考资料
 
 - [PyTorch](https://github.com/pytorch/pytorch)
