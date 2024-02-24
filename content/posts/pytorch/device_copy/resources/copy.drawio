@@ -1,0 +1,46 @@
+<mxfile host="65bd71144e" scale="4" border="0">
+    <diagram id="au5gI-XGu-aU7CLRphIa" name="Page-1">
+        <mxGraphModel dx="506" dy="218" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Copy" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="160" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Host Copy" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="100" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Device Copy" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="220" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="Copy Stub" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="165" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="150" y="120" width="50" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="160" width="40" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="Copy With&lt;br&gt;Temporaries" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="140" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="D2D copy" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="220" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="D2H/H2D copy" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="300" width="70" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;This happens if not:&lt;br&gt;same device&lt;br&gt;contiguous and same dtype&lt;br&gt;device to other device with p2p enabled&lt;br&gt;&lt;br&gt;Temp contiguous tensors are created and recall copy function&lt;br&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="90" width="290" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="1. Sync and wait for dst(if different devices)&lt;br&gt;2. Copy async based on CudaKernel / TensorIterator&lt;br&gt;3. Sync and wait for src(if different devices)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="207.5" width="280" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="1. Copy async based on TensorIterator&lt;br&gt;2. If `non_blocking` is False, sync and wait" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="290" width="220" height="65" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
