@@ -337,9 +337,7 @@ void copy_device_to_device(TensorIterator& iter,
 
 1. 阻塞并等待dst张量。（同步1）
 2. 异步执行复制。
-3. 阻
-
-塞并等待src张量。（同步2）
+3. 阻塞并等待src张量。（同步2）
 
 异步复制的逻辑很简单：如果`memcpy_eligible`，我们直接使用`cudaMemcpyPeerAsync`或`cudaMemcpyAsync`。
 
