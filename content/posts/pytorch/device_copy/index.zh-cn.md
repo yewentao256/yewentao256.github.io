@@ -406,7 +406,7 @@ Then, the copy is performed asynchronously, with a task scheduled in the source 
 
 Finally, synchronization occurs at the dst stream to ensure the completion of the copy operation.
 
-With these synchronization, we can ensure the copy process is safe in both src stream and the dst stream.
+With these synchronization, we can ensure the copy process is safe.
 
 ### 2.3 Copy between CPU and GPU (no temporaries)
 
