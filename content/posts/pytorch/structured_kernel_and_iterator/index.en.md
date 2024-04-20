@@ -365,21 +365,45 @@ class TORCH_API TensorIteratorConfig final {
   int num_inputs_ = 0;
 
   // ...
-
-  // Checked for partial overlap with the outputs and
-  // outputs are checked for internal overlap (e.g. broadcasted views).
   bool check_mem_overlap_ = true;
-  // Indicate whether this is a reduce op
+  bool allow_cpu_scalars_ = false;
   bool is_reduction_ = false;
   bool resize_outputs_ = true;
-  // Checks that all inputs and defined outputs have the same dtype/device
   bool check_all_same_dtype_ = true;
   bool check_all_same_device_ = true;
-  // If true, the iterator's "common dtype" is always computed
+  bool enforce_safe_casting_to_output_ = false;
+  bool enforce_linear_iteration_ = false;
   bool promote_inputs_to_common_dtype_ = false;
-  // ...
+  bool promote_integer_inputs_to_float_ = false;
+  bool cast_common_dtype_to_outputs_ = false;
+  bool check_mem_overlap_ = true;
+
 };
 ```
+
+The config properties:
+
+- **check_mem_overlap (default: true)**: checks for memory overlap between input and output tensors. If detected, an error is thrown.
+
+- **allow_cpu_scalars (default: false)**: When set to true, this allows CPU scalar values (**Wrapped number** usually) to be passed as kernel parameters when executing device code, like within CUDA kernels.
+
+- **is_reduction (default: false)**: Indicates whether the TensorIterator is being used for reduction operations, such as summing or finding maximum values.
+
+- **resize_outputs (default: true)**: This allows output tensors to be resized as needed to match the expected output of the operation.
+
+- **check_all_same_dtype (default: true)**: This ensures that all input and output tensors have the same data type. If they differ, type promotion or conversion might be necessary to proceed with the operation.
+
+- **check_all_same_device (default: true)**: Verifies that all tensors are located on the same device.
+
+- **enforce_safe_casting_to_output (default: false)**: When enabled, this checks that the `common_dtype_` used in computations can be safely cast to the output tensor’s data type, safeguarding against data corruption through unsafe type conversions.
+
+- **enforce_linear_iteration (default: false)**: If true, tensor iteration follows a C-style contiguous memory layout (last dimension iterates fastest). This iteration order can be less efficient and may even prevent vectorization. So only use if the correctness of your kernel depends on it.
+
+- **promote_inputs_to_common_dtype (default: false)**: If set, the `common_dtype_` is computed and all input tensors are promoted to `common_dtype_` before the operation.
+
+- **promote_integer_inputs_to_float (default: false)**: If enabled, and if the `common_dtype_` of the iterator is an integer type, it will be promoted to a default floating-point type. Eg. `int_tensor / 3 = float_tensor`
+
+- **cast_common_dtype_to_outputs (default: false)**: If true, the results of operations are first calculated in a temporary common data type, then converted back to the original data type of the output tensors.
 
 The `config.build()` function internally calls `iterator.build()`:
 

@@ -206,11 +206,11 @@ Zero可以理解为一种高度扩展的DP，可以与PP和TP共同使用，但�
 
 ## Referrence
 
-- [https://www.microsoft.com/en-us/research/blog/zero-deepspeed-new-system-optimizations-enable-training-models-with-over-100-billion-parameters/]
-- [https://huggingface.co/transformers/v4.11.3/parallelism.html?from_wecom=1]
-- [https://ai.googleblog.com/2019/03/introducing-gpipe-open-source-library.html]
-- [https://docs.aws.amazon.com/sagemaker/latest/dg/model-Parallelism-core-features.html]
-- [https://arxiv.org/abs/2104.04473]
-- [https://www.deepspeed.ai/tutorials/pipeline/]
-- [https://www.microsoft.com/en-us/research/blog/deepspeed-extreme-scale-model-training-for-everyone/]
-- [https://huggingface.co/docs/transformers/perf_train_gpu_many]
+- Microsoft Research Blog: "[Zero DeepSpeed: New System Optimizations Enable Training Models with Over 100 Billion Parameters](https://www.microsoft.com/en-us/research/blog/zero-deepspeed-new-system-optimizations-enable-training-models-with-over-100-billion-parameters/)"
+- Hugging Face Transformers Documentation: "[Parallelism Techniques](https://huggingface.co/transformers/v4.11.3/parallelism.html?from_wecom=1)"
+- Google AI Blog: "[Introducing GPipe: An Open Source Library for Efficiently Training Large-scale Neural Network Models](https://ai.googleblog.com/2019/03/introducing-gpipe-open-source-library.html)"
+- AWS SageMaker Documentation: "[Model Parallel Core Features](https://docs.aws.amazon.com/sagemaker/latest/dg/model-parallel-core-features.html)"
+- Arxiv Preprint: "[An Analysis of Model Parallelism in Training Large-scale Neural Networks](https://arxiv.org/abs/2104.04473)"
+- DeepSpeed Tutorial: "[Pipeline Parallelism Tutorial](https://www.deepspeed.ai/tutorials/pipeline/)"
+- Microsoft Research Blog: "[DeepSpeed: Extreme-Scale Model Training for Everyone](https://www.microsoft.com/en-us/research/blog/deepspeed-extreme-scale-model-training-for-everyone/)"
+- Hugging Face Documentation: "[Training Large Models: A Deep Dive on GPU Performance](https://huggingface.co/docs/transformers/perf_train_gpu_many)"
