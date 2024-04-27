@@ -144,11 +144,27 @@ if __name__ == "__main__":
 
 - **send/isend**: Point-to-point data sending.
 - **broadcast**: Data from one node is broadcasted to all other nodes.
+
+![image](resources/broadcast.png)
+
 - **reduce**: Data from all nodes undergoes a specific operation (e.g., summation) and gets reduced to a designated node.
+
+![image](resources/reduce.png)
+
 - **all-reduce**: Data from all nodes undergoes reduction, and the result is distributed to all nodes.
+
+![image](resources/allreduce.png)
+
 - **scatter**: Divides data from one node into multiple portions, each sent to different nodes.
 - **gather**: Data from all nodes is collected onto a single node.
 - **all-gather**: Data from all nodes is collected and then distributed to every node.
+
+![image](resources/allgather.png)
+
+- **reduce-scatter**：Similar to the reduce operation, but the result is distributed across multiple nodes.
+
+![image](resources/reducescatter.png)
+
 - **all-to-all**: Each node sends and receives different data according to its own list.
 
 Collective communication APIs such as `all-reduce`, `all_gather` etc., are used for DDP training. P2P communication APIs like `send`, `isend` etc., are used for RPC training.
@@ -189,3 +205,4 @@ Generally, use Gloo for CPUs and NCCL for GPUs. If you're familiar with and alre
 - [RPC](https://pytorch.org/docs/stable/rpc.html)
 - [c10d](https://pytorch.org/docs/stable/distributed.html)
 - [Contributing to PyTorch Distributed](https://github.com/pytorch/pytorch/blob/main/torch/distributed/CONTRIBUTING.md)
+- [NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce)

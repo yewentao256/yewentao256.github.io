@@ -134,6 +134,30 @@ at::Tensor PythonArgs::tensor_slow(int i) {
 }
 ```
 
+And the process of converting scalar to tensor is through `fill`:
+
+```c++
+// torch/include/ATen/ScalarOps.h
+inline at::Tensor scalar_to_tensor(
+    const Scalar& s,
+    const Device device = at::kCPU) {
+  // This is the fast track we have for CPU scalar tensors.
+  if (device == at::kCPU) {
+    return at::detail::scalar_tensor_static(s, s.type(), at::kCPU);
+  }
+  // ...
+}
+
+// aten/src/ATen/ScalarOps.cpp
+Tensor scalar_tensor_static(const Scalar& s, c10::optional<ScalarType> dtype_opt, c10::optional<Device> device_opt) {
+  // ...
+  Tensor result = at::detail::empty_cpu(
+      {}, dtype_opt, c10::nullopt, device_opt, c10::nullopt, c10::nullopt);
+  scalar_fill(result, s);
+  return result;
+}
+```
+
 In scenarios where a C++ function (e.g., `at::native::add_(...)`) gets called, the `Scalar` is similarly wrapped.
 
 ```c++

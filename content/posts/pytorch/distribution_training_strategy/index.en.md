@@ -1,6 +1,6 @@
 ---
 title: "Distributed Training Strategy Introduction"
-date: 2024-03-03T19:20:48+08:00
+date: 2024-04-13T19:20:48+08:00
 categories: ["pytorch"]
 summary: "This blog post explores advanced parallelism techniques in deep learning to optimize computational efficiency and memory usage across GPUs. It covers Data Parallelism (DP), Zero Redundancy Optimizer (Zero), Pipeline Parallelism (PP) and Tensor Parallelism (TP)."
 ---

@@ -1,6 +1,6 @@
 ---
 title: "Distributed Training Strategy Introduction"
-date: 2024-03-03T19:20:48+08:00
+date: 2024-04-13T19:20:48+08:00
 categories: ["pytorch"]
 summary: "这篇博客介绍了分布式并行训练策略，包括 Data Parallelism (DP), Zero Redundancy Optimizer (Zero), Pipeline Parallelism (PP) 和 Tensor Parallelism (TP)。"
 ---

@@ -144,11 +144,27 @@ if __name__ == "__main__":
 
 - **send/isend**：点对点发送数据
 - **broadcast**：一个节点数据广播到所有节点上
+
+![image](resources/broadcast.png)
+
 - **reduce**：所有节点数据通过某种运算（比如求和）reduce到一个指定节点
+
+![image](resources/reduce.png)
+
 - **all-reduce**：所有节点数据进行reduce运算，结果分发到所有节点
+
+![image](resources/allreduce.png)
+
 - **scatter**：划分某个节点的数据为多份，分别发送给其他节点
 - **gather**：所有节点数据汇集到一个节点上
 - **all-gather**：所有节点数据汇集，并分发到所有节点
+
+![image](resources/allgather.png)
+
+- **reduce-scatter**：与reduce操作类似，但结果会划分到多个节点上
+
+![image](resources/reducescatter.png)
+
 - **all-to-all**：每个节点按照自己的列表发送和接收其他节点的不同数据
 
 collective communication APIs如`all-reduce`、`all_gather`等用于DDP训练，P2P communication APIs如`send`、`isend`等用于RPC训练
@@ -189,3 +205,4 @@ collective communication APIs如`all-reduce`、`all_gather`等用于DDP训练，
 - [RPC](https://pytorch.org/docs/stable/rpc.html)
 - [c10d](https://pytorch.org/docs/stable/distributed.html)
 - [Contributing to PyTorch Distributed](https://github.com/pytorch/pytorch/blob/main/torch/distributed/CONTRIBUTING.md)
+- [NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce)
