@@ -2,12 +2,12 @@
 title: "Deep Dive to Pytorch Contiguous Operator(4)"
 date: 2024-05-25T09:09:23+08:00
 categories: ["pytorch"]
-summary: "This blog covers PyTorch's TensorIterator, focusing on fast setup and stride calculation for both normal and ambiguous tensors."
+summary: "这篇博客介绍了PyTorch TensorIterator 针对任意输入tensor计算output stride的过程。"
 ---
 
 ## Summary
 
-This blog covers PyTorch's TensorIterator, focusing on fast setup and stride calculation for both normal and ambiguous tensors.
+这篇博客介绍了PyTorch TensorIterator 针对任意输入tensor计算output stride的过程。
 
 ## Introduction
 
