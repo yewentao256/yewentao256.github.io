@@ -167,6 +167,40 @@ Tensor& add_(Tensor& self, const Scalar& other, const Scalar& alpha) {
 }
 ```
 
+In the kernel ("f(a, b) == f(b,a)"), it is possible to improve computational efficiency by removing the wrapped tensor and CPU scalar tensor from **TensorIterator** and treating them as ordinary constant values.
+
+For example:
+
+```c++
+// aten/src/ATen/native/cuda/BinaryBitwiseOpsKernels.cu
+void bitwise_and_kernel_cuda(TensorIteratorBase& iter) {
+  AT_DISPATCH_INTEGRAL_TYPES_AND(kBool, iter.dtype(), "bitwise_and_cuda", [&]() {
+    BitwiseAndFunctor<scalar_t> f;
+    opmath_symmetric_gpu_kernel_with_scalars<scalar_t>(iter, f);
+  });
+}
+
+template <typename scalar_t, typename return_t = scalar_t, typename func_t>
+void opmath_symmetric_gpu_kernel_with_scalars(TensorIteratorBase& iter, const func_t& f) {
+  // ...
+  if (iter.is_cpu_scalar(1)) {
+    scalar_val = iter.scalar_value<opmath_arg_t>(1);
+    iter.remove_operand(1);
+    device_guard.reset_device(iter.device(1));
+  } else if (iter.is_cpu_scalar(2)) {
+    scalar_val = iter.scalar_value<opmath_arg_t>(2);
+    iter.remove_operand(2);
+  }
+
+  if (iter.ninputs() == 2) {
+    gpu_kernel(iter, BinaryFunctor<scalar_t, scalar_t, return_t, func_t>(f));
+  } else {
+    AUnaryFunctor<scalar_t, scalar_t, return_t, func_t> unary_f(f, scalar_val);
+    gpu_kernel(iter, unary_f);
+  }
+}
+```
+
 ### 2.2 Computing the dtypes
 
 The computation of dtypes occurs within the **TensorIterator**. If you're unfamiliar with TensorIterator, I recommend reading my article introducing it [here](../structured_kernel_and_iterator/).
