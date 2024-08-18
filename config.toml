@@ -687,14 +687,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       url = "/categories/"
       title = ""
     [[languages.en.menu.main]]
-      weight = 4
-      identifier = "open-source"
-      pre = ""
-      post = ""
-      name = "OpenSource"
-      url = "/open_source/"
-      title = ""
-    [[languages.en.menu.main]]
       weight = 5
       identifier = "about"
       pre = ""
@@ -732,14 +724,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       post = ""
       name = "分类"
       url = "/categories/"
-      title = ""
-    [[languages.zh-cn.menu.main]]
-      weight = 4
-      identifier = "open-source"
-      pre = ""
-      post = ""
-      name = "开源"
-      url = "/open_source/"
       title = ""
     [[languages.zh-cn.menu.main]]
       weight = 5
