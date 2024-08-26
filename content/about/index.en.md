@@ -4,7 +4,7 @@ date: 2023-02-03T16:49:14+08:00
 ---
 
 
-## Hello Friend, Welcome to My Blog!
+## Hello Friend, Welcome to My Blog
 
 I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
 
