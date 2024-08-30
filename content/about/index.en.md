@@ -3,7 +3,6 @@ title: "About"
 date: 2023-02-03T16:49:14+08:00
 ---
 
-
 ## Hello Friend, Welcome to My Blog
 
 I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
@@ -14,7 +13,7 @@ I am actively seeking full-time opportunities in software engineering or AI deve
 
 ## Summary
 
-Skilled software engineer with 2+ years of full-time experience and 1.5+ years of internships in deep learning and distributed systems. Proven expertise in developing and optimizing large-scale AI frameworks and contributing to open-source projects. Co-founder of two tech startups, demonstrating strong leadership and project management skills.
+Software engineer with 2+ years of experience and 1.5+ years of internships in deep learning and distributed systems. Experienced in developing and optimizing large-scale AI frameworks with Python and C++. Demonstrated ability in open-source contributions and technical innovation as a co-founder of two startups.
 
 ## Experience
 
@@ -23,29 +22,28 @@ Skilled software engineer with 2+ years of full-time experience and 1.5+ years o
 **Deep Learning System Development Engineer (SenseCore)** | Shanghai, China  
 *Jul 2022 - Aug 2024*
 
-- **LazyLLM Framework**: Developed a large language model application framework, including building the RAG system and service parallel mechanism, supporting large-scale deployments. [GitHub](https://github.com)
-- **DeepLink Framework**: Designed and built the Op Inferrer mechanism, constructed a CI/CD pipeline for traditional model accuracy verification. [GitHub](https://github.com)
-- **PyTorch Community Contributions**: Optimized Cudnn operator performance, contributing multiple PRs and issues, resulting in a 15% increase in operator efficiency. [GitHub](https://github.com)
-- **DIOPI Development**: Achieved multi-chip adaptations and operator performance optimizations, leading to a 20% performance improvement. [GitHub](https://github.com)
-- **Distributed Training of Llama2 70B**: Achieved stable training with 64 cards on Huawei 910B, improving tgs from 10% to 70% compared to A100.
-- **One-iter Tool**: Developed for model accuracy comparison, obtained a patent (Publication No. CN117312173A).
+- Developed **LazyLLM**, a large language model application framework, including the construction of **RAG** system for more accurate context-aware suggestions, and a parallel mechanism to enhance large-scale deployment efficiency. GitHub
+- Designed and built an **Op Inferrer** mechanism for the DeepLink Framework, constructed a CI/CD pipeline for traditional model accuracy verification. GitHub
+- Implemented multi-chip operator adaptations and optimized operator performance for DIOPI (Device-Independent Operator Interface), resulting in a 20% performance improvement. GitHub
+- Stabilized **Llama2 70B** training across 64 Huawei 910B cards, boosting tgs (tokens per GPU per second) from 10% to 70% compared to A100.
+- Developed and **patented** the One-iter Tool (CN117312173A) for rapid model accuracy comparison, enabling correctness validation within minutes
 
 ### **SenseTime - R&D Intern**
 
 **Research Institute (Deep Learning Frameworks)** | Beijing, China  
 *Jan 2021 - Jul 2022*
 
-- Developed the **Inspector Backend** for deep learning training data collection, meeting commercial delivery standards.
-- Reconstructed the **PAVI Training Data Collection Tool**, covering batch processing, concurrency, caching, and retransmission, ensuring stable and reliable data upload and improving upload efficiency by tens of times.
-- Developed the **Auction** task scheduling tool and obtained a patent (Publication No. CN115033366A).
-- Successfully expanded business channels by bridging the task scheduling platform, data mid-end, and deep learning model teams.
+- Developed Inspector service for deep learning training data collection, meeting commercial delivery standards.
+- Reconstructed PAVI, a training data collection tool, covering batch processing, concurrency, caching and retransmission, ensuring stable and reliable data uploads and improving efficiency by **tens of times**.
+- Invented the function-level task scheduling tool Auction, **obtained a patent** (CN115033366A) and enabled distributed training.
+- Proactively expanded business channels by integrating the task scheduling platform, data, and deep learning model teams, successfully completing the automatic model annotation project.
 
 ### **Wuhan Hongyuan Investment & Creation Technology Services Co., Ltd.**
 
 **Co-founder** | Wuhan, China  
 *Nov 2019 - Sep 2020*
 
-- Led development of software and hardware solutions for the **Henan Shangqiu City Procuratorate AI Exhibition Hall** and software for **Ningbo Siwei Education Technology Company**.
+- Led development of software and hardware solutions for the **Henan Shangqiu City** Procuratorate AI Exhibition Hall.
 
 ### **Yuye Tech (Wuhan) Development Co., Ltd.**
 
@@ -72,6 +70,11 @@ Skilled software engineer with 2+ years of full-time experience and 1.5+ years o
 
 ## Projects
 
+### **PyTorch Contribution** | *May 2023 - Present*
+
+- Authored a series of blog posts analyzing source code and the internal mechanisms of PyTorch, including Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd, etc. [Blog](https://wentao.site/categories/pytorch/)
+- Made multiple contributions to the PyTorch community, including optimizing Cudnn operator performance, which resulted in a 15% efficiency increase. [GitHub](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
+
 ### **MicroTorch** | *Jun 2023 - Present*
 
 - Built a simplified **PyTorch** implementation from scratch for educational purposes. [GitHub](https://github.com)
@@ -87,7 +90,7 @@ Skilled software engineer with 2+ years of full-time experience and 1.5+ years o
 
 ## Competitions
 
-- **2021 China University Computer Contest** - WeChat Big Data Challenge - National Third Prize (Top 2%)
-- **2020 China University Computer Contest** - Huawei Big Data Challenge - National Third Prize (Top 2%)
+- **2021 China University Computer Contest** - WeChat Big Data Challenge - National Third Prize (Top 2% / 6000+ teams)
+- **2020 China University Computer Contest** - Huawei Big Data Challenge - National Third Prize (Top 2% / 1400+ teams)
 - **2020 China Service Outsourcing Innovation and Entrepreneurship Competition** - National Second Prize (Top 2%)
-- **2019 China University Computer Capability Challenge** - National First Prize (Runner-up)
+- **2019 China University Computer Capability Challenge** - National First Prize (Runner-up / 400+ teams)
