@@ -7,13 +7,13 @@ date: 2023-02-03T16:49:14+08:00
 
 I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
 
-I am actively seeking full-time opportunities in software engineering or AI development. If you are interested in collaborating or have any questions, feel free to reach out!
+I am actively seeking full-time opportunities in SDE / MLE / AI Engineer. If you are interested, please reach out to me!
 
 **Email**: `zhyanwentao@outlook.com`
 
 ## Summary
 
-Software engineer with 2+ years of experience and 1.5+ years of internships in deep learning and distributed systems. Experienced in developing and optimizing large-scale AI frameworks with Python and C++. Demonstrated ability in open-source contributions and technical innovation as a co-founder of two startups.
+Software engineer with **2+ years of experience and 1.5+ years of internships**. Experienced in developing and optimizing large-scale AI frameworks with **Python and C++**. Demonstrated ability in **open-source contributions** and technical innovation as a co-founder of two **tech-startups**. Passionate about learning and applying new technologies in fast-paced environments.
 
 ## Experience
 
