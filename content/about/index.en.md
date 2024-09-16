@@ -19,38 +19,38 @@ Software engineer with **2+ years of experience and 1.5+ years of internships**.
 
 ### **SenseTime**
 
-**Deep Learning System Development Engineer (SenseCore)** | Shanghai, China  
+**Deep Learning System Development Engineer** | Shanghai, China  
 *Jul 2022 - Aug 2024*
 
-- Developed **LazyLLM**, a large language model application framework, including the construction of **RAG** system for more accurate context-aware suggestions, and a parallel mechanism to enhance large-scale deployment efficiency. GitHub
-- Designed and built an **Op Inferrer** mechanism for the DeepLink Framework, constructed a CI/CD pipeline for traditional model accuracy verification. GitHub
-- Implemented multi-chip operator adaptations and optimized operator performance for DIOPI (Device-Independent Operator Interface), resulting in a 20% performance improvement. GitHub
-- Stabilized **Llama2 70B** training across 64 Huawei 910B cards, boosting tgs (tokens per GPU per second) from 10% to 70% compared to A100.
-- Developed and **patented** the One-iter Tool (CN117312173A) for rapid model accuracy comparison, enabling correctness validation within minutes
+- Developed [LazyLLM](https://github.com/LazyAGI/LazyLLM) (Python), including the construction of the **RAG** system for more accurate context-aware suggestions, and a parallel mechanism that increased large-scale deployment efficiency by 30%.
+- Designed and implemented the **Op Inferrer** for the [DeepLink Framework](https://github.com/DeepLink-org/deeplink.framework) (Python, C++), enhancing the inference speed of binary, unary, logic, and reduction operators **by 5% across 40+ models**, including LLMs.
+- Implemented multi-chip operator adaptations and optimized operator performance for [DIOPI](https://github.com/DeepLink-org/DIOPI) (C++), resulting in a 20% performance improvement, validated across 30+ models.
+- Stabilized **Llama2 70B** training across 64 Huawei 910B cards using Python, **boosting tgs from 10% to 70% compared to A100**.
+- Patented **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)) (Python) reducing model accuracy validation time **from hours to minutes**, and integrated it into the CI/CD pipeline.
 
 ### **SenseTime - R&D Intern**
 
 **Research Institute (Deep Learning Frameworks)** | Beijing, China  
 *Jan 2021 - Jul 2022*
 
-- Developed Inspector service for deep learning training data collection, meeting commercial delivery standards.
-- Reconstructed PAVI, a training data collection tool, covering batch processing, concurrency, caching and retransmission, ensuring stable and reliable data uploads and improving efficiency by **tens of times**.
-- Invented the function-level task scheduling tool Auction, **obtained a patent** (CN115033366A) and enabled distributed training.
-- Proactively expanded business channels by integrating the task scheduling platform, data, and deep learning model teams, successfully completing the automatic model annotation project.
+- Developed **Inspector** (Python, SQL), a tool for deep learning training data collection and visualization. Built using **FastAPI** + Kafka + Ceph/MySQL/TiDB, it was deployed in Kubernetes, integrated with CI/CD, and met commercial delivery standards.
+- Reconstructed **PAVI** (Python, Go, SQL), a training data collection tool, covering batch processing, parallel computing, protobuf, caching and retransmission, ensuring stable and reliable data uploads and **improving efficiency by tens of times**.
+- Invented and patented the function-level task scheduling tool **Auction** ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)) for easier distributed training.
+- Proactively expanded business channels by integrating the task scheduling platform, data, and deep learning model teams, successfully completing the automatic model annotation project, **reducing manual labeling costs by 200%**.
 
 ### **Wuhan Hongyuan Investment & Creation Technology Services Co., Ltd.**
 
 **Co-founder** | Wuhan, China  
 *Nov 2019 - Sep 2020*
 
-- Led development of software and hardware solutions for the **Henan Shangqiu City** Procuratorate AI Exhibition Hall.
+- Led the development of software and hardware solutions for 10+ AI exhibition halls in various locations, including the Henan Shangqiu City Procuratorate, **resulting in a 50% increase in visitor engagement**. Example: [You after Taking Drugs](https://github.com/yewentao256/You-after-taking-drugs)
 
 ### **Yuye Tech (Wuhan) Development Co., Ltd.**
 
 **Co-founder** | Wuhan, China  
 *Jun 2019 - Nov 2019*
 
-- Led the architecture and service development of **Dingdong Baotuan**, a competition teaming platform for college students. Successfully launched and gathered hundreds of users.
+- Led the architecture and service development of Dingdong Baotuan (Python, SQL), a competition teaming platform for college students. Successfully launched and **attracted hundreds of users** within the first month.
 
 ## Education
 
@@ -70,23 +70,41 @@ Software engineer with **2+ years of experience and 1.5+ years of internships**.
 
 ## Projects
 
-### **PyTorch Contribution** | *May 2023 - Present*
+### **[PyTorch Contribution](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)**
 
-- Authored a series of blog posts analyzing source code and the internal mechanisms of PyTorch, including Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd, etc. [Blog](https://wentao.site/categories/pytorch/)
-- Made multiple contributions to the PyTorch community, including optimizing Cudnn operator performance, which resulted in a 15% efficiency increase. [GitHub](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
+- *May 2023 - Present*
+- Authored **10+** [Blog Posts](https://wentao.site/categories/pytorch/) analyzing PyTorch source code and internal mechanisms, including Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd, Distributed Training strategy, etc.
+- Made multiple contributions to the PyTorch community, including optimizing Cudnn operator performance, which **resulted in a 15% efficiency increase**.
 
-### **MicroTorch** | *Jun 2023 - Present*
+### **[MicroTorch](https://github.com/yewentao256/MicroTorch)**
 
-- Built a simplified **PyTorch** implementation from scratch for educational purposes. [GitHub](https://github.com)
-- Including Tensor implementation, memory management, forward/backward computation of CPU and CUDA operators, computational graph, and automatic differentiation.
-- Utilized **pybind** to export C++ to Python, enabling pip installation and unit test-driven development.
+- *Jun 2023 - Present*
+- Simplified PyTorch implementation **from scratch** for educational purposes
+- Implemented Tensor object, memory management, forward/backward (broadcast) computation of CPU & Cuda operators, computational graph and autodifferentiation, momentum optimizer and more.
+- Utilized pybind to export C++ to Python, enabling pip installation and **unit test-driven development**.
 
-### **Other Open-Source Projects**
+### **[CMU CSAPP](https://github.com/yewentao256/CSAPP_15213)**
 
-- **You After Taking Drugs: Face Change Simulation System**: [GitHub](https://github.com)
-- **CMU CSAPP-15213 course notes and labs**: [GitHub](https://github.com)
-- **TinyNN: Simplified implementation of FCNN and CNN**: [GitHub](https://github.com)
-- **Sicpy: Typeless programming language Compiler**: [GitHub](https://github.com)
+- *Dec 2022 - Feb 2024*
+- Self-studied the **CMU CSAPP-15213** course and completed its associated labs, covering core concepts such as assembly optimization, multi-level cache, compiling and linking, exception control flow, virtual memory, and system-level I/O.
+
+### **[TinyNN](https://github.com/yewentao256/TinyNN)**
+
+- *Nov 2022 - Dec 2022*
+- Built **TinyNN**, a minimal implementation of **Fully Connected Neural Networks (FCNN)** and **Convolutional Neural Networks (CNN)**, designed for educational and experimental purposes.
+
+### **[You After Taking Drugs: Face Change Simulation System](https://github.com/yewentao256/You-after-taking-drugs)**
+
+- *Aug 2021*
+- Developed a simulation system using **dlib**, **Image Warping**, and **Face Fusion** techniques, capable of generating face change predictions based on potential drug use effects.
+- Designed to run efficiently offline on a CPU, the project obtained **Computer Software Copyright** with registration number **2022SR0021854**.
+- Algorithm and implementation details available on GitHub.
+
+### **[Untyped Programming Language "Sicpy"](https://github.com/yewentao256/SCP-sicpy)**
+
+- *Nov 2020 - Dec 2020*
+- Designed and implemented **Sicpy**, an untyped programming language and its corresponding compiler using **flex** and **bison**.
+- Developed features including **lexical**, **syntax**, and **semantic analysis**, as well as **type inference** and **automatic garbage collection** via reference counting, providing a complete custom language framework for functional and imperative programming experimentation.
 
 ## Competitions
 
