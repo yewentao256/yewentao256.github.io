@@ -1,6 +1,6 @@
 ---
 title: "About"
-date: 2023-02-03T16:49:14+08:00
+date: 2024-09-17T16:49:14+08:00
 ---
 
 ## Hello Friend, Welcome to My Blog
@@ -9,7 +9,7 @@ I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell 
 
 I am actively seeking full-time opportunities in SDE / MLE / AI Engineer. If you are interested, please reach out to me!
 
-**Email**: `zhyanwentao@outlook.com`
+**Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
 ## Summary
 
