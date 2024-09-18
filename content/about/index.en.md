@@ -13,7 +13,7 @@ I am actively seeking full-time opportunities in SDE / MLE / AI Engineer. If you
 
 ## Summary
 
-Software engineer with **2+ years of experience and 1.5+ years of internships**. Experienced in developing and optimizing large-scale AI frameworks with **Python and C++**. Demonstrated ability in **open-source contributions** and technical innovation as a co-founder of two **tech-startups**. Passionate about learning and applying new technologies in fast-paced environments.
+Software engineer with **3.5+ years of experience** in developing deep learning frameworks and backend services. Proven track record in **open-source contributions** and innovation as a **co-founder of two tech startups**.
 
 ## Experience
 
@@ -22,35 +22,35 @@ Software engineer with **2+ years of experience and 1.5+ years of internships**.
 **Deep Learning System Development Engineer** | Shanghai, China  
 *Jul 2022 - Aug 2024*
 
-- Developed [LazyLLM](https://github.com/LazyAGI/LazyLLM) (Python), including the construction of the **RAG** system for more accurate context-aware suggestions, and a parallel mechanism that increased large-scale deployment efficiency by 30%.
+- Developed [LazyLLM](https://github.com/LazyAGI/LazyLLM) (Python), including the construction of the **RAG** system for more accurate context-aware suggestions. Implemented a parallel mechanism that increased large-scale deployment efficiency by 30%.
 - Designed and implemented the **Op Inferrer** for the [DeepLink Framework](https://github.com/DeepLink-org/deeplink.framework) (Python, C++), enhancing the inference speed of binary, unary, logic, and reduction operators **by 5% across 40+ models**, including LLMs.
 - Implemented multi-chip operator adaptations and optimized operator performance for [DIOPI](https://github.com/DeepLink-org/DIOPI) (C++), resulting in a 20% performance improvement, validated across 30+ models.
 - Stabilized **Llama2 70B** training across 64 Huawei 910B cards using Python, **boosting tgs from 10% to 70% compared to A100**.
-- Patented **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)) (Python) reducing model accuracy validation time **from hours to minutes**, and integrated it into the CI/CD pipeline.
+- Patented **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)) (Python) reducing model accuracy validation time **from hours to minutes**, and integrated it into the CI/CD pipeline, significantly accelerating deployment cycles.
 
 ### **SenseTime - R&D Intern**
 
 **Research Institute (Deep Learning Frameworks)** | Beijing, China  
 *Jan 2021 - Jul 2022*
 
-- Developed **Inspector** (Python, SQL), a tool for deep learning training data collection and visualization. Built using **FastAPI** + Kafka + Ceph/MySQL/TiDB, it was deployed in Kubernetes, integrated with CI/CD, and met commercial delivery standards.
-- Reconstructed **PAVI** (Python, Go, SQL), a training data collection tool, covering batch processing, parallel computing, protobuf, caching and retransmission, ensuring stable and reliable data uploads and **improving efficiency by tens of times**.
-- Invented and patented the function-level task scheduling tool **Auction** ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)) for easier distributed training.
-- Proactively expanded business channels by integrating the task scheduling platform, data, and deep learning model teams, successfully completing the automatic model annotation project, **reducing manual labeling costs by 200%**.
+- Developed **Inspector** (Python, SQL), a tool for deep learning training data collection and visualization. Built with **FastAPI** and Ceph/MySQL/TiDB, deployed in Kubernetes, and integrated with CI/CD pipelines to meet commercial delivery standards.
+- Reconstructed **PAVI** (Python, Go, SQL), improving data upload efficiency by over **10 times** through batch processing, parallel computing, and caching strategies.
+- Invented and patented the function-level task scheduling tool **Auction** ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)) to simplify distributed training.
+- Led the automatic model annotation project across multiple teams, reducing manual labeling costs by **60%**.
 
 ### **Wuhan Hongyuan Investment & Creation Technology Services Co., Ltd.**
 
 **Co-founder** | Wuhan, China  
 *Nov 2019 - Sep 2020*
 
-- Led the development of software and hardware solutions for 10+ AI exhibition halls in various locations, including the Henan Shangqiu City Procuratorate, **resulting in a 50% increase in visitor engagement**. Example: [You after Taking Drugs](https://github.com/yewentao256/You-after-taking-drugs)
+- Led the development of software and hardware solutions for **10+** AI exhibition halls in various locations, including the Henan Shangqiu City Procuratorate, increasing visitor engagement by **50%**. Example: [You after Taking Drugs](https://github.com/yewentao256/You-after-taking-drugs)
 
 ### **Yuye Tech (Wuhan) Development Co., Ltd.**
 
 **Co-founder** | Wuhan, China  
 *Jun 2019 - Nov 2019*
 
-- Led the architecture and service development of Dingdong Baotuan (Python, SQL), a competition teaming platform for college students. Successfully launched and **attracted hundreds of users** within the first month.
+- Led the development of Dingdong Baotuan (Python, SQL), a competition teaming platform for college students, attracting hundreds of users within the first month of launch.
 
 ## Education
 
@@ -73,15 +73,16 @@ Software engineer with **2+ years of experience and 1.5+ years of internships**.
 ### **[PyTorch Contribution](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)**
 
 - *May 2023 - Present*
-- Authored **10+** [Blog Posts](https://wentao.site/categories/pytorch/) analyzing PyTorch source code and internal mechanisms, including Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd, Distributed Training strategy, etc.
-- Made multiple contributions to the PyTorch community, including optimizing Cudnn operator performance, which **resulted in a 15% efficiency increase**.
+- Authored **10+** [Blog Posts](https://wentao.site/categories/pytorch/) analyzing PyTorch source code and internal mechanisms, covering topics like Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd and Distributed Training strategy.
+- Contributed to optimizing the CuDNN Convolution operator performance, achieving a **15%** efficiency increase.
 
 ### **[MicroTorch](https://github.com/yewentao256/MicroTorch)**
 
 - *Jun 2023 - Present*
 - Simplified PyTorch implementation **from scratch** for educational purposes
-- Implemented Tensor object, memory management, forward/backward (broadcast) computation of CPU & Cuda operators, computational graph and autodifferentiation, momentum optimizer and more.
-- Utilized pybind to export C++ to Python, enabling pip installation and **unit test-driven development**.
+- Developed a custom **Tensor** class with full support for forward and backward computation of basic CPU & Cuda operators.
+- Implemented key features of a deep learning framework, including **computational graph construction**, **automatic differentiation**, and **momentum-based optimizers**.
+- Employed test-driven development with comprehensive unit tests to ensure robust implementation and correctness.
 
 ### **[CMU CSAPP](https://github.com/yewentao256/CSAPP_15213)**
 
