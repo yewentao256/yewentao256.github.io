@@ -15,6 +15,8 @@ I am actively seeking full-time opportunities in SDE / MLE / AI Engineer. If you
 
 Software engineer with **3.5+ years of experience** in developing deep learning frameworks and backend services. Proven track record in **open-source contributions** and innovation as a **co-founder of two tech startups**.
 
+---
+
 ## Experience
 
 ### **SenseTime**
@@ -52,6 +54,8 @@ Software engineer with **3.5+ years of experience** in developing deep learning 
 
 - Led the development of Dingdong Baotuan (Python, SQL), a competition teaming platform for college students, attracting hundreds of users within the first month of launch.
 
+---
+
 ## Education
 
 ### **Cornell Tech at Cornell University** | New York, USA
@@ -68,17 +72,19 @@ Software engineer with **3.5+ years of experience** in developing deep learning 
 - Cumulative GPA: 3.91/4.0, core course GPA: 3.92/4.0
 - Technical Director and Vice President of the Wuhan University Microsoft Student Club
 
+---
+
 ## Projects
 
 ### **[PyTorch Contribution](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)**
 
-- *May 2023 - Present*
+- *May 2023 - Present (C++, Python)*
 - Authored **10+** [Blog Posts](https://wentao.site/categories/pytorch/) analyzing PyTorch source code and internal mechanisms, covering topics like Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd and Distributed Training strategy.
 - Contributed to optimizing the CuDNN Convolution operator performance, achieving a **15%** efficiency increase.
 
 ### **[MicroTorch](https://github.com/yewentao256/MicroTorch)**
 
-- *Jun 2023 - Present*
+- *Jun 2023 - Present (C++, Python)*
 - Simplified PyTorch implementation **from scratch** for educational purposes
 - Developed a custom **Tensor** class with full support for forward and backward computation of basic CPU & Cuda operators.
 - Implemented key features of a deep learning framework, including **computational graph construction**, **automatic differentiation**, and **momentum-based optimizers**.
@@ -86,26 +92,33 @@ Software engineer with **3.5+ years of experience** in developing deep learning 
 
 ### **[CMU CSAPP](https://github.com/yewentao256/CSAPP_15213)**
 
-- *Dec 2022 - Feb 2024*
+- *Dec 2022 - Feb 2024 (C, Assembly)*
 - Self-studied the **CMU CSAPP-15213** course and completed its associated labs, covering core concepts such as assembly optimization, multi-level cache, compiling and linking, exception control flow, virtual memory, and system-level I/O.
+- [Blogs](https://wentao.site/categories/csapp/)
 
 ### **[TinyNN](https://github.com/yewentao256/TinyNN)**
 
-- *Nov 2022 - Dec 2022*
+- *Nov 2022 - Dec 2022 (Python)*
 - Built **TinyNN**, a minimal implementation of **Fully Connected Neural Networks (FCNN)** and **Convolutional Neural Networks (CNN)**, designed for educational and experimental purposes.
 
 ### **[You After Taking Drugs: Face Change Simulation System](https://github.com/yewentao256/You-after-taking-drugs)**
 
-- *Aug 2021*
+- *Aug 2021 (Python)*
 - Developed a simulation system using **dlib**, **Image Warping**, and **Face Fusion** techniques, capable of generating face change predictions based on potential drug use effects.
 - Designed to run efficiently offline on a CPU, the project obtained **Computer Software Copyright** with registration number **2022SR0021854**.
 - Algorithm and implementation details available on GitHub.
 
 ### **[Untyped Programming Language "Sicpy"](https://github.com/yewentao256/SCP-sicpy)**
 
-- *Nov 2020 - Dec 2020*
+- *Nov 2020 - Dec 2020 (C, Yacc, Lex)*
 - Designed and implemented **Sicpy**, an untyped programming language and its corresponding compiler using **flex** and **bison**.
 - Developed features including **lexical**, **syntax**, and **semantic analysis**, as well as **type inference** and **automatic garbage collection** via reference counting, providing a complete custom language framework for functional and imperative programming experimentation.
+
+### **[CSE251](https://github.com/yewentao256/CSE251)**
+
+- *Sep 2020 (C)*
+
+---
 
 ## Competitions
 
