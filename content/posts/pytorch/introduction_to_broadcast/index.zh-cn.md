@@ -228,7 +228,7 @@ print(B.grad)   # tensor([3.])
 
 **问题**：PyTorch 是如何实现这一点的？
 
-我们在 [../deep_dive_to_autograd_1] 中介绍了自动求导引擎的机制。如果您对 PyTorch 中自动求导的基本概念不熟悉，建议您先阅读那篇文章。
+我们在 [deep_dive_to_autograd_1](../deep_dive_to_autograd_1) 中介绍了自动求导引擎的机制。如果您对 PyTorch 中自动求导的基本概念不熟悉，建议您先阅读那篇文章。
 
 PyTorch 中梯度计算的关键点在于 `validate_outputs` 函数。回到我们的例子，`add_backward(fn)` 操作产生输出 `[1, 1, 1]`。
 

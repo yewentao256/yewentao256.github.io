@@ -225,7 +225,7 @@ To intuitively understand this, consider that the value in `B` is utilized three
 
 **Question**: How does pytorch realize this?
 
-We've introduced the mechanism of autograd engine in [../deep_dive_to_autograd_1]. If you're new to the foundational concepts of autograd in PyTorch, it's recommended to review that article first.
+We've introduced the mechanism of autograd engine in [deep_dive_to_autograd_1](../deep_dive_to_autograd_1). If you're new to the foundational concepts of autograd in PyTorch, it's recommended to review that article first.
 
 The key point of gradient computation in PyTorch lies within the `validate_outputs` function. Back to our example, the `add_backward(fn)` operation yields outputs `[1, 1, 1]`.
 
