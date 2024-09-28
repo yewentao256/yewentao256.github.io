@@ -5,53 +5,53 @@ categories: ["pytorch"]
 summary: "这篇文章介绍了pytorch broadcast机制的基本概念与开发细节，包含前向和反向的详细计算过程。"
 ---
 
-## Summary
+## AI翻译注意
 
-这篇文章介绍了pytorch broadcast机制的基本概念与开发细节，含前向和反向的详细计算过程。
+本篇文档的中文版本由AI（chatgpt o1-preview）进行翻译，如有冲突请参考英文版本
 
-## 等待被翻译
+## 摘要
 
-非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+本文介绍了 PyTorch 广播机制的实现细节，包括前向和后向计算。
 
-## Introduction
+## 引言
 
-Let's start with code:
+让我们从代码开始：
 
 ```python
 import torch
 
-A = torch.tensor([[1, 2, 3], [4, 5, 6]])    # shape: [2, 3]
-B = torch.tensor([1, 2, 3])                 # shape: [3]
+A = torch.tensor([[1, 2, 3], [4, 5, 6]])    # 形状：[2, 3]
+B = torch.tensor([1, 2, 3])                 # 形状：[3]
 
 C = A + B
-print(C)    # tensor([[2, 4, 6], [5, 7, 9]])  shape: [2, 3]
+print(C)    # tensor([[2, 4, 6], [5, 7, 9]])  形状：[2, 3]
 ```
 
-How could this happen? Let's discover it step by step.
+这是如何实现的呢？让我们一步步探索。
 
-## BroadCast Rule
+## 广播规则
 
-The following outlines scenarios in which tensors can be broadcasted:
+以下是张量可以广播的情况：
 
-Case 1: **Dimensional Discrepancy**
+**情况1：维度不一致**
 
-If tensors A and B have different dimensions, for instance: `A = [2, 3]` and `B = [3]`, then B will be unsqueezed (with an added dimension of 1) to match the shape `[1, 3]`.
+如果张量 A 和 B 的维度不同，例如：`A = [2, 3]` 和 `B = [3]`，那么 B 将被扩展（添加一个维度 1）以匹配形状 `[1, 3]`。
 
-Case2: **Size Discrepancy**
+**情况2：尺寸不一致**
 
-When the dimensions are the same but the sizes differ, and one of them is 1, for example: `A = [2, 3]` and `B = [1, 3]`, B will be broadcasted to the shape `[2, 3]`.
+当维度相同但尺寸不同，并且其中一个尺寸为 1 时，例如：`A = [2, 3]` 和 `B = [1, 3]`，B 将被广播到形状 `[2, 3]`。
 
-Important Note:
+**重要注意事项：**
 
-If the sizes in any dimension of the tensors are both greater than 1 and do not match, they cannot be broadcasted together.
+如果张量在任何维度上的尺寸都大于 1 且不匹配，则无法一起广播。
 
-As an illustration, consider `A = [2, 3]` and `B = [2, 4]`. Attempting to combine A and B will result in an error.
+例如，考虑 `A = [2, 3]` 和 `B = [2, 4]`。尝试组合 A 和 B 将导致错误。
 
-## How Pytorch Calculates for Broadcasting
+## PyTorch 如何计算广播
 
-Still using the example above, after operator dispatch, we come to **add** structure kernel:
+仍然使用上面的例子，在操作符分派后，我们来到 **add** 结构内核：
 
-Note: If you are interested in op dispatch, you can refer to my document [deep_dice_to_contiguous](../deep_dive_into_contiguous_1/index.en.md) for more details.
+注意：如果您对操作符分派感兴趣，可以参考我的文档 [深入理解 contiguous](../deep_dive_into_contiguous_1/index.en.md) 了解更多细节。
 
 ```c++
 // build/aten/src/ATen/RegisterCPU.cpp
@@ -63,9 +63,9 @@ at::Tensor wrapper_CPU_add_Tensor(const at::Tensor & self, const at::Tensor & ot
 }
 ```
 
-Note that **structured_ufunc_add_CPU_functional** is a **TensorIterator**.
+注意，**structured_ufunc_add_CPU_functional** 是一个 **TensorIterator**。
 
-We mainly focus on `op.meta` function:
+我们主要关注 `op.meta` 函数：
 
 ```c++
 // aten/src/ATen/native/BinaryOps.cpp
@@ -73,13 +73,13 @@ TORCH_META_FUNC2(add, Tensor) (
   const Tensor& self, const Tensor& other, const Scalar& alpha
 ) {
   // self: [2, 3], other: [3]
-  // out (maybe_get_output()) here is undefined
+  // out (maybe_get_output()) 这里是未定义的
   build_borrowing_binary_op(maybe_get_output(), self, other);
   native::alpha_check(dtype(), alpha);
 }
 ```
 
-Then we comes to the `build_borrowing_binary_op` function
+然后我们来到 `build_borrowing_binary_op` 函数：
 
 ```c++
 // aten/src/ATen/TensorIterator.cpp
@@ -92,14 +92,14 @@ void TensorIteratorBase::build_borrowing_binary_op(
 }
 
 void TensorIteratorBase::build(TensorIteratorConfig& config) {
-  // ... Tensor Iterator build logic
-  // compute the broadcasted shape
+  // ... Tensor Iterator 构建逻辑
+  // 计算广播后的形状
   compute_shape(config);
   // ...
 }
 ```
 
-Let's step into the `compute_shape` function:
+让我们深入 `compute_shape` 函数：
 
 ```c++
 // aten/src/ATen/TensorIterator.cpp
@@ -128,21 +128,21 @@ Container infer_size_impl(ArrayType a, ArrayType b) {
   size_t ndim = dimsA > dimsB ? dimsA : dimsB;
   Container expandedSizes(ndim);
 
-  // Uses ptrdiff_t to ensure signed comparison
+  // 使用 ptrdiff_t 来确保有符号比较
   for (ptrdiff_t i = (ptrdiff_t)ndim - 1; i >= 0; --i) {
     ptrdiff_t offset = ndim - 1 - i;
-    ptrdiff_t dimA = dimsA - 1 - offset;  // same as `dimsA - ndim + i`
+    ptrdiff_t dimA = dimsA - 1 - offset;  // 等同于 `dimsA - ndim + i`
     ptrdiff_t dimB = dimsB - 1 - offset;
     auto sizeA = (dimA >= 0) ? a[dimA] : 1;
     auto sizeB = (dimB >= 0) ? b[dimB] : 1;
 
     TORCH_CHECK(
         sizeA == sizeB || sizeA == 1 || sizeB == 1,
-        "The size of tensor a (", sizeA,
-        ") must match the size of tensor b (", sizeB,
-        ") at non-singleton dimension ", i);
-    // If sizeA and sizeB are the same, either is taken;
-    // if sizeA is 1, sizeB is taken (thus selecting the larger value)
+        "张量 a 的尺寸 (", sizeA,
+        ") 必须与张量 b 的尺寸 (", sizeB,
+        ") 在非单例维度 ", i, " 上匹配");
+    // 如果 sizeA 和 sizeB 相同，任取其一；
+    // 如果 sizeA 为 1，取 sizeB（因此选择较大的值）
     expandedSizes[i] = sizeA == 1 ? std::move(sizeB) : std::move(sizeA);
   }
 
@@ -150,36 +150,35 @@ Container infer_size_impl(ArrayType a, ArrayType b) {
 }
 ```
 
-Given that, we derive `expandedSizes = [2, 3]` when `A = [2, 3]` and `B = [3]`.
+由此，我们得出当 `A = [2, 3]` 和 `B = [3]` 时，`expandedSizes = [2, 3]`。
 
-Upon computation, the value of `expandedSizes` is stored as `shape_` within the **TensorIterator** class. This class offers robust support for various shapes and strides. Subsequently, methods such as `compute_types`, `compute_strides`, and `coalesce` are invoked to fully construct the TensorIterator.
+在计算完成后，`expandedSizes` 的值被存储为 **TensorIterator** 类中的 `shape_`。该类为各种形状和步幅提供了强大的支持。随后，调用 `compute_types`、`compute_strides` 和 `coalesce` 等方法来完整地构建 TensorIterator。
 
-Thereafter, `op.impl` is called to perform the actual addition operation.
+之后，调用 `op.impl` 来执行实际的加法操作。
 
 ```c++
 // build/aten/src/ATen/UfuncCPUKernel_add.cpp
 void add_kernel(TensorIteratorBase& iter, const at::Scalar & alpha) {
   AT_DISPATCH_SWITCH(iter.common_dtype(), "add_stub",
-// ...
+    // ...
 
-AT_DISPATCH_CASE(at::ScalarType::Float,
-  [&]() {
-    
-auto _s_alpha = alpha.to<scalar_t>();
-auto _v_alpha = at::vec::Vectorized<scalar_t>(_s_alpha);
-cpu_kernel_vec(iter,
-  [=](scalar_t self, scalar_t other) { return ufunc::add(self, other, _s_alpha); },
-  [=](at::vec::Vectorized<scalar_t> self, at::vec::Vectorized<scalar_t> other) { return ufunc::add(self, other, _v_alpha); }
-);
+    AT_DISPATCH_CASE(at::ScalarType::Float,
+      [&]() {
+        
+    auto _s_alpha = alpha.to<scalar_t>();
+    auto _v_alpha = at::vec::Vectorized<scalar_t>(_s_alpha);
+    cpu_kernel_vec(iter,
+      [=](scalar_t self, scalar_t other) { return ufunc::add(self, other, _s_alpha); },
+      [=](at::vec::Vectorized<scalar_t> self, at::vec::Vectorized<scalar_t> other) { return ufunc::add(self, other, _v_alpha); }
+    );
 
-  }
-)
-  )
+      }
+    )
+    )
 }
-// ...
 ```
 
-The `ufunc::add` is eletment-wise operation and seems quite easy:
+`ufunc::add` 是逐元素操作，看起来相当简单：
 
 ```c++
 // aten/src/ATen/native/ufunc/add.h
@@ -203,15 +202,15 @@ C10_ALWAYS_INLINE Vectorized<T> add(Vectorized<T> self, Vectorized<T> other, Vec
 }}}  // namespace at::native::ufunc
 ```
 
-A pivotal component enabling PyTorch's TensorIterator to accommodate diverse shapes and strides is the `cpu_kernel_vec`. This leverages the shape computed during the build phase and utilizes functions like `loop2d` and `DimCounter` for its realization.
+使 PyTorch 的 TensorIterator 能够适应各种形状和步幅的关键组件是 `cpu_kernel_vec`。它利用构建阶段计算的形状，并使用诸如 `loop2d` 和 `DimCounter` 等函数来实现。
 
-In this document, we've bypassed these intricate operations. For those keen on delving deeper into these technical specifics, I encourage you to peruse my previous document: [deep_dive_into_contiguous(3)](../deep_dive_into_contiguous_3).
+在本文中，我们略过了这些复杂的操作。对于那些渴望深入了解这些技术细节的人，我鼓励您阅读我之前的文档：[深入理解 contiguous (3)](../deep_dive_into_contiguous_3)。
 
-## Understanding Gradient Calculation with Broadcasting
+## 理解带有广播的梯度计算
 
-Let's see another code example:
+让我们看另一个代码示例：
 
-```py
+```python
 import torch
 
 A = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
@@ -223,15 +222,15 @@ print(A.grad)   # tensor([1., 1., 1.])
 print(B.grad)   # tensor([3.])
 ```
 
-It's easy to understand `A.grad = tensor([1., 1., 1.])`, but why does `B.grad = tensor([3.])`?
+理解 `A.grad = tensor([1., 1., 1.])` 很容易，但为什么 `B.grad = tensor([3.])`？
 
-To intuitively understand this, consider that the value in `B` is utilized three times during the forward `add` operation. Consequently, during the backward pass, this value is similarly involved three times, leading to its accumulation into a total of 3.
+为了直观地理解这一点，考虑到在前向 `add` 操作中，`B` 的值被使用了三次。因此，在反向传播过程中，该值也同样涉及三次，导致它的累积总和为 3。
 
-**Question**: How does pytorch realize this?
+**问题**：PyTorch 是如何实现这一点的？
 
-We've introduced the mechanism of autograd engine in [../deep_dive_to_autograd_1]. If you're new to the foundational concepts of autograd in PyTorch, it's recommended to review that article first.
+我们在 [../deep_dive_to_autograd_1] 中介绍了自动求导引擎的机制。如果您对 PyTorch 中自动求导的基本概念不熟悉，建议您先阅读那篇文章。
 
-The key point of gradient computation in PyTorch lies within the `validate_outputs` function. Back to our example, the `add_backward(fn)` operation yields outputs `[1, 1, 1]`.
+PyTorch 中梯度计算的关键点在于 `validate_outputs` 函数。回到我们的例子，`add_backward(fn)` 操作产生输出 `[1, 1, 1]`。
 
 ```c++
 // torch/csrc/autograd/engine.cpp
@@ -269,9 +268,9 @@ void validate_outputs(
     }
 
     if (!metadata.is_same_shape(grad)) {
-      // Ensuring that the gradient's shape aligns with the original tensor.
+      // 确保梯度的形状与原始张量对齐
       if (metadata.is_expandable_to_shape(grad)) {
-        // Calculating the rediced gradients of inputs
+        // 计算输入的缩减梯度
         grad = metadata.reduce_grad(grad);
       } else {
         const auto message = metadata.incompatible_shape_error_message(i, grad);
@@ -283,7 +282,7 @@ void validate_outputs(
 }
 ```
 
-In `validate_outputs`, a critical aspect in handling broadcasted tensors during gradient calculation is `reduce_grad`.
+在 `validate_outputs` 中，处理梯度计算中广播张量的关键方面是 `reduce_grad`。
 
 ```c++
 // torch/include/torch/csrc/autograd/input_metadata.h
@@ -297,7 +296,7 @@ struct InputMetadata {
 }
 ```
 
-This leads us to comprehend that the operation is accomplished through a summation.
+这使我们理解到，该操作是通过求和完成的。
 
 ```c++
 // torch/include/ATen/ExpandUtils.h
@@ -305,7 +304,7 @@ inline Tensor sum_to(
     Tensor tensor,
     const c10::SymIntArrayRef shape,
     bool always_return_non_view = false) {
-  // In our example, shape here is [1] (original one)
+  // 在我们的例子中，shape 是 [1]（原始形状）
   return _sum_to(std::move(tensor), shape, always_return_non_view);
 }
 
@@ -318,15 +317,15 @@ inline Tensor _sum_to(
     return tensor.sum();
   }
 
-  // Get the sizes of our gradient tensor, in our example, it's [3]
+  // 获取我们的梯度张量的尺寸，在我们的例子中是 [3]
   auto sizes = at::symint::sizes<T>(tensor);
   c10::SmallVector<int64_t, 8> reduce_dims;
   const int64_t leading_dims = sizes.size() - shape.size();
-  // Add all leading dimensions to the reduction list.
+  // 将所有前导维度添加到缩减列表中
   for (const auto i : c10::irange(leading_dims)) {
     reduce_dims.push_back(i);
   }
-  // Check remaining dimensions and see if they need reduction.
+  // 检查剩余维度，看看是否需要缩减
   for (int64_t i = leading_dims; i < static_cast<int64_t>(sizes.size()); ++i) {
     if (shape[i - leading_dims] == 1 && sizes[i] != 1) {
       reduce_dims.push_back(i);
@@ -345,12 +344,12 @@ inline Tensor _sum_to(
 }
 ```
 
-In our example, the gradient is computed through `[1, 1, 1].sum([0], true)`, resulting in the final gradient `[3]` for Tensor B.
+在我们的例子中，梯度是通过 `[1, 1, 1].sum([0], true)` 计算的，最终得到张量 B 的梯度 `[3]`。
 
-Congratulations! You now have a clearer understanding of PyTorch's mechanism for broadcasting.
+恭喜！您现在对 PyTorch 的广播机制有了更清晰的理解。
 
-## Referrences
+## 参考资料
 
-- [pytorch](https://github.com/pytorch/pytorch)
-- [autograd](../deep_dive_to_autograd_1)
-- [deep_dive_into_contiguous](../deep_dive_into_contiguous_3)
+- [PyTorch](https://github.com/pytorch/pytorch)
+- [自动求导](../deep_dive_to_autograd_1)
+- [深入理解 contiguous](../deep_dive_into_contiguous_3)
