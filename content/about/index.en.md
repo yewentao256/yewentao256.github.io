@@ -13,7 +13,7 @@ I am actively seeking full-time opportunities in SDE / MLE / AI Engineer. If you
 
 ## Summary
 
-Software engineer with **3.5+ years of experience** in developing deep learning frameworks and backend services. Proven track record in **open-source contributions** and innovation as a **co-founder of two tech startups**.
+Software engineer with **5+ years of experience** in developing deep learning frameworks and backend services. Proven track record in **open-source contributions** and innovation as a **co-founder of two tech startups**.
 
 ---
 
