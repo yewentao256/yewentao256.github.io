@@ -9,9 +9,7 @@ I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell 
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
-## Summary
-
-Software engineer with **5+ years of experience** in developing deep learning frameworks and backend services. Proven track record in **open-source contributions** and innovation as a **co-founder of two tech startups**.
+Software engineer with **5+ years of experience**, specializing in deep learning frameworks and backend services.
 
 ---
 
@@ -19,31 +17,32 @@ Software engineer with **5+ years of experience** in developing deep learning fr
 
 ### **SenseTime**
 
-**Deep Learning System Development Engineer** | Shanghai, China  
+**Deep Learning System Development Engineer**
 *Jul 2022 - Aug 2024*
 
-- Developed [LazyLLM](https://github.com/LazyAGI/LazyLLM) (Python), including the construction of the **RAG** system for more accurate context-aware suggestions. Implemented a parallel mechanism that increased large-scale deployment efficiency by 30%.
-- Designed and implemented the **Op Inferrer** for the [DeepLink Framework](https://github.com/DeepLink-org/deeplink.framework) (Python, C++), enhancing the inference speed of binary, unary, logic, and reduction operators **by 5% across 40+ models**, including LLMs.
-- Implemented multi-chip operator adaptations and optimized operator performance for [DIOPI](https://github.com/DeepLink-org/DIOPI) (C++), resulting in a 20% performance improvement, validated across 30+ models.
-- Stabilized **Llama2 70B** training across 64 Huawei 910B cards using Python, **boosting tgs from 10% to 70% compared to A100**.
-- Patented **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)) (Python) reducing model accuracy validation time **from hours to minutes**, and integrated it into the CI/CD pipeline, significantly accelerating deployment cycles.
+- Developed [LazyLLM](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+), building a custom **RAG** from scratch with a specialized tree architecture that **outperforms Llama Index**, and a parallel mechanism that improved large-scale deployment efficiency by 30%.
+- Designed and implemented the **Op Inferrer** for the [DeepLink Framework](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+), **bypassing PyTorch's heavier TensorIterator** and improving the inference speed of binary, unary, and reduction operators **by 5% across 40+ models**, including LLMs.
+- Implemented multi-chip operator adaptations for [DIOPI](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+), supporting CUDA, Cambricon, and Ascend architectures.
+- Optimized CUDA model performance through DeepLink and DIOPI integration, achieving **a 20% average improvement** across 30+ models, with **ResNet50 outperforming PyTorch**.
+- Stabilized **Llama2 70B** training across 64 Ascend 910B chips using Zero + TP + PP and mixed-precision training, providing detailed performance analysis reports and optimizing operator performance, **boosting tgs from 10% to 70% compared to A100**.
+- Patented the **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), reducing model accuracy validation time from hours to minutes, and integrated it into the CI/CD pipeline, significantly accelerating deployment cycles.
 
 ### **SenseTime - R&D Intern**
 
-**Research Institute (Deep Learning Frameworks)** | Beijing, China  
+**Research Institute (Deep Learning Frameworks)**
 *Jan 2021 - Jul 2022*
 
-- Developed **Inspector** (Python, SQL), a tool for deep learning training data collection and visualization. Built with **FastAPI** and Ceph/MySQL/TiDB, deployed in Kubernetes, and integrated with CI/CD pipelines to meet commercial delivery standards.
-- Reconstructed **PAVI** (Python, Go, SQL), improving data upload efficiency by over **10 times** through batch processing, parallel computing, and caching strategies.
-- Invented and patented the function-level task scheduling tool **Auction** ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)) to simplify distributed training.
-- Led the automatic model annotation project across multiple teams, reducing manual labeling costs by **60%**.
+- Developed **Inspector**, a deep learning training data visualization platform, using **FastAPI** and Ceph/MySQL/TiDB, deployed in Kubernetes, and integrated with CI/CD pipelines.
+- Reconstructed **PAVI**, a training data collection SDK, increasing data upload efficiency by **more than 10 times** through batch processing and parallel computing.
+- Invented and patented a function-level task scheduling tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)) to simplify distributed training.
+- Led an automatic model annotation project across multiple teams, cutting manual labeling costs by **60%**.
 
 ### **Wuhan Hongyuan Investment & Creation Technology Services Co., Ltd.**
 
-**Co-founder** | Wuhan, China  
+**Co-founder**
 *Nov 2019 - Sep 2020*
 
-- Led the development of software and hardware solutions for **10+** AI exhibition halls in various locations, including the Henan Shangqiu City Procuratorate, increasing visitor engagement by **50%**. Example: [You after Taking Drugs](https://github.com/yewentao256/You-after-taking-drugs)
+- Led the development of software and hardware solutions for **10+** AI exhibition halls in various locations, including one for Henan Shangqiu City Procuratorate, which **increased visitor engagement by 50%**.
 
 ### **Yuye Tech (Wuhan) Development Co., Ltd.**
 
@@ -64,11 +63,14 @@ Software engineer with **5+ years of experience** in developing deep learning fr
 ### **Wuhan University** | Wuhan, China
 
 **Bachelor of Software Engineering (Excellent Engineer Program)**  
-*Sep 2018 - Jun 2022*
+*Sep 2018 - Jun 2022* | GPA: 3.91/4.0
 
 - Selected for the National Excellent Engineer Training Program (top 5% acceptance rate)
-- Cumulative GPA: 3.91/4.0, core course GPA: 3.92/4.0
 - Technical Director and Vice President of the Wuhan University Microsoft Student Club
+- 2021 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 6000+ teams)
+- 2020 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 1400+ teams)
+- 2020 China Service Outsourcing Innovation and Entrepreneurship Competition - National Second Prize (Top 2%)
+- 2019 China University Computer Capability Challenge - National First Prize (Runner-up / 400+ teams)
 
 ---
 
@@ -78,7 +80,7 @@ Software engineer with **5+ years of experience** in developing deep learning fr
 
 - *May 2023 - Present (C++, Python)*
 - Authored **10+** [Blog Posts](https://wentao.site/categories/pytorch/) analyzing PyTorch source code and internal mechanisms, covering topics like Tensor Storage, CPU & Cuda Operators, Dispatcher, TensorIterator, Autograd and Distributed Training strategy.
-- Contributed to optimizing the CuDNN Convolution operator performance, achieving a **15%** efficiency increase.
+- Contributed to optimizing **CuDNN Convolution** operator performance, **achieving a 15% efficiency increase**.
 
 ### **[MicroTorch](https://github.com/yewentao256/MicroTorch)**
 
@@ -115,12 +117,3 @@ Software engineer with **5+ years of experience** in developing deep learning fr
 ### **[CSE251](https://github.com/yewentao256/CSE251)**
 
 - *Sep 2020 (C)*
-
----
-
-## Competitions
-
-- **2021 China University Computer Contest** - WeChat Big Data Challenge - National Third Prize (Top 2% / 6000+ teams)
-- **2020 China University Computer Contest** - Huawei Big Data Challenge - National Third Prize (Top 2% / 1400+ teams)
-- **2020 China Service Outsourcing Innovation and Entrepreneurship Competition** - National Second Prize (Top 2%)
-- **2019 China University Computer Capability Challenge** - National First Prize (Runner-up / 400+ teams)
