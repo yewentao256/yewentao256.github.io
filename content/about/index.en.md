@@ -5,15 +5,19 @@ date: 2024-09-17T16:49:14+08:00
 
 ## Hello Friend, Welcome to My Blog
 
-I am **Ye Wentao**, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
+I am Wentao, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
-Software engineer with **5+ years of experience**, specializing in deep learning frameworks and backend services.
+Github: [yewentao256](https://github.com/yewentao256)
+
+LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ---
 
 ## Experience
+
+Software engineer with **5+ years of experience**, specializing in deep learning frameworks and backend services.
 
 ### **SenseTime**
 
