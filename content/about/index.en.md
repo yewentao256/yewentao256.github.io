@@ -17,7 +17,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ## Experience
 
-Software engineer with **5+ years of experience**, specializing in deep learning frameworks and backend services.
+Deep Learning and Software Engineer with **5+ years of experience**, specializing in deep learning frameworks and backend services.
 
 ### **SenseTime**
 
