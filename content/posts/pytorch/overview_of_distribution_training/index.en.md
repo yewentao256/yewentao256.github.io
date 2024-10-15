@@ -14,7 +14,7 @@ This document provides a comprehensive overview of distributed training capabili
 `torch.distributed` mainly consists of three core components:
 
 - **Distributed Data-Parallel Training (DDP)**: Accelerating the training process by parallel processing data across multiple computing devices.
-- **RPC-Based Distributed Training (RPC)**: A supplement to DDP, especially suitable for situations where direct data parallel training is not available.
+- **RPC-Based Distributed Training (RPC, Remote procedure call)**: A supplement to DDP, especially suitable for situations where direct data parallel training is not available.
 - **Collective Communication (c10d)**: A communication library that underpins DDP and RPC. Typically, users wouldn't call this library directly but would use DDP and RPC for distributed training instead.
 
 ## Data Parallel Training
@@ -30,7 +30,7 @@ Data parallel training mainly includes the following cases:
 
 Compared to DP, DDP requires additional steps to start, such as calling `init_process_group`.
 
-By utilizing multi-process parallelism, DDP bypasses the GIL limitations. Furthermore, with DDP, the model is broadcasted only once during the construct phase (unlike DP which broadcasts it during each forward operation). There's no need to broadcast again in subsequent training phases, just for model parameter updates. 
+By utilizing multi-process parallelism, DDP bypasses the GIL limitations. Furthermore, with DDP, the model is broadcasted only once during the construct phase (unlike DP which broadcasts it during each forward operation). There's no need to broadcast again in subsequent training phases, just for model parameter updates.
 
 Therefore, DDP offers significantly higher performance than DP.
 
@@ -151,10 +151,6 @@ if __name__ == "__main__":
 
 ![image](resources/reduce.png)
 
-- **all-reduce**: Data from all nodes undergoes reduction, and the result is distributed to all nodes.
-
-![image](resources/allreduce.png)
-
 - **scatter**: Divides data from one node into multiple portions, each sent to different nodes.
 - **gather**: Data from all nodes is collected onto a single node.
 - **all-gather**: Data from all nodes is collected and then distributed to every node.
@@ -164,6 +160,10 @@ if __name__ == "__main__":
 - **reduce-scatter**：Similar to the reduce operation, but the result is distributed across multiple nodes.
 
 ![image](resources/reducescatter.png)
+
+- **all-reduce**: Data from all nodes undergoes reduction, and the result is distributed to all nodes. (reduce-scatter + all gather in ring algorithm, using 2(n-1) time phrases)
+
+![image](resources/allreduce.png)
 
 - **all-to-all**: Each node sends and receives different data according to its own list.
 
@@ -175,6 +175,10 @@ Collective communication APIs such as `all-reduce`, `all_gather` etc., are used 
 
 - **Gloo**: An open-source communication library, the default backend for CPUs, cross-platform with reliable performance, not requiring specific system dependencies.
 - **NCCL** (NVIDIA Collective Communications Library): A communication library for multi-GPU and multi-node, providing optimal performance for NVIDIA GPUs.
+  - NVLink: High-speed communication within a single node between multiple GPUs
+  - InfiniBand (IB): High-speed transmission between nodes
+  - PCIe (Peripheral Component Interconnect Express): Fallback communication mechanism, slower
+  - First, establish a GPU topology graph, then implement communication using ring (most common), tree, and grid algorithms based on the mentioned three communication mechanisms
 - **MPI** (Message Passing Interface): Used for inter-process message passing across multiple compute nodes. MPI is not the default backend for PyTorch and requires additional installation and adaptation.
 
 Generally, use Gloo for CPUs and NCCL for GPUs. If you're familiar with and already use MPI communication, then consider installing MPI additionally.

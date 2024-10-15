@@ -2,7 +2,7 @@
 title: "Overview of PyTorch Distributed Training"
 date: 2023-09-17T14:30:55+08:00
 categories: ["pytorch"]
-summary: "本文提供了一个关于PyTorch分布式训练能力的全面概述，涵盖了`torch.distributed`的核心组件，深入探讨了**Distributed Data-Parallel Training (DDP)**、**RPC-Based Distributed Training**和**Collective Communication (c10d)**等内容。"
+summary: "本文提供了一个关于PyTorch分布式训练能力的全面概述，涵盖了`torch.distributed`的核心组件，深入探讨了**Distributed Data-Parallel Training (DDP)**、**RPC-Based Distributed Training**、**Collective Communication (c10d)** 等内容。"
 ---
 
 ## Summary
@@ -14,7 +14,7 @@ summary: "本文提供了一个关于PyTorch分布式训练能力的全面概述
 `torch.distributed`主要有三种核心组件：
 
 - **Distributed Data-Parallel Training (DDP)**：分布式数据并行训练，通过在多个计算设备上并行处理数据来加速训练过程
-- **RPC-Based Distributed Training (RPC)**：基于RPC的分布式训练，对DDP的补充，尤其适用于模型不容易直接使用数据并行训练的情境。
+- **RPC-Based Distributed Training (RPC)**：基于RPC(Remote procedure call)的分布式训练，对DDP的补充，尤其适用于模型不容易直接使用数据并行训练的情境。
 - **Collective Communication (c10d)**：通信库，是DDP和RPC的基础。一般情况下，用户不会直接调用此库，而是使用DDP和RPC直接进行分布式训练。
 
 ## Data Parallel Training
@@ -151,10 +151,6 @@ if __name__ == "__main__":
 
 ![image](resources/reduce.png)
 
-- **all-reduce**：所有节点数据进行reduce运算，结果分发到所有节点
-
-![image](resources/allreduce.png)
-
 - **scatter**：划分某个节点的数据为多份，分别发送给其他节点
 - **gather**：所有节点数据汇集到一个节点上
 - **all-gather**：所有节点数据汇集，并分发到所有节点
@@ -164,6 +160,10 @@ if __name__ == "__main__":
 - **reduce-scatter**：与reduce操作类似，但结果会划分到多个节点上
 
 ![image](resources/reducescatter.png)
+
+- **all-reduce**：所有节点数据进行reduce运算，结果分发到所有节点（相当于reduce-scatter + all gather，在环形算法中轮转消耗2(n-1)的时间片）
+
+![image](resources/allreduce.png)
 
 - **all-to-all**：每个节点按照自己的列表发送和接收其他节点的不同数据
 
@@ -175,6 +175,10 @@ collective communication APIs如`all-reduce`、`all_gather`等用于DDP训练，
 
 - **Gloo**：开源通信库，CPU默认后端，跨平台并拥有可靠性能，不需要特定系统依赖
 - **NCCL**（NVIDIA NCCL (NVIDIA Collective Communications Library) ：多GPU、多节点通信库，给NVIDIA GPU提供了最佳性能
+  - NVLink：单节点内多GPU高速通行
+  - InfiniBand（IB）：节点间高速传输
+  - PCIe（Peripheral Component Interconnect Express）：fallback通行机制，较慢。
+  - 先建立GPU拓扑图，然后基于上述三种通信机制实现环形（最普遍）/树形/网格算法实现通信。
 - **MPI**(Message Passing Interface) ：用于在多计算节点上进程间消息传递。MPL不是pytorch默认后端，需要额外安装与适配才能使用。
 
 一般地，CPU用Gloo，GPU用NCCL，如果你对MPI很熟悉且已经正在使用MPI通信，那么考虑额外安装MPI。
