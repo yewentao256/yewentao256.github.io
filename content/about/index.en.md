@@ -125,3 +125,5 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - Group project with [JiFeng Wu](https://github.com/jifengwu2k)
 
 ![gif](resources/mario.gif)
+
+![gif](resources/mario2.gif)
