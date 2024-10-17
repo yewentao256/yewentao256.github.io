@@ -121,7 +121,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 ### **New Super Mario**
 
 - *Apr 2020 (C#, unity)*
-- Group project with [JiFeng Wu](https://github.com/jifengwu2k)
+- Group project with [JiFeng Wu](https://github.com/jifengwu2k), Jinran Tang and Taihe Li.
 
 ![gif](resources/mario.gif)
 
