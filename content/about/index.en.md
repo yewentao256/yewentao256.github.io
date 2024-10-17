@@ -118,3 +118,10 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - *Sep 2020 (C)*
 - CSE 251 Programming in C @MSU
+
+### **New Super Mario**
+
+- *Apr 2020 (C#, unity)*
+- Group project with [JiFeng Wu](https://github.com/jifengwu2k)
+
+![gif](resources/mario.gif)
