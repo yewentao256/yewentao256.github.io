@@ -67,8 +67,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 **Bachelor of Software Engineering (Excellent Engineer Program)**  
 *Sep 2018 - Jun 2022* | GPA: 3.91/4.0
 
-- Selected for the National Excellent Engineer Training Program (top 5% acceptance rate)
-- Technical Director and Vice President of the Wuhan University Microsoft Student Club
+- Served as the Technical Director of the Wuhan University Microsoft Student Club. Awarded National Scholarship (Top 1%)
 - 2021 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 6000+ teams)
 - 2020 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 1400+ teams)
 - 2020 China Service Outsourcing Innovation and Entrepreneurship Competition - National Second Prize (Top 2%)
@@ -90,7 +89,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - Simplified PyTorch implementation **from scratch** for educational purposes
 - Developed a custom **Tensor** class with full support for forward and backward computation of basic CPU & Cuda operators.
 - Implemented key features of a deep learning framework, including **computational graph construction**, **automatic differentiation**, and **momentum-based optimizers**.
-- Employed test-driven development with comprehensive unit tests to ensure robust implementation and correctness.
 
 ### **[CMU CSAPP](https://github.com/yewentao256/CSAPP_15213)**
 
@@ -119,3 +117,4 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 ### **[CSE251](https://github.com/yewentao256/CSE251)**
 
 - *Sep 2020 (C)*
+- CSE 251 Programming in C @MSU
