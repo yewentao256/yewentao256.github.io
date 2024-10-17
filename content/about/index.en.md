@@ -106,12 +106,11 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - *Aug 2021 (Python)*
 - Developed a simulation system using **dlib**, **Image Warping**, and **Face Fusion** techniques, capable of generating face change predictions based on potential drug use effects.
 - Designed to run efficiently offline on a CPU, the project obtained **Computer Software Copyright** with registration number **2022SR0021854**.
-- Algorithm and implementation details available on GitHub.
 
-### **[Untyped Programming Language "Sicpy"](https://github.com/yewentao256/SCP-sicpy)**
+### **[Sicpy Compiler](https://github.com/yewentao256/sicpy)**
 
-- *Nov 2020 - Dec 2020 (C, Yacc, Lex)*
-- Designed and implemented **Sicpy**, an untyped programming language and its corresponding compiler using **flex** and **bison**.
+- *Nov 2020 - Dec 2020 (C, Flex, Bison)*
+- Designed and implemented an untyped programming language **Sicpy** and its corresponding compiler using **flex** and **bison**.
 - Developed features including **lexical**, **syntax**, and **semantic analysis**, as well as **type inference** and **automatic garbage collection** via reference counting, providing a complete custom language framework for functional and imperative programming experimentation.
 
 ### **[CSE251](https://github.com/yewentao256/CSE251)**
