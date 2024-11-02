@@ -21,7 +21,7 @@ Data parallelism is the simplest strategy for parallel processing. In this setup
 
 However, because each GPU retains the entire model parameters and optimizer state, data parallelism **is not particularly memory-efficient**.
 
-Moreover, data parallelism involves a communication step to aggregate gradients after each GPU has completed forward and backward computations. As the `DP_size` increases, the communication cost also grows. To mitigate this, the use of "micro_batches" allows for multiple forward and backward passes in one go, effectively reducing communication overhead.
+Moreover, data parallelism involves a communication step to aggregate gradients after each GPU has completed forward and backward computations.
 
 Pytorch natively supports this functionality through `DataParallel (DP)` or `DistributedDataParallel (DDP)`. We strongly recommend using DDP over DP for the following reasons:
 
@@ -59,11 +59,11 @@ The Zero Redundancy Optimizer, commonly referred to as **Zero**, distributes the
 
 In the diagram, `Ψ` represents the number of model parameters, `K` denotes constants specific to the optimizer, and `Nd` indicates the number of GPUs. The optimization is segmented into three distinct stages.
 
-**Stage 1**: This stage involves the partitioning of optimizer states, resulting in a fourfold reduction in memory usage as the diagram shows, with communication overhead equivalent to that of traditional data parallelism (DP).
+**Stage 1**: This stage involves the partitioning of optimizer states, resulting in a fourfold reduction in memory usage as the diagram shows, with communication overhead equivalent to that of traditional data parallelism (DP). (e.g., for Adam optimizer, 32-bit weights, and the first, and second moment estimates)
 
-**Stage 2**：This stage introduces gradient partitioning, which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DP.
+**Stage 2**：This stage introduces gradient partitioning (FP 32 gradients), which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DP.
 
-**Stage 3**：This final stage includes partitioning of the model parameters. Memory usage decreases linearly with the addition of GPUs. For instance, 64 GPUs would result in a 64-fold reduction. However, this stage increases the communication overhead by approximately 50%.
+**Stage 3**：This final stage includes partitioning of the model parameters (Runtime FP16). Memory usage decreases linearly with the addition of GPUs. For instance, 64 GPUs would result in a 64-fold reduction. However, this stage increases the communication overhead by approximately 50%.
 
 ### Training Process Example
 
@@ -79,7 +79,7 @@ During the forward pass, each GPU holds a portion of the model parameters. For p
 
 ![image](resources/zero-2.png)
 
-For example, GPU0 broadcasts its forward pass parameters (M0) to the other GPUs. Each GPU then performs forward computations with its portion of the data. Once the forward computations are completed, the shared parameters on other GPUs are deleted.
+For example, GPU0 broadcasts its forward pass parameters (M0, fp16) to the other GPUs. Each GPU then performs forward computations with its portion of the data. Once the forward computations are completed, the shared parameters on other GPUs are deleted.
 
 It is important to note that only a subset of activation values from the forward pass is retained to minimize memory usage. The discarded activation values are recomputed during the backward pass through a technique known as **"checkpointing"**.
 
@@ -93,7 +93,7 @@ The backward pass then commences:
 
 During this phase, all model parameters from M3 are still present, and missing activation values are recomputed using the previously retained activations (for instance, if the model has ten layers, and activations from layers 0, 2, 4, 6, and 8 were saved, these are used to compute the outputs for layers 1, 3, 5, 7, and 9).
 
-Each GPU computes its own gradients based on the loss and activation values. These gradients are then communicated to GPU3, which accumulates them to form the complete gradient.
+Each GPU computes its own gradients based on the loss, activation values and model params. These gradients are then communicated to GPU3, which accumulates them to form the complete gradient.
 
 ![image](resources/zero-5.png)
 
@@ -101,7 +101,7 @@ Once the gradient accumulation is complete, the other GPUs delete the parameters
 
 ![image](resources/zero-6.png)
 
-Now, we need to compute the gradients for M2. GPU2 broadcasts its parameters to the other GPUs, and the gradients are recomputed using the parameters and the saved partial activations.
+Now, we need to compute the gradients for M2. GPU2 broadcasts its parameters to the other GPUs, and the gradients are computed using the parameters, loss and the saved partial activations.
 
 This process repeats until all gradients have been computed.
 
@@ -109,7 +109,7 @@ This process repeats until all gradients have been computed.
 
 At this point, each GPU has its gradients (accumulated from all datasets).
 
-The optimizer then uses these gradients (FP16) to update its model parameters (FP32).
+The optimizer then uses these gradients (FP16) to update its model parameters (FP32). (Computation based on FP32 gradients + FP32 momentum/variance + FP32 params)
 
 ![image](resources/zero-8.png)
 
@@ -128,7 +128,7 @@ For instance, consider a model with six layers divided across two GPUs (naive pi
      gpu0           gpu1
 ```
 
-When a batch of data is inputted, it first processes through layers 0 to 2 on gpu0, and then moves via the `.to()` to gpu1 for processing through layers 3 to 5 (this transition incurs communication overhead, which is smaller if both GPUs are on the same machine but significantly larger across different machines).
+When a batch of data is inputted, it first processes through layers 0 to 2 on gpu0, and then moves via the `.to()` to gpu1 for processing through layers 3 to 5.
 
 Typically, **labels** are sent to the GPU where the last layer of the model resides to compute the loss directly, followed by backward propagation and parameter updates.
 
@@ -190,13 +190,11 @@ As shown in the diagram, there are 4 GPUs configured with `2 DP + 2 PP`. The GPU
 
 For DP, only GPUs 0 and 1 are visible to each other, and GPUs 2 and 3 are "invisible." During training, DP divides the data between the two visible GPUs. GPUs 0 and 1 then covertly delegate part of their tasks to GPUs 2 and 3 using PP.
 
-### DP + PP + TP
+### Zero（DP） + PP + TP
 
 ![image](resources/Blog_DeepSpeed3_Figure2_highres.png)
 
 This setup involves eight nodes with a total of 32 GPUs, each node equipped with four GPUs. The Tensor Parallelism (TP) communication groups are set to the same node. Then, Pipeline Parallelism (PP) is set to 4, and Data Parallelism (DP) to 2, achieving a three-dimensional parallel training structure.
-
-### Zero（DP） + PP + TP
 
 Zero can be seen as a highly scalable form of DP, compatible with both PP and TP, but typically only suitable for Zero Stage 1.
 
