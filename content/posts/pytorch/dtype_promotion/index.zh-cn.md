@@ -348,7 +348,7 @@ struct ResultTypeState {
 };
 ```
 
-For each tensor, PyTorch invokes `update_result_type_state` to update the **ResultTypeState**. This state include three types of result dtypes: `dimResult` (for normal tensors), `wrappedResult` (for wrapped tensors), and `zeroResult` (for 0-dim tensors that are not wrapped).
+For each tensor, PyTorch invokes `update_result_type_state` to update the **ResultTypeState**. This state include three types of result dtypes: `dimResult` (for normal tensors), `zeroResult` (for 0-dim tensors that are not wrapped) and  `wrappedResult` (for wrapped tensors).
 
 The `at::native::result_type` function is then called to infer the `common_dtype_`:
 
@@ -381,7 +381,7 @@ static inline ScalarType combine_categories(ScalarType higher, ScalarType lower)
 }
 ```
 
-In most cases, the precedence order of the three result types is: `dimResult` > `wrappedResult` > `zeroResult`.
+In most cases, the precedence order of the three result types is: `dimResult` > `zeroResult` > `wrappedResult`.
 
 If the higher result dtype is a `bool` or the lower result dtype is a `FloatingType`, the dtype promotion function `promote_skip_undefined` is invoked:
 
