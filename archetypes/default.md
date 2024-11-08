@@ -1,6 +1,7 @@
 ---
 title: "{{ replace .Name "-" " " | title }}"
 date: {{ .Date }}
+lastmod: {{ .Date }}
 categories: [""]
 summary: "{{ replace .Name "-" " " | title }}"
 ---

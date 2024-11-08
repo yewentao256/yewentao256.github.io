@@ -1,9 +1,12 @@
 ---
 title: "About"
-date: 2024-09-17T16:49:14+08:00
+date: 2023-02-03T16:49:14+08:00
+hiddenFromHomePage: true
+lastmod: 2024-11-07T15:58:26+08:00
+summary: "Personal about page."
 ---
 
-## Hello Friend, Welcome to My Blog
+Hello Friend, Welcome to My Blog!
 
 I am Wentao, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
 
@@ -15,7 +18,24 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ---
 
-## Experience
+## 1. Patents
+
+- Patent: One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time from hours to minutes.
+- Patent: Function-Level Task Scheduling Tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)), patented in 2022, streamlining distributed training workflows.
+- Software Copyright: "After Taking Drugs (Facial Human Morphing Experience)" (2022SR0021854), Published Aug 9, 2021.
+
+---
+
+## 2. Awards
+
+- **National Third Prize**, China University Computer Contest - WeChat Big Data Challenge, 2021 (Top 2% / 6,000+ teams)
+- **National Third Prize**, China University Computer Contest - Huawei Big Data Challenge, 2020 (Top 2% / 1,400+ teams)
+- **National Second Prize**, China Service Outsourcing Innovation & Entrepreneurship Competition, 2020 (Top 2% / 700+ teams)
+- **National First Prize (Runner-up)**, China University Computer Capability Challenge, 2019 (Top 1% / 400+ teams)
+
+---
+
+## 3. Experience
 
 ### **SenseTime**
 
@@ -27,7 +47,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - Implemented multi-chip operator adaptations for [DIOPI](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+), supporting CUDA, Cambricon, and Ascend architectures.
 - Independently identified performance bottlenecks and optimized CUDA model performance via DeepLink and DIOPI integration, achieving a **20% average improvement** across 30+ models, with ResNet50's performance **surpassing PyTorch**.
 - Stabilized **Llama2 70B** training across 64 Ascend 910B chips using ZeRO + TP + PP and mixed-precision training, providing analysis reports and optimizing operator performance, **improving training TGS from 10% to 70% compared to A100 chips**.
-- Patented the **One-iter Tool** ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), reducing model accuracy validation time **from hours to minutes**, and integrated it into the CI/CD pipeline, significantly accelerating deployment cycles.
 
 ### **SenseTime - R&D Intern**
 
@@ -36,7 +55,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - Independently designed and developed the backend of a training data visualization platform, using **FastAPI** and Ceph + MySQL + TiDB, deployed in Kubernetes, and integrated with CI/CD pipelines.
 - Rebuilt a data collection SDK, increasing data upload efficiency **10×** through parallelism, accelerating model development pipelines.
-- Designed and patented a function-level task scheduling tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)), simplifying distributed training workflows.
 - Led automatic model annotation project across multiple teams, reducing manual labeling costs by **60%**.
 
 ### **Wuhan Hongyuan Investment & Technology Services Co., Ltd.**
@@ -55,27 +73,24 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ---
 
-## Education
+## 4. Education
 
-### **Cornell Tech at Cornell University** | New York, USA
+### Cornell University - Cornell Tech
 
-**Master of Computer Science**  
+**Master of Computer Science  | New York, USA**  
 *Aug 2024 - May 2025*
 
-### **Wuhan University** | Wuhan, China
+### Wuhan University
 
-**Bachelor of Software Engineering (Excellent Engineer Program)**  
+**Bachelor of Software Engineering (Excellent Engineer Program) | Wuhan, China**  
 *Sep 2018 - Jun 2022* | GPA: 3.91/4.0
 
-- Served as the Technical Director of the Wuhan University Microsoft Student Club. Awarded National Scholarship (Top 1%)
-- 2021 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 6000+ teams)
-- 2020 China University Computer Contest - Big Data Challenge - National Third Prize (Top 2% / 1400+ teams)
-- 2020 China Service Outsourcing Innovation and Entrepreneurship Competition - National Second Prize (Top 2% / 700+ teams)
-- 2019 China University Computer Capability Challenge - National First Prize (Runner-up / 400+ teams)
+- Led technical projects as Technical Director of Wuhan University Microsoft Student Club.
+- Awarded National Scholarship (Top 1%) and twice awarded National Encouragement Scholarship (Top 2%)
 
 ---
 
-## Projects
+## 5. Projects
 
 ### **[PyTorch Contribution](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)**
 
@@ -104,7 +119,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - *Aug 2021 (Python)*
 - Developed a simulation system using **dlib**, **Image Warping**, and **Face Fusion** techniques, capable of generating face change predictions based on potential drug use effects.
-- Designed to run efficiently offline on a CPU, the project obtained **Computer Software Copyright** with registration number **2022SR0021854**.
 
 ### **[Sicpy Compiler](https://github.com/yewentao256/sicpy)**
 
