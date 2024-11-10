@@ -7,7 +7,7 @@ summary: "Pytorch Tensor Puzzles"
 
 ## Summary
 
-This article provides solutions to the [Tensor Puzzles]((https://github.com/srush/Tensor-Puzzles)) by [Sasha Rush](https://github.com/srush).
+This article provides solutions to the [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) by [Sasha Rush](https://github.com/srush).
 
 For the more challenging puzzles (e.g., `compress`), we include detailed explanations as comments within the code.
 
