@@ -1,13 +1,13 @@
 ---
 title: "Tensor Puzzles"
-date: 2024-11-9T22:52:12+08:00
+date: 2024-11-09T22:52:12+08:00
 categories: ["Pytorch"]
 summary: "Pytorch Tensor Puzzles"
 ---
 
 ## Summary
 
-本博客提供了 [tensor puzzles](https://github.com/srush/Tensor-Puzzles) 的解决方案 @[sasha](https://github.com/srush)
+本博客提供了 [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) 的解决方案 @[Sasha Rush](https://github.com/srush)
 
 对于较难的题目(如 `compress`)，我们在注释中给出了详细解释
 

@@ -1,15 +1,15 @@
 ---
 title: "Tensor Puzzles"
-date: 2024-11-9T22:52:12+08:00
+date: 2024-11-09T22:52:12+08:00
 categories: ["Pytorch"]
 summary: "Pytorch Tensor Puzzles"
 ---
 
 ## Summary
 
-This article give solutions to the [tensor puzzles](https://github.com/srush/Tensor-Puzzles) @[sasha](https://github.com/srush)
+This article provides solutions to the [Tensor Puzzles]((https://github.com/srush/Tensor-Puzzles)) by [Sasha Rush](https://github.com/srush).
 
-For the harder ones (eg. `compress`), we give the detailed explanation as comments in code.
+For the more challenging puzzles (e.g., `compress`), we include detailed explanations as comments within the code.
 
 ## Puzzle 1 - ones
 
