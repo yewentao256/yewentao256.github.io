@@ -37,39 +37,36 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ## 3. Experience
 
-### **SenseTime**
+### Experience
 
-**Deep Learning System Software Engineer**
-*Jul 2022 - Aug 2024*
+- **Deep Learning System Software Engineer**  
+  - **SenseTime | SenseCore**  
+  - *Jul 2022 - Aug 2024*
 
-### **SenseTime - Software Engineer Intern**
+- **Software Engineer Intern**  
+  - **SenseTime | Research Institute (Deep Learning Frameworks)**  
+  - *Jan 2021 - Jul 2022*
 
-**Research Institute (Deep Learning Frameworks)**
-*Jan 2021 - Jul 2022*
+- **Co-founder & CTO**  
+  - **Wuhan Hongyuan Investment & Technology Services Co., Ltd.**  
+  - *Nov 2019 - Sep 2020*
 
-### **Wuhan Hongyuan Investment & Technology Services Co., Ltd.**
-
-**Co-founder & CTO**
-*Nov 2019 - Sep 2020*
-
-### **Yuye (Wuhan) Technology Development Co., Ltd.**
-
-**Co-founder** | Wuhan, China  
-*Jun 2019 - Nov 2019*
+- **Co-founder**  
+  - **Yuye (Wuhan) Technology Development Co., Ltd.**  
+  - *Jun 2019 - Nov 2019*
 
 ---
 
 ## 4. Education
 
-### Cornell University
+- **Master of Computer Science**  
+  - **Cornell University** | Cornell Tech | New York, USA  
+  - *Aug 2024 - May 2025*
 
-**Master of Computer Science | Cornell Tech  | New York, USA**  
-*Aug 2024 - May 2025*
-
-### Wuhan University
-
-**Bachelor of Software Engineering (Excellent Engineer Program) | Wuhan, China**  
-*Sep 2018 - Jun 2022* | GPA: 3.91/4.0
+- **Bachelor of Software Engineering (Excellent Engineer Program)**  
+  - **Wuhan UniversityChina** | Wuhan, China
+  - *Sep 2018 - Jun 2022*  
+  - GPA: 3.91/4.0  
 
 ---
 
