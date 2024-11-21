@@ -61,7 +61,7 @@ Zero将Optimizer State（优化器状态），梯度和模型参数划分到各�
 
 **Stage1**：优化器状态分割，在图示情况下减少四倍内存占用，与 DP（data parallelism）相同的通信量。例如：Adam 有 FP32的 params、momentum和variance
 
-**Stage2**：增加梯度分割（FP32 gradient），减少八倍内存占用，与 DP 相同通信量。
+**Stage2**：增加梯度分割（FP16 运行时的 gradient），在图示情况下减少八倍内存占用，与 DP 相同通信量。
 
 **Stage3**：增加模型参数分割（运行时FP 16），随 GPU 增加线性倍数减少内存占用（如64个 GPU 就减少64倍），大约增加50%通信量。
 

@@ -61,7 +61,7 @@ In the diagram, `Ψ` represents the number of model parameters, `K` denotes cons
 
 **Stage 1**: This stage involves the partitioning of optimizer states, resulting in a fourfold reduction in memory usage as the diagram shows, with communication overhead equivalent to that of traditional data parallelism (DP). (e.g., for Adam optimizer, 32-bit weights, and the first, and second moment estimates)
 
-**Stage 2**：This stage introduces gradient partitioning (FP 32 gradients), which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DP.
+**Stage 2**：This stage introduces gradient partitioning (FP 16 running gradients), which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DP.
 
 **Stage 3**：This final stage includes partitioning of the model parameters (Runtime FP16). Memory usage decreases linearly with the addition of GPUs. For instance, 64 GPUs would result in a 64-fold reduction. However, this stage increases the communication overhead by approximately 50%.
 
