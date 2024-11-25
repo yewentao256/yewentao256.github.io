@@ -30,7 +30,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - **National Third Prize**, China University Computer Contest - WeChat Big Data Challenge, 2021 (Top 2% / 6,000+ teams)
 - **National Third Prize**, China University Computer Contest - Huawei Big Data Challenge, 2020 (Top 2% / 1,400+ teams)
 - **National Second Prize**, China Service Outsourcing Innovation & Entrepreneurship Competition, 2020 (Top 2% / 700+ teams)
-- **National First Prize (Runner-up)**, China University Computer Capability Challenge, 2019 (Top 1% / 400+ teams)
+- **National First Prize**, China University Computer Capability Challenge, 2019 (**Runner-up** / 400+ teams)
 
 ---
 
@@ -66,6 +66,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
   - **Wuhan UniversityChina** | Wuhan, China
   - *Sep 2018 - Jun 2022*  
   - GPA: 3.91/4.0  
+  - Awarded the **National Scholarship** (Top 1%) and the National Encouragement Scholarship twice (Top 2%) out of 500 students.
 
 ---
 
