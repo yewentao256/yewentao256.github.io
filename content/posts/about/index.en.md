@@ -50,7 +50,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
   - **Wuhan Hongyuan Investment & Technology Services Co., Ltd.**  
   - *Nov 2019 - Sep 2020*
 
-- **Co-founder**  
+- **Co-founder & Backend Developer**  
   - **Yuye (Wuhan) Technology Development Co., Ltd.**  
   - *Jun 2019 - Nov 2019*
 
