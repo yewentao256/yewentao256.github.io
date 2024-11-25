@@ -22,7 +22,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time **from hours to minutes**.
 - Function-Level Task Scheduling Tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)), patented in 2022, streamlining distributed training workflows.
-- Software Copyright: "After Taking Drugs (Facial Human Morphing Experience)" (2022SR0021854), Published Aug 9, 2021.
 
 ---
 
@@ -39,11 +38,11 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ### Experience
 
-- **Deep Learning System Software Engineer**  
+- **Deep Learning System Development Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
 
-- **Software Engineer Intern**  
+- **R&D Intern**  
   - **SenseTime | Research Institute (Deep Learning Frameworks)**  
   - *Jan 2021 - Jul 2022*
 
@@ -113,7 +112,8 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 ### [You After Taking Drugs: Face Change Simulation System](https://github.com/yewentao256/You-after-taking-drugs)
 
 - *Aug 2021 (Python)*
-- Developed a simulation system using **dlib**, **Image Warping**, and **Face Fusion** techniques, capable of generating face change predictions based on potential drug use effects.
+- Independently developed this system in 7 days using computer vision algorithms; optimized for smooth performance on a single i3 CPU, ensuring a seamless user experience and earning client approval in the first review.
+- Software Copyright: "After Taking Drugs (Facial Human Morphing Experience)" (2022SR0021854).
 
 ### [Sicpy Compiler](https://github.com/yewentao256/sicpy)
 
