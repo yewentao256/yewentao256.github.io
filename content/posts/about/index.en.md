@@ -38,11 +38,11 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ### Experience
 
-- **Deep Learning System Development Engineer**  
+- **Deep Learning System R&D Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
 
-- **R&D Intern**  
+- **Backend Developer Intern**  
   - **SenseTime | Research Institute (Deep Learning Frameworks)**  
   - *Jan 2021 - Jul 2022*
 
