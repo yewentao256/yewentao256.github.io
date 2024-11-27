@@ -74,65 +74,66 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ### OpenSource Contribution
 
-#### [PyTorch](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
+#### [PyTorch](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256) ![GitHub stars](https://img.shields.io/github/stars/pytorch/pytorch?style=social)
 
 - *May 2023 - Present*
 - **Identified and optimized the CuDNN Convolution operator** within PyTorch, achieving a 15% performance improvement; this enhancement directly benefits computer vision tasks, improving the training and inference performance of convolutional neural networks (CNNs); contribution successfully merged into the PyTorch codebase.
 - **Authored a blog series**, "Analyzing PyTorch's Internal Mechanisms," with over 10 [articles](https://wentao.site/categories/pytorch/) published in 2023 and 2024, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 
-#### [LazyLLM](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+)
+#### [LazyLLM](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+) ![GitHub stars](https://img.shields.io/github/stars/LazyAGI/LazyLLM?style=social)
 
 - *May 2024 - Aug 2024*
 - **Independently built a Retrieval-Augmented Generation (RAG) system** in LazyLLM with a specialized tree architecture, which improved query performance by 50% over LlamaIndex by enhancing the efficiency of parent/child node retrieval, optimizing response times for large language models.
 
-#### [DeepLink](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+)
+#### [DeepLink](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+) ![GitHub stars](https://img.shields.io/github/stars/DeepLink-org/deeplink.framework?style=social)
 
 - *May 2023 - May 2024*
 - Designed and implemented the Op Inferrer, bypassing PyTorch's TensorIterator to increase the inference speed of binary, unary, and reduction operators by 5% across 40+ models, including large language models (LLMs).
 - Identified and resolved CUDA performance bottlenecks by optimizing implementations within DeepLink and DIOPI, achieving an average 20% performance improvement across 30+ models; enhanced computational efficiency allowed ResNet50 to surpass PyTorch’s benchmark performance, providing significant speedups for high-demand tasks.
 
-#### [DIOPI](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+)
+#### [DIOPI](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+) ![GitHub stars](https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social)
 
 - *Apr 2023 - May 2024*
 - **Developed 30+ machine learning operators** in DIOPI, enabling advanced functionalities across diverse hardware; implemented multi-chip adaptations to support CUDA, Cambricon, and Ascend architectures, enhancing cross-platform compatibility, reducing integration time and enhancing operational efficiency for large-scale systems.
 
-#### [MMCV & PAVI Logger](https://github.com/open-mmlab/mmcv)
+#### [MMCV & PAVI Logger](https://github.com/open-mmlab/mmcv) ![GitHub stars](https://img.shields.io/github/stars/open-mmlab/mmcv?style=social)
 
-- *Jul 2022 - Dec 2022*
-- Developed and integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging functionality for deep learning workflows.
+- *Jan 2021 - Dec 2022*
+- **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
+- Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
 ### Owned Projects
 
-#### [MicroTorch](https://github.com/yewentao256/MicroTorch)
+#### [MicroTorch](https://github.com/yewentao256/MicroTorch) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/MicroTorch?style=social)
 
 - *Jun 2023 - Aug 2024*
 - Developed a **minimalistic deep learning framework** inspired by PyTorch, implementing core functionalities such as AutoGrad, dynamic computation graphs, and tensor operations.
 - Designed to be lightweight and modular, making it ideal for educational purposes, with extensive examples to facilitate learning.
 
-#### [CMU CSAPP](https://github.com/yewentao256/CSAPP_15213)
+#### [CMU CSAPP](https://github.com/yewentao256/CSAPP_15213) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/CSAPP_15213?style=social)
 
 - *Dec 2022 - Feb 2024 (C, Assembly)*
 - Self-studied the **CMU CSAPP-15213** course and completed its associated labs, covering core concepts such as assembly optimization, multi-level cache, compiling and linking, exception control flow, virtual memory, and system-level I/O.
 - [Blogs](https://wentao.site/categories/csapp/)
 
-#### [TinyNN](https://github.com/yewentao256/TinyNN)
+#### [TinyNN](https://github.com/yewentao256/TinyNN) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/TinyNN?style=social)
 
 - *Nov 2022 - Dec 2022 (Python)*
 - Built **TinyNN**, a minimal implementation of **Fully Connected Neural Networks** and **Convolutional Neural Networks**, designed for educational and experimental purposes.
 
-#### [You After Taking Drugs: Face Change Simulation System](https://github.com/yewentao256/You-after-taking-drugs)
+#### [You After Taking Drugs: Face Change Simulation System](https://github.com/yewentao256/You-after-taking-drugs) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/You-after-taking-drugs?style=social)
 
 - *Aug 2021 (Python)*
 - Independently developed this system in 7 days using computer vision algorithms; optimized for smooth performance on a single i3 CPU, ensuring a seamless user experience and earning client approval in the first review.
 - Software Copyright: "After Taking Drugs (Facial Human Morphing Experience)" (2022SR0021854).
 
-#### [Sicpy Compiler](https://github.com/yewentao256/sicpy)
+#### [Sicpy Compiler](https://github.com/yewentao256/sicpy) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/sicpy?style=social)
 
 - *Nov 2020 - Dec 2020 (C, Flex, Bison)*
 - Designed and implemented an untyped programming language **Sicpy** and its corresponding compiler using **flex** and **bison**.
 - Developed features including **lexical**, **syntax**, and **semantic analysis**, as well as **type inference** and **automatic garbage collection** via reference counting, providing a complete custom language framework for functional and imperative programming experimentation.
 
-#### [CSE251](https://github.com/yewentao256/CSE251)
+#### [CSE251](https://github.com/yewentao256/CSE251) ![GitHub stars](https://img.shields.io/github/stars/yewentao256/CSE251?style=social)
 
 - *Sep 2020 (C)*
 - CSE 251 Programming in C @MSU
