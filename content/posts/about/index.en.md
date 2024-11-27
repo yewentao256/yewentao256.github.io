@@ -78,7 +78,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - <a href="https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
 - *May 2023 - Present*
-- **Identified and optimized the CuDNN Convolution operator** within PyTorch, achieving a 15% performance improvement; this enhancement directly benefits computer vision tasks, improving the training and inference performance of convolutional neural networks (CNNs); contribution successfully merged into the PyTorch codebase.
+- **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
 - **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles** published in 2023 and 2024, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 
 #### LazyLLM
@@ -133,7 +133,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - <a href="https://github.com/yewentao256/You-after-taking-drugs"><img src="https://img.shields.io/github/stars/yewentao256/You-after-taking-drugs?style=social" alt="GitHub stars" height="20"></a>
 - *Aug 2021 (Python)*
-- Independently developed this system in 7 days using computer vision algorithms; optimized for smooth performance on a single i3 CPU, ensuring a seamless user experience and earning client approval in the first review.
+- **Independently developed this system in 7 days** using computer vision algorithms; optimized for smooth performance on a single i3 CPU, ensuring a seamless user experience and earning client approval in the first review.
 - Software Copyright: "After Taking Drugs (Facial Human Morphing Experience)" (2022SR0021854).
 
 #### Sicpy Compiler
