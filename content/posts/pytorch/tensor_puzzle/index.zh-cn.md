@@ -2,12 +2,12 @@
 title: "Tensor Puzzles"
 date: 2024-11-09T22:52:12+08:00
 categories: ["Pytorch"]
-summary: "Pytorch Tensor Puzzles"
+summary: "本博客提供了 [Sasha Rush](https://github.com/srush) 的 [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) 的解决方案"
 ---
 
 ## Summary
 
-本博客提供了 [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) 的解决方案 @[Sasha Rush](https://github.com/srush)
+本博客提供了 [Sasha Rush](https://github.com/srush) 的 [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) 的解决方案
 
 对于较难的题目(如 `compress`)，我们在注释中给出了详细解释
 

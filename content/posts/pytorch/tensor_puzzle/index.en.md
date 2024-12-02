@@ -2,7 +2,7 @@
 title: "Tensor Puzzles"
 date: 2024-11-09T22:52:12+08:00
 categories: ["Pytorch"]
-summary: "Pytorch Tensor Puzzles"
+summary: "This article provides solutions to the [Tensor Puzzles](https://github.com/srush/Tensor-Puzzles) by [Sasha Rush](https://github.com/srush)"
 ---
 
 ## Summary
