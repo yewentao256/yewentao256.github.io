@@ -81,6 +81,15 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
 - **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles** published in 2023 and 2024, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 
+#### MMCV & PAVI Logger
+
+- <a href="https://github.com/open-mmlab/mmcv"><img src="https://img.shields.io/github/stars/open-mmlab/mmcv?style=social" alt="GitHub stars" height="20"></a>
+- *Jan 2021 - Dec 2022*
+- **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
+- Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
+
+### Main Contributor
+
 #### LazyLLM
 
 - <a href="https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+"><img src="https://img.shields.io/github/stars/LazyAGI/LazyLLM?style=social" alt="GitHub stars" height="20"></a>
@@ -99,13 +108,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - <a href="https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+"><img src="https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social" alt="GitHub stars" height="20"></a>
 - *Apr 2023 - May 2024*
 - **Developed 30+ machine learning operators** in DIOPI, enabling advanced functionalities across diverse hardware; implemented multi-chip adaptations to support CUDA, Cambricon, and Ascend architectures, enhancing cross-platform compatibility, reducing integration time and enhancing operational efficiency for large-scale systems.
-
-#### MMCV & PAVI Logger
-
-- <a href="https://github.com/open-mmlab/mmcv"><img src="https://img.shields.io/github/stars/open-mmlab/mmcv?style=social" alt="GitHub stars" height="20"></a>
-- *Jan 2021 - Dec 2022*
-- **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
-- Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
 ### Owned Projects
 
