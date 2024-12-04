@@ -70,9 +70,9 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ---
 
-## 5. Projects
+## 5. OpenSource Projects
 
-### OpenSource Contribution
+### Feature Developer
 
 #### PyTorch
 
