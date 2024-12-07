@@ -79,7 +79,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 - <a href="https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
 - *May 2023 - Present*
 - **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
-- **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles** published in 2023 and 2024, providing the developer community with insights into PyTorch’s core architecture and optimizations.
+- **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 
 #### MMCV & PAVI Logger
 
