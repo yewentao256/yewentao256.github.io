@@ -1,14 +1,12 @@
 ---
-title: "About"
+title: "About Me"
 date: 2023-02-03T16:49:14+08:00
 hiddenFromHomePage: true
 lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-Hello Friend, Welcome to My Blog!
-
-I am Wentao, currently a Master of Computer Science student at **Cornell University**, expected to graduate in May 2025.
+Wentao Ye is a Computer Science Master’s student at Cornell University with extensive experience in deep learning systems, distributed training, and backend development. A former R&D engineer at SenseTime, he has optimized large-scale LLMs and contributed to open-source frameworks like PyTorch. An award-winning developer and two-time startup co-founder, he excels at building scalable AI solutions and driving innovation in machine learning.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 

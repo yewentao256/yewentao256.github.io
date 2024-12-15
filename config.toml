@@ -103,9 +103,9 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 
 [params]
   # 网站标题
-  title = "yewentao's blog"
+  title = "Wentao's Blog"
   # 网站描述
-  description = "yewentao's blog"
+  description = "Wentao's Blog"
   # 网站关键词
   keywords = ["Blog", "Hugo", "yewentao"]
   # 网站默认主题样式 ("light", "dark", "black", "auto")
@@ -247,9 +247,9 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       # 头像的链接指向的 URL
       avatarLinkURL = ""
       # 主页显示的网站标题 (支持 HTML 格式)
-      title = "Yewentao's Blog"
+      title = "Wentao's Blog"
       # 主页显示的网站副标题 (允许 HTML 格式)
-      subtitle = "Hello friend, welcome to my blog!"
+      subtitle = "Hello! Welcome to my blog!"
       # 是否为副标题显示打字机动画
       typeit = true
       # 是否显示社交账号
@@ -667,7 +667,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 [languages]
   [languages.en]
     weight = 1
-    title = "Yewentao's Blog"
+    title = "Wentao's Blog"
     languageCode = "en"
     languageName = "English"
     [[languages.en.menu.main]]
@@ -705,7 +705,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 
   [languages.zh-cn]
     weight = 2
-    title = "Yewentao's Blog"
+    title = "Wentao's Blog"
     languageCode = "zh-CN"
     languageName = "简体中文"
     hasCJKLanguage = true
