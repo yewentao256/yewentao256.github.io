@@ -143,12 +143,6 @@ Wentao Ye is a Computer Science Master’s student at Cornell University with ex
 - Designed and implemented an untyped programming language **Sicpy** and its corresponding compiler using **flex** and **bison**.
 - Developed features including **lexical**, **syntax**, and **semantic analysis**, as well as **type inference** and **automatic garbage collection** via reference counting, providing a complete custom language framework for functional and imperative programming experimentation.
 
-#### CSE251
-
-- <a href="https://github.com/yewentao256/CSE251"><img src="https://img.shields.io/github/stars/yewentao256/CSE251?style=social" alt="GitHub stars" height="20"></a>
-- *Sep 2020 (C)*
-- CSE 251 Programming in C @MSU
-
 #### New Super Mario
 
 - *Apr 2020 (C#, unity)*
