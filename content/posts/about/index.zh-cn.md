@@ -36,8 +36,6 @@ Wentao Ye is a Computer Science Master’s student at Cornell University with ex
 
 ## 3. Experience
 
-### Experience
-
 - **Deep Learning System R&D Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*

@@ -34,8 +34,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ## 3. Experience
 
-### Experience
-
 - **Deep Learning System R&D Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
