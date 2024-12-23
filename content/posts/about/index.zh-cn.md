@@ -59,6 +59,7 @@ Wentao Ye is a Computer Science Master’s student at Cornell University with ex
 - **Master of Computer Science**  
   - **Cornell University** | Cornell Tech | New York, USA  
   - *Aug 2024 - May 2025*
+  - GPA: 4.0/4.0
 
 - **Bachelor of Software Engineering (Excellent Engineer Program)**  
   - **Wuhan UniversityChina** | Wuhan, China
