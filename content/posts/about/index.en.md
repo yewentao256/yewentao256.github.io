@@ -6,7 +6,7 @@ lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-Wentao Ye is a Computer Science Master’s student at Cornell University with extensive experience in deep learning systems, distributed training, and backend development. A former R&D engineer at SenseTime, he has optimized large-scale LLMs and contributed to open-source frameworks like PyTorch. An award-winning developer and two-time startup co-founder, he excels at building scalable AI solutions and driving innovation in machine learning.
+Computer Science M.Eng. student at Cornell University with strong expertise in advanced deep learning, distributed training, and backend development. Former deep learning engineer at SenseTime, with a proven track record of optimizing large-scale LLMs and contributing to open-source frameworks such as PyTorch. An award-winning developer and two-time startup co-founder, recognized for designing scalable AI solutions and driving innovation in machine learning.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
@@ -34,11 +34,11 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ## 3. Experience
 
-- **Deep Learning System R&D Engineer**  
+- **Deep Learning Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
 
-- **Backend Developer Intern**  
+- **R&D Intern**  
   - **SenseTime | Research Institute (Deep Learning Frameworks)**  
   - *Jan 2021 - Jul 2022*
 
@@ -46,7 +46,7 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
   - **Wuhan Hongyuan Investment & Technology Services Co., Ltd.**  
   - *Nov 2019 - Sep 2020*
 
-- **Co-founder & Backend Developer**  
+- **Co-founder**  
   - **Yuye (Wuhan) Technology Development Co., Ltd.**  
   - *Jun 2019 - Nov 2019*
 
@@ -56,12 +56,12 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 - **Master of Computer Science**  
   - **Cornell University** | Cornell Tech | New York, USA  
-  - *Aug 2024 - May 2025*
+  - *May 2025*
   - GPA: 4.0/4.0
 
 - **Bachelor of Software Engineering (Excellent Engineer Program)**  
   - **Wuhan UniversityChina** | Wuhan, China
-  - *Sep 2018 - Jun 2022*  
+  - *Jun 2022*  
   - GPA: 3.91/4.0  
   - Awarded the **National Scholarship** (Top 1%) and the National Encouragement Scholarship twice (Top 2%) out of 500 students.
 
