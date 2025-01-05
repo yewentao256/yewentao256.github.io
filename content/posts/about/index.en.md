@@ -108,6 +108,13 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ### Owned Projects
 
+#### GAN-Paint
+
+- <a href="https://github.com/yewentao256/GAN-Paint"><img src="https://img.shields.io/github/stars/yewentao256/GAN-Paint?style=social" alt="GitHub stars" height="20"></a>
+- *Nov 2024 - Jan 2025*
+- Developed a lightweight GAN (generative adversarial network) for large-area image completion and cross-scene stitching, achieving realistic outputs on a single RTX 2070 GPU.
+- Implemented an end-to-end training pipeline with efficient data preprocessing, masking strategies, and evaluation, completing model training within hours.
+
 #### MicroTorch
 
 - <a href="https://github.com/yewentao256/MicroTorch"><img src="https://img.shields.io/github/stars/yewentao256/MicroTorch?style=social" alt="GitHub stars" height="20"></a>
