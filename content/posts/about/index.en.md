@@ -6,7 +6,7 @@ lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-Computer Science M.Eng. student at Cornell University with expertise in deep learning, distributed training, and backend development. Former deep learning engineer at SenseTime, with a proven track record of optimizing large-scale LLMs and contributing to open-source frameworks such as PyTorch. An award-winning developer and two-time startup co-founder, recognized for designing scalable AI solutions and driving innovation in machine learning.
+Computer Science M.Eng. student at Cornell University with expertise in deep learning, distributed training, and backend development. Former deep learning engineer at SenseTime, with a proven track record of **optimizing large-scale LLMs across thousands of chips** and contributing to **open-source frameworks such as PyTorch**. An award-winning developer and two-time startup co-founder, recognized for designing scalable AI solutions and driving innovation in machine learning..
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
@@ -63,7 +63,6 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
   - **Wuhan UniversityChina** | Wuhan, China
   - *Jun 2022*  
   - GPA: 3.91/4.0  
-  - Awarded the **National Scholarship** (Top 1%) and the National Encouragement Scholarship twice (Top 2%) out of 500 students.
 
 ---
 
