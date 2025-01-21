@@ -59,9 +59,9 @@ Zero将Optimizer State（优化器状态），梯度和模型参数划分到各�
 
 在图中，`Ψ` 表示模型参数数，`K` 表示优化器特定的常量，`Nd` 指 GPU 数量，优化对应三个阶段。
 
-**Stage1**：优化器状态分割，在图示情况下减少四倍内存占用，与 DP（data parallelism）相同的通信量。例如：Adam 有 FP32的 params、momentum和variance
+**Stage1**：优化器状态分割，在图示情况下减少四倍内存占用，与 DDP（data parallelism）相同的通信量（一次**all-reduce**）。优化器状态是什么？例如：Adam 有 FP32的 params、momentum和variance
 
-**Stage2**：增加梯度分割（FP16 运行时的 gradient），在图示情况下减少八倍内存占用，与 DP 相同通信量。
+**Stage2**：增加梯度分割（FP16 运行时的 gradient），在图示情况下减少八倍内存占用，与 DDP 相同通信量（但由于较为复杂，实际通信开销会更大）。
 
 **Stage3**：增加模型参数分割（运行时FP 16），随 GPU 增加线性倍数减少内存占用（如64个 GPU 就减少64倍），大约增加50%通信量。
 
@@ -96,6 +96,8 @@ Zero将Optimizer State（优化器状态），梯度和模型参数划分到各�
 此时 M3 的模型参数都还在，缺失的激活值会通过之前保留的部分激活值**重计算**得到（如我们有十层，保留0、2、4、6、8，通过模型参数和保留的激活值 计算得到1、3、5、7、9的前向输出）
 
 每个 GPU 根据 loss、激活值和模型参数 进行反向传播计算出自己的梯度后，其他 GPU 将梯度通信给 GPU3 ，GPU3 进行梯度累加并平均，这样 GPU3 上的梯度就是综合考虑所有数据的完整的梯度。
+
+注：这也是为什么stage2比stage1 通信量相同，通信开销更大的原因。由一次all reduce变成每部分点对点传播accumulate了
 
 ![image](resources/zero-5.png)
 

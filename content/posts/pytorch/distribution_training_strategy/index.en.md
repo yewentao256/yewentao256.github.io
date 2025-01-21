@@ -59,9 +59,9 @@ The Zero Redundancy Optimizer, commonly referred to as **Zero**, distributes the
 
 In the diagram, `Ψ` represents the number of model parameters, `K` denotes constants specific to the optimizer, and `Nd` indicates the number of GPUs. The optimization is segmented into three distinct stages.
 
-**Stage 1**: This stage involves the partitioning of optimizer states, resulting in a fourfold reduction in memory usage as the diagram shows, with communication overhead equivalent to that of traditional data parallelism (DP). (e.g., for Adam optimizer, 32-bit weights, and the first, and second moment estimates)
+**Stage 1**: This stage involves the partitioning of optimizer states, resulting in a fourfold reduction in memory usage as the diagram shows, with communication overhead equivalent to that of traditional DDP (One **all-reduce**). What are the optimizer states? e.g., for Adam optimizer, 32-bit weights, and the first, and second moment estimates
 
-**Stage 2**：This stage introduces gradient partitioning (FP 16 running gradients), which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DP.
+**Stage 2**：This stage introduces gradient partitioning (FP 16 running gradients), which further reduces memory usage by eight times as the diagram shows, still maintaining the same level of communication as DDP (However, due to the complexity, **the actual communication overhead will be higher**).
 
 **Stage 3**：This final stage includes partitioning of the model parameters (Runtime FP16). Memory usage decreases linearly with the addition of GPUs. For instance, 64 GPUs would result in a 64-fold reduction. However, this stage increases the communication overhead by approximately 50%.
 
@@ -94,6 +94,8 @@ The backward pass then commences:
 During this phase, all model parameters from M3 are still present, and missing activation values are recomputed using the previously retained activations (for instance, if the model has ten layers, and activations from layers 0, 2, 4, 6, and 8 were saved, these are used to compute the outputs for layers 1, 3, 5, 7, and 9).
 
 Each GPU computes its own gradients based on the loss, activation values and model params. These gradients are then communicated to GPU3, which accumulates them to form the complete gradient.
+
+Note: This is why stage2 has the same amount of communication and more communication overhead than stage1. From one **all-reduce** to peer-to-peer **send** and accumulate
 
 ![image](resources/zero-5.png)
 
