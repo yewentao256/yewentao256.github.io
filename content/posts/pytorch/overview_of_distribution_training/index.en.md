@@ -175,11 +175,11 @@ Collective communication APIs such as `all-reduce`, `all_gather` etc., are used 
 
 - **Gloo**: An open-source communication library, the default backend for CPUs, cross-platform with reliable performance, not requiring specific system dependencies.
 - **NCCL** (NVIDIA Collective Communications Library): A communication library for multi-GPU and multi-node, providing optimal performance for NVIDIA GPUs.
-  - NVLink: High-speed communication within a single node between multiple GPUs
-  - InfiniBand (IB): High-speed transmission between nodes
+  - NVLink: High-speed communication **within a single node** between multiple GPUs
+  - InfiniBand (IB): High-speed transmission between nodes, part of the RDMA(Remote Direct Memory Access)
   - PCIe (Peripheral Component Interconnect Express): Fallback communication mechanism, slower
   - First, establish a GPU topology graph, then implement communication using ring (most common), tree, and grid algorithms based on the mentioned three communication mechanisms
-- **MPI** (Message Passing Interface): Used for inter-process message passing across multiple compute nodes. MPI is not the default backend for PyTorch and requires additional installation and adaptation.
+- **MPI** (Message Passing Interface): Used for cross-process message passing across multiple compute nodes. MPI is not the default backend for PyTorch and requires additional installation and adaptation.
 
 Generally, use Gloo for CPUs and NCCL for GPUs. If you're familiar with and already use MPI communication, then consider installing MPI additionally.
 
@@ -189,7 +189,7 @@ Generally, use Gloo for CPUs and NCCL for GPUs. If you're familiar with and alre
 
 ![image](resources/pt_distributed_arch.png)
 
-- **Process Groups (PG)**: Manages inter-process communication, exposing a series of communication APIs like `broadcast`, `send`, `all-reduce`, etc.
+- **Process Groups (PG)**: Manages cross-process communication, exposing a series of communication APIs like `broadcast`, `send`, `all-reduce`, etc.
 
 - **Store**: A key-value storage system used for sharing information between processes. It includes `FileStore` (a shared file for storing key-value pairs), `TCPStore` (using a TCP server for storage), `HashStore` (stored in memory, used for single-process modes or testing), as well as third-party stores like `etcd`, `Redis`.
 

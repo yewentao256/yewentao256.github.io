@@ -175,8 +175,8 @@ collective communication APIs如`all-reduce`、`all_gather`等用于DDP训练，
 
 - **Gloo**：开源通信库，CPU默认后端，跨平台并拥有可靠性能，不需要特定系统依赖
 - **NCCL**（NVIDIA NCCL (NVIDIA Collective Communications Library) ：多GPU、多节点通信库，给NVIDIA GPU提供了最佳性能
-  - NVLink：单节点内多GPU高速通行
-  - InfiniBand（IB）：节点间高速传输
+  - NVLink：**单节点内**多GPU高速通行
+  - InfiniBand（IB）：节点间高速传输（RDMA，Remote Direct Memory Access 的一部分）
   - PCIe（Peripheral Component Interconnect Express）：fallback通行机制，较慢。
   - 先建立GPU拓扑图，然后基于上述三种通信机制实现环形（最普遍）/树形/网格算法实现通信。
 - **MPI**(Message Passing Interface) ：用于在多计算节点上进程间消息传递。MPL不是pytorch默认后端，需要额外安装与适配才能使用。
