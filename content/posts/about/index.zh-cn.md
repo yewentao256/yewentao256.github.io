@@ -13,3 +13,5 @@ summary: "Personal about page."
 Github: [yewentao256](https://github.com/yewentao256)
 
 LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
+
+我的博客系列: [Pytorch](https://wentao.site/categories/pytorch/), [CSAPP](https://wentao.site/categories/csapp/), and [more](https://wentao.site/categories/)

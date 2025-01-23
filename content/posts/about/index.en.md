@@ -14,6 +14,8 @@ Github: [yewentao256](https://github.com/yewentao256)
 
 LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
+My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [CSAPP](https://wentao.site/categories/csapp/), and [more](https://wentao.site/categories/)
+
 ---
 
 ## 1. Patents
