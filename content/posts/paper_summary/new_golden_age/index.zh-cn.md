@@ -9,6 +9,10 @@ summary: "论文阅读总结：'A New Golden Age for Computer Architecture'"
 
 非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
 
+## Download the paper
+
+[Paper_Link](https://dl.acm.org/doi/pdf/10.1145/3282307)
+
 ## What is the paper about?
 
 The paper explores the history, current challenges, and future opportunities in computer architecture.

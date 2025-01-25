@@ -5,7 +5,9 @@ categories: ["paper_summary"]
 summary: "Summary for paper 'A New Golden Age for Computer Architecture'"
 ---
 
-![paper_download](resources/new_golden_age.pdf)
+## Download the paper
+
+[Paper_Link](https://dl.acm.org/doi/pdf/10.1145/3282307)
 
 ## What is the paper about?
 
