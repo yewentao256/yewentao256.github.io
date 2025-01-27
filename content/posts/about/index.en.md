@@ -6,7 +6,7 @@ lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-Computer Science M.Eng. student at Cornell University with expertise in deep learning, distributed training, and backend development. Former deep learning engineer at SenseTime, with a proven track record of **optimizing large-scale LLMs across thousands of chips** and contributing to **open-source frameworks such as PyTorch**. An award-winning developer and two-time startup co-founder, recognized for designing scalable AI solutions and driving innovation in machine learning..
+Computer Science M.Eng. student at Cornell University with **3+ years** of experience in deep learning and large-scale LLM optimization. Former deep learning engineer at SenseTime, recognized for delivering up to **700% performance gains on Llama 2 across 1024 NPUs**. A dedicated **open-source contributor to PyTorch** and HPC frameworks, with a proven track record of **distributed training** and end-to-end AI solutions. An award-winning developer and two-time startup co-founder, driving innovative machine learning applications from prototype to production.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
