@@ -13,7 +13,7 @@ summary: "论文阅读总结：'Attention is all you need'"
 
 [Paper](https://arxiv.org/pdf/1706.03762)
 
-## 1. What is new about this specific paper, compared to prior work?
+## 1. What is the paper about?
 
 This paper proposes the **Transformer**, a novel Seq2Seq architecture that relies **entirely on attention mechanisms**, rather than recurrent or convolutional layers, to encode and decode sequences.
 
