@@ -6,7 +6,7 @@ lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-Computer Science M.Eng. student at Cornell University with **3+ years** of experience in deep learning and large-scale LLM optimization. Former deep learning engineer at SenseTime, recognized for delivering up to **700% performance gains on Llama 2 across 1024 NPUs**. A dedicated **open-source contributor to PyTorch** and HPC frameworks, with a proven track record of **distributed training** and end-to-end AI solutions. An award-winning developer and two-time startup co-founder, driving innovative machine learning applications from prototype to production.
+CS M.Eng. student at Cornell University with **3+ years** of experience in deep learning and LLM optimization. Former deep learning engineer at SenseTime, recognized for delivering **up to 700% performance gains on Llama2 70B across 1024 NPUs**. A dedicated **open-source contributor with 7k+ total stars** across personal and contributed projects. An award-winning developer and **two-time startup co-founder**, driving innovative machine learning applications from prototype to production.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
@@ -70,7 +70,7 @@ My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summa
 
 ## 5. OpenSource Projects
 
-### Feature Developer
+### Feature Contributor
 
 #### PyTorch
 
@@ -78,13 +78,6 @@ My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summa
 - *May 2023 - Present*
 - **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
 - **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
-
-#### MMCV & PAVI Logger
-
-- <a href="https://github.com/open-mmlab/mmcv"><img src="https://img.shields.io/github/stars/open-mmlab/mmcv?style=social" alt="GitHub stars" height="20"></a>
-- *Jan 2021 - Dec 2022*
-- **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
-- Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
 ### Main Contributor
 
@@ -106,6 +99,13 @@ My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summa
 - <a href="https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+"><img src="https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social" alt="GitHub stars" height="20"></a>
 - *Apr 2023 - May 2024*
 - **Developed 30+ machine learning operators** in DIOPI, enabling advanced functionalities across diverse hardware; implemented multi-chip adaptations to support CUDA, Cambricon, and Ascend architectures, enhancing cross-platform compatibility, reducing integration time and enhancing operational efficiency for large-scale systems.
+
+#### MMCV & PAVI Logger
+
+- <a href="https://github.com/open-mmlab/mmcv"><img src="https://img.shields.io/github/stars/open-mmlab/mmcv?style=social" alt="GitHub stars" height="20"></a>
+- *Jan 2021 - Dec 2022*
+- **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
+- Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
 ### Owned Projects
 
