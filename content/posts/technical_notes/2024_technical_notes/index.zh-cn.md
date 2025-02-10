@@ -13,7 +13,9 @@ summary: "2024技术积累笔记"
 
 - dropout
 - normalization
-- Regularization（训练时加入惩罚项）：有两种方式：1、加入loss （L2就λθ^2， L1就λθ），这里θ是参数。2、直接weight * λ （也叫weight decay）
+- Regularization（训练时加入惩罚项）：
+  - 1、直接加到loss函数里 （L2就`λθ^2`， L1就`λθ`），这里`θ`是参数
+  - 2、直接`weight * λ` （也叫**weight decay**）
 - 增加数据量、早停等
 
 ### Zero
