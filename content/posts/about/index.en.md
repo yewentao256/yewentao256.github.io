@@ -6,7 +6,7 @@ lastmod: 2024-11-07T15:58:26+08:00
 summary: "Personal about page."
 ---
 
-CS M.Eng. student at Cornell University with **3+ years** of experience in deep learning and LLM optimization. Former deep learning engineer at SenseTime, recognized for delivering **up to 700% performance gains on Llama2 70B across 1024 NPUs**. A dedicated **open-source contributor with 7k+ total stars** across personal and contributed projects. An award-winning developer and **two-time startup co-founder**, driving innovative machine learning applications from prototype to production.
+CS M.Eng. student at Cornell University with **3+ years** of experience in deep learning and LLM optimization, and around 2 years of software development. Former deep learning engineer at SenseTime, recognized for delivering **up to 700% performance gains on Llama2 70B across 1024 NPUs**. A dedicated **open-source contributor with 7k+ total stars** across personal and contributed projects. An award-winning developer and **two-time startup co-founder**, driving innovative machine learning applications from prototype to production.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
