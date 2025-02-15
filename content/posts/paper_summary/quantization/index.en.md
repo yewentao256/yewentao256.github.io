@@ -1,5 +1,5 @@
 ---
-title: "Summary: Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference"
+title: "Summary: Quantization and Training of Neural Networks"
 date: 2025-02-15T10:04:18+08:00
 categories: ["paper_summary"]
 summary: "Summary for paper 'Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference'"

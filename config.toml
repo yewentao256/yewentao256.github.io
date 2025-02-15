@@ -14,7 +14,7 @@ theme = 'DoIt'
 publishDir = 'public'
 
 # 默认每页列表显示的文章数目
-paginate = 12
+pagerSize = 12
 # 谷歌分析代号 [UA-XXXXXXXX-X]
 googleAnalytics = ""
 # 版权描述，仅仅用于 SEO
@@ -29,15 +29,6 @@ enableEmoji = true
 
 # 忽略一些构建错误
 ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
-
-
-# 作者配置
-[author]
-  name = "yewentao"
-  email = "zhyanwentao@outlook.com"
-  link = "https://wentao.site/"
-  avatar = "/avatar.png"
-  gravatarEmail = ""
 
 # 网站地图配置
 [sitemap]
@@ -91,6 +82,11 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       table = true
       taskList = true
       typographer = true
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['\[', '\]']]
+          inline = [['\(', '\)']]
     [markup.goldmark.renderer]
       # whether to use HTML tags directly in the document
       # 是否在文档中直接使用 HTML 标签
@@ -124,6 +120,21 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # [试验性功能] 缓存图床图片，详情请见：https://github.com/HEIGE-PCloud/DoIt/pull/860#issue-1574342372
   cacheRemoteImages = false
 
+  [page]
+    [page.math]
+      enable = true
+      blockLeftDelimiter = '\['
+      blockRightDelimiter = '\]'
+      inlineLeftDelimiter = '\('
+      inlineRightDelimiter = '\)'
+      copyTex = true
+      mhchem = true
+  [params.author]
+    name = "yewentao"
+    email = "zhyanwentao@outlook.com"
+    link = "https://wentao.site/"
+    avatar = "/avatar.png"
+    gravatarEmail = ""
   # 页面头部导航栏配置
   [params.header]
     # 桌面端导航栏模式 ["fixed", "normal", "auto"]
@@ -164,7 +175,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # Section (所有文章) 页面配置
   [params.section]
     # section 页面每页显示文章数量
-    paginate = 20
+    pagerSize = 20
     # 日期格式 (月和日)
     dateFormat = "01-02"
     # RSS 文章数目
@@ -179,7 +190,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # List (目录或标签) 页面配置
   [params.list]
     # list 页面每页显示文章数量
-    paginate = 20
+    pagerSize = 20
     # 日期格式 (月和日)
     dateFormat = "01-02"
     # RSS 文章数目
@@ -260,7 +271,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     [params.home.posts]
       enable = true
       # 主页每页显示文章数量
-      paginate = 10
+      pagerSize = 10
 
   # 作者的社交信息设置
   [params.social]
@@ -314,8 +325,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     ruby = true
     # 是否使用 fraction 扩展语法
     fraction = true
-    # 是否使用 fontawesome 扩展语法
-    fontawesome = true
     # 是否在文章页面显示原始 Markdown 文档链接
     linkToMarkdown = true
     # DoIt 新增 | 0.2.14 配置文章原始文件的链接
@@ -749,7 +758,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   page = ["HTML", "MarkDown"]
   section = ["HTML", "RSS"]
   taxonomy = ["HTML", "RSS"]
-  taxonomyTerm = ["HTML"]
 
 # 用于分类的设置
 [taxonomies]
