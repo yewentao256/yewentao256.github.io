@@ -105,6 +105,23 @@ The fundamental update rule is:
   \hat{v} = \frac{v}{1-\beta_2^t}
   \]
 
+```py
+def adam_optimizer(grad, params, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8, num_iterations=10):
+    m = np.zeros_like(params)
+    v = np.zeros_like(params)
+
+    for t in range(1, num_iterations + 1):
+        g = grad(params)
+        m = beta1 * m + (1-beta1) * g
+        v = beta2 * v + (1-beta2) * g * g
+
+        m_hat = m / (1 - beta1 ** t)
+        v_hat = v / (1 - beta2 ** t)
+        params = params - learning_rate * m_hat / (np.sqrt(v_hat) + epsilon)
+    
+    return params
+```
+
 ### Loss
 
 - **L2 Loss**: Mean Squared Error (MSE), \(\frac{1}{n}\sum (y_i - \hat{y})^2\)  

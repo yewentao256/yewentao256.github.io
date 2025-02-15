@@ -93,13 +93,36 @@ Instance Norm：只考虑H和W做归一化
 
 带momentum的SGD： `θ -= γ * v`, `v = β * v_(t-1) + (1-β) * G`
 
-**Adam**：`θ -= (γ * m) / (v^0.5 + ϵ)`
+#### Adam
 
-其中 `m`为一阶矩（滑动平均值） `m = β1 * m_(t-1) + (1-β1) * G`
+核心公式：`θ -= (γ * m_hat) / (v_hat ^ 0.5 + ϵ)`
 
-`v`为二阶矩（滑动平均方差） `v = β2 * v_(t-1) + (1-β2) * G^2`
+其中 `m`为一阶矩（滑动平均值） `m_t = β1 * m_(t-1) + (1-β1) * G`
 
-此外，初始时还有一个偏差校正 `m/v = m/v / (1-β)`
+`v`为二阶矩（滑动平均方差） `v_t = β2 * v_(t-1) + (1-β2) * G^2`
+
+偏差校正：`m_hat = m_t / (1 - β1^t)`，`v_hat = v_t / 1 - β2^t`
+
+为什么要有这个偏差校正？一开始m和v初始化为0，`β`的值很大，m和v的更新会很慢，加入这个偏差校正让它在一开始就有有效的值。后期随着迭代轮数t的增大，`β^t`会逐渐减小到0，`m_hat`和`v_hat`也对应趋近于`m`和`v`的值。
+
+一个代码：
+
+```py
+def adam_optimizer(grad, params, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8, num_iterations=10):
+    m = np.zeros_like(params)
+    v = np.zeros_like(params)
+
+    for t in range(1, num_iterations + 1):
+        g = grad(params)
+        m = beta1 * m + (1-beta1) * g
+        v = beta2 * v + (1-beta2) * g * g
+
+        m_hat = m / (1 - beta1 ** t)
+        v_hat = v / (1 - beta2 ** t)
+        params = params - learning_rate * m_hat / (np.sqrt(v_hat) + epsilon)
+    
+    return params
+```
 
 ### Loss
 
