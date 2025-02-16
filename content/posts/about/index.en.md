@@ -27,10 +27,22 @@ My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summa
 
 ## 2. Awards
 
-- **National Third Prize**, China University Computer Contest - WeChat Big Data Challenge, 2021 - **Rank 80 / 6,768 teams**
-- **National Third Prize**, China University Computer Contest - Huawei Big Data Challenge, 2020 - **Rank 27 / 1,491 teams**
-- **National Second Prize**, China Service Outsourcing Innovation & Entrepreneurship Competition, 2020 - **Top 1% / 6417 teams**
-- **National First Prize**, China University Computer Capability Challenge, 2019 - **Runner-up / 414 teams**
+- **National Third Prize**
+  - China University Computer Contest, WeChat Big Data Challenge, 2021
+  - **Rank 80 / 6,768 teams**
+  - [Certificate](resources/2021_bdc.png)
+- **National Third Prize**
+  - China University Computer Contest, Huawei Big Data Challenge, 2020
+  - **Rank 27 / 1,491 teams**
+  - [Certificate](resources/2020_bdc.jpg)
+- **National Second Prize**
+  - China Service Outsourcing Innovation & Entrepreneurship Competition, 2020
+  - **Top 1% / 6417 teams**
+  - [Certificate](resources/2020_service_outsourcing.png)
+- **National First Prize**
+  - China University Computer Capability Challenge, 2019
+  - **Runner-up / 414 teams**
+  - [Certificate](resources/2019_runner_up.jpg)
 
 ---
 
