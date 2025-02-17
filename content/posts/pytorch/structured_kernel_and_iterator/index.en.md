@@ -295,10 +295,10 @@ Back to our structured kernel:
 ```c++
 // build/aten/src/ATen/RegisterCPU.cpp
 at::Tensor wrapper_CPU_sum_dim_IntList(/* params */) {
-structured_sum_out_functional op;
-op.meta(self, dim, keepdim, dtype);
-op.impl(self, dim, keepdim, dtype, op.outputs_[0]);
-return std::move(op.outputs_[0]);
+  structured_sum_out_functional op;
+  op.meta(self, dim, keepdim, dtype);
+  op.impl(self, dim, keepdim, dtype, op.outputs_[0]);
+  return std::move(op.outputs_[0]);
 }
 ```
 

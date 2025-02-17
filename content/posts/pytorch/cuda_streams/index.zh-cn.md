@@ -2,12 +2,12 @@
 title: "Pytorch Cuda Streams Introduction"
 date: 2023-10-03T10:01:22+08:00
 categories: ["pytorch"]
-summary: "本文探讨了Cuda **流（Stream）**的基本概念、并行执行和多GPU同步策略。我们分析了使用多个Cuda流的优势，以及如何通过Cuda**事件（Event）**确保任务同步，利用Cuda流优化程序性能。"
+summary: "本文探讨了Cuda **流(Stream)**的基本概念、并行执行和多GPU同步策略。我们分析了使用多个Cuda流的优势，以及如何通过Cuda**事件(Event)**确保任务同步，利用Cuda流优化程序性能。"
 ---
 
 ## Summary
 
-本文探讨了Cuda **流（Stream）**的基本概念、并行执行和多GPU同步策略。我们分析了使用多个Cuda流的优势，以及如何通过Cuda**事件（Event）**确保任务同步，利用Cuda流优化程序性能。
+本文探讨了Cuda **流(Stream)**的基本概念、并行执行和多GPU同步策略。我们分析了使用多个Cuda流的优势，以及如何通过Cuda**事件(Event)**确保任务同步，利用Cuda流优化程序性能。
 
 ## 基本概念
 

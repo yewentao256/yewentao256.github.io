@@ -93,7 +93,7 @@ FastSetupType TensorIteratorBase::compute_fast_setup_type(const TensorIteratorCo
 
 ### Non Overlapping and Dense
 
-这里`non_overlapping_dense`指的是内存没有空隙的密集tensor，**是contiguous的tensor一定是overlapping_and_dense的tensor**。
+这里`non_overlapping_dense`指的是内存没有空隙的密集tensor，**是contiguous的tensor一定是non_overlapping_and_dense的tensor**。
 
 和`is_contiguous`等标记位一样，有一个专门的set函数来设置（在`refresh`函数中调用），最底层的计算逻辑为：
 

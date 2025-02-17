@@ -132,7 +132,7 @@ PP 的核心思想是把一个模型的不同层划分到不同 GPU 上，每个
      gpu0           gpu1
 ```
 
-当一批数据输入时，先进入 gpu0 经由 layer0~2 计算，随后`.to()`到 gpu1 上经由 layer3~5 计算
+当一批数据输入时，先进入 gpu0 经由 layer0到2 计算，随后`.to()`到 gpu1 上经由 layer3到5 计算
 
 通常 **labels** 会被送到模型最后一层所在的 GPU 上直接计算 loss，然后反向传播、更新模型参数。
 
@@ -142,7 +142,7 @@ PP 的核心思想是把一个模型的不同层划分到不同 GPU 上，每个
 
 ![image](resources/pp.png)
 
-其核心思想是将输入数据划分为多个 **micro-batch**，让 GPU 可以并行处理不同的 micro-batch 以尽可能提高利用率，减少 GPU 空闲时间（气泡，**bubble**）。在上面的图中，4个 GPU 以 **`chunk=4`**（即在一个 pipeline stage同时中处理 4 批次的数据）训练，以 GPU0 为例，从 F0~F3 进行四个 forward 计算然后转交给下一个 GPU ，随后执行 B3~B0 四个 backward 计算。
+其核心思想是将输入数据划分为多个 **micro-batch**，让 GPU 可以并行处理不同的 micro-batch 以尽可能提高利用率，减少 GPU 空闲时间（气泡，**bubble**）。在上面的图中，4个 GPU 以 **`chunk=4`**（即在一个 pipeline stage同时中处理 4 批次的数据）训练，以 GPU0 为例，从 F0到F3 进行四个 forward 计算然后转交给下一个 GPU ，随后执行 B3到B0 四个 backward 计算。
 
 如果在训练中同时开启了 DP 和 PP，我们有`global_batch_size = micro_batch_size * dp_size * chunk`：如 `global_batch_size=512`、`DP=4`、`chunk=4`，则最终得到 `micro_batch_size=32`，即每个 `micro-bacth` 有32条数据。
 
