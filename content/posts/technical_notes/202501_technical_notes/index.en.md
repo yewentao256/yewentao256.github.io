@@ -1,5 +1,5 @@
 ---
-title: "2025 Technical Notes"
+title: "2025 01 Technical Notes"
 date: 2025-01-31T14:02:12+08:00
 categories: ["technical_notes"]
 summary: "Technical notes during 2025 Jan."

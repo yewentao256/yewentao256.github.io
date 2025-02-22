@@ -69,9 +69,8 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     guessSyntax = true
     lineNos = true
     lineNumbersInTable = true
-    # false 是必要的设置 (https://github.com/dillonzq/LoveIt/issues/158)
-    noClasses = false
-    style = 'monokai'
+    # noClasses = false
+    style = 'solarized-light'
   # Goldmark 是 Hugo 0.60 以来的默认 Markdown 解析库
   [markup.goldmark]
     [markup.goldmark.extensions]
