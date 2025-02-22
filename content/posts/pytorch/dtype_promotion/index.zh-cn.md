@@ -9,13 +9,13 @@ summary: "本文深入探讨了 PyTorch 中的数据类型提升(**dtype promoti
 
 本文深入探讨了 PyTorch 中的数据类型提升(**dtype promotion**)机制，包含 promotion 的基本规则、scalar 如何被 wrapped 成 tensor、**TensorIterator** 在计算数据类型时的作用等细节。
 
-## 等待被翻译
+>这篇文章使用`O3-mini-high`翻译，如有困惑请参考英文原文
 
-非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+---
 
-## 0. Introduction
+## 0. 引言
 
-Let's start with code:
+我们从代码开始：
 
 ```py
 import torch
@@ -45,31 +45,34 @@ int_zerodim = torch.tensor(1, dtype=torch.int)
 >>> torch.add(long_tensor, float_tensor).dtype
 ```
 
-Have you ever wondered about the data types (`dtype`) of output tensors in PyTorch? We'll explore this topic and provide answers later in the article.
+你是否曾经好奇，为什么 PyTorch 中算术运算（比如 `add`、`sub` 等）的输出张量会有不同的 `dtype`？本文将探讨这一主题，并在后续部分给出详细的答案。
 
-## 1. Basic Rules of Dtype Promotion
+---
 
-In PyTorch, when the dtypes of inputs in an arithmetic operation (such as `add`, `sub`, etc.) are different, dtype promotion occurs. This is based on the following criteria:
+## 1. 数据类型（Dtype）提升的基本规则
 
-- If the dtype of a scalar is of a higher category than that of a tensor (Note: `complex` > `floating` > `integral` > `boolean`), the dtype is promoted to one that is large enough to contain all scalar values.
+在 PyTorch 中，当参与算术运算的输入张量具有不同的 dtype 时，会触发 dtype 提升（promotion）。提升规则主要基于以下几个准则：
 
-- If a zero-dimensional (0-dim) tensor operand has a higher category than dimensioned operands, it is promoted to a dtype that can hold the 0-dim tensor.
+- **标量与张量**：如果一个标量的 dtype 所处的类别比张量更高（注意：`complex` > `floating` > `integral` > `boolean`），则最终的 dtype 将被提升到足以容纳所有标量值的类型。
 
-- In cases where there are no higher-category 0-dim tensor operands, the dtype is promoted to one that can accommodate all dimensioned operands.
+- **零维张量**：如果参与运算的 0 维张量（即标量张量）的类别高于其他有维度的张量，其 dtype 会被提升为能够存储 0 维张量的类型。
 
-- **Special Cases**: For operations like `div`, dividing an integer tensor by an integer scalar results in a `float` dtype.
+- **多个有维度张量**：如果没有更高类别的 0 维张量，则会提升为能够容纳所有有维度张量的 dtype。
 
-## 2. PyTorch Implementation Details
+- **特殊情况**：例如，对于 `div`（除法）操作，当整数张量除以整数标量时，结果会被提升为 `float` 类型。
 
-Let's delve into the PyTorch source code to understand how dtype promotion is implemented.
+---
 
-### 2.1 Wrapped Tensor
+## 2. PyTorch 的实现细节
 
-Consider the operation `int_tensor + 5`, where `5` is a constant scalar. In this scenario, the scalar `5` is wrapped into a tensor with a dtype of `int64`.
+接下来，我们深入 PyTorch 源码，看看它是如何实现 dtype 提升的。
 
-This wrapping approach enables the reuse of the `add.Tensor` operator. As a result, there is no need to maintain separate `add.Tensor` and `add.Scalar` operators. (Note: In PyTorch, the `add.Scalar` interface is not registered to the **dispatcher** and is therefore not used.)
+### 2.1 包装张量（Wrapped Tensor）
 
-Here's how the scalar wrapping occurs:
+考虑操作 `int_tensor + 5`，这里的 `5` 是一个常量标量。此时，标量 `5` 会被包装成一个 dtype 为 `int64` 的张量。  
+这种包装方式使得我们可以复用 `add.Tensor` 运算符，从而不必单独维护 `add.Tensor` 和 `add.Scalar` 两个版本。（需要注意的是，PyTorch 中的 `add.Scalar` 接口没有注册到 dispatcher 上，因此并未实际使用。）
+
+下面展示了标量包装的具体实现：
 
 ```c++
 // torch/csrc/autograd/generated/python_variable_methods.cpp
@@ -86,7 +89,7 @@ static PyObject * THPVariable_add(PyObject* self_, PyObject* args, PyObject* kwa
   // ...
   switch (_r.idx) {
     case 0: {
-      // [deprecated] aten::add(Tensor self, Scalar alpha, Tensor other) -> Tensor
+      // [已废弃] aten::add(Tensor self, Scalar alpha, Tensor other) -> Tensor
       // ...
     }
     case 1: {
@@ -101,7 +104,7 @@ static PyObject * THPVariable_add(PyObject* self_, PyObject* args, PyObject* kwa
 }
 ```
 
-The crucial step is `_r.tensor(0)`, where the scalar is converted into a 0-dim tensor.
+关键在于调用了 `_r.tensor(0)`，此处将标量转换成了一个 0 维张量。
 
 ```c++
 // torch/csrc/utils/python_arg_parser.h
@@ -125,7 +128,7 @@ at::Tensor PythonArgs::tensor_slow(int i) {
     scalar = at::Scalar(THPUtils_unpackLong(obj));
   } else if (THPUtils_checkDouble(obj)) {
     scalar = at::Scalar(THPUtils_unpackDouble(obj));
-  } // ... other dtypes ...
+  } // ... 其他 dtype 的处理 ...
   // ...
   at::Tensor tensor = scalar_to_tensor(scalar);
   tensor.unsafeGetTensorImpl()->set_wrapped_number(true);
@@ -134,14 +137,14 @@ at::Tensor PythonArgs::tensor_slow(int i) {
 }
 ```
 
-And the process of converting scalar to tensor is through `fill`:
+而将标量转换成张量的过程是通过 `fill` 完成的：
 
 ```c++
 // torch/include/ATen/ScalarOps.h
 inline at::Tensor scalar_to_tensor(
     const Scalar& s,
     const Device device = at::kCPU) {
-  // This is the fast track we have for CPU scalar tensors.
+  // 针对 CPU 标量张量的快速路径
   if (device == at::kCPU) {
     return at::detail::scalar_tensor_static(s, s.type(), at::kCPU);
   }
@@ -158,7 +161,7 @@ Tensor scalar_tensor_static(const Scalar& s, c10::optional<ScalarType> dtype_opt
 }
 ```
 
-In scenarios where a C++ function (e.g., `at::native::add_(...)`) gets called, the `Scalar` is similarly wrapped.
+在某些 C++ 函数（例如 `at::native::add_(...)`）被调用时，`Scalar` 同样会被包装。
 
 ```c++
 // aten/src/ATen/native/BinaryOps.cpp
@@ -167,9 +170,7 @@ Tensor& add_(Tensor& self, const Scalar& other, const Scalar& alpha) {
 }
 ```
 
-In the kernel ("f(a, b) == f(b,a)"), it is possible to improve computational efficiency by removing the wrapped tensor and CPU scalar tensor from **TensorIterator** and treating them as ordinary constant values.
-
-For example:
+在内核层面（例如 f(a, b) == f(b, a) 的情况），可以通过剥除包装张量和 CPU 标量张量，从而将其视为普通常量，以提升计算效率。示例如下：
 
 ```c++
 // aten/src/ATen/native/cuda/BinaryBitwiseOpsKernels.cu
@@ -201,17 +202,17 @@ void opmath_symmetric_gpu_kernel_with_scalars(TensorIteratorBase& iter, const fu
 }
 ```
 
-### 2.2 Computing the dtypes
+### 2.2 计算数据类型
 
-The computation of dtypes occurs within the **TensorIterator**. If you're unfamiliar with TensorIterator, I recommend reading my article introducing it [here](../structured_kernel_and_iterator/).
+数据类型的计算主要发生在 **TensorIterator** 内部。如果你不熟悉 TensorIterator，建议先阅读我之前介绍它的文章 [这里](../structured_kernel_and_iterator/)。
 
-And in this article, we will focus on exploring the implementation of dtype promotion.
+在这篇文章中，我们将重点探讨 dtype 提升的实现过程。
 
 ```cpp
 // aten/src/ATen/TensorIterator.cpp
 void TensorIteratorBase::build(TensorIteratorConfig& config) {
   // ...
-  // compute the result dtype and device
+  // 计算结果张量的 dtype 和设备
   compute_types(config);
   // ...
 }
@@ -230,13 +231,12 @@ void TensorIteratorBase::compute_types(const TensorIteratorConfig& config) {
       } else {
         has_undefined_outputs = true;
       }
-
       // ...
     }
     // ... 
 
     if (!op.is_output) {
-      // Determines if there are varying input dtypes
+      // 判断输入张量是否存在不同的 dtype
       if (op.target_dtype != common_dtype_) {
         if (common_dtype_ == ScalarType::Undefined) {
           common_dtype_ = op.target_dtype;
@@ -245,7 +245,7 @@ void TensorIteratorBase::compute_types(const TensorIteratorConfig& config) {
         }
       }
     } else {
-      // Determines if there are varying output dtypes
+      // 判断输出张量是否存在不同的 dtype
       if (op.target_dtype != output_dtype) {
         if (output_dtype == ScalarType::Undefined) {
           output_dtype = op.target_dtype;
@@ -260,18 +260,17 @@ void TensorIteratorBase::compute_types(const TensorIteratorConfig& config) {
   if (!has_undefined_outputs && !config.check_all_same_device_ &&
       !config.promote_inputs_to_common_dtype_ && !config.cast_common_dtype_to_outputs_ &&
       !config.enforce_safe_casting_to_output_) {
-    // Invalidates common_dtype_ if it could not be inferred
+    // 如果无法推断出 common_dtype_ 则置为 Undefined
     common_dtype_ = has_different_input_dtypes ? ScalarType::Undefined : common_dtype_;
     return;
   }
 
-  // Computes a common dtype, if needed
+  // 如果需要，计算一个公共 dtype
   if ((has_different_input_dtypes || all_ops_are_scalars_) && config.promote_inputs_to_common_dtype_) {
     common_dtype_ = compute_common_dtype();
   }
 
-  // Promotes common dtype to the default float scalar type, if needed
-  // This is for operators like `div`
+  // 对于类似 `div` 操作，将整数输入提升为默认的 float 类型
   if (config.promote_integer_inputs_to_float_ &&
       c10::isIntegralType(common_dtype_, /*includeBool=*/true)) {
     common_dtype_ = c10::typeMetaToScalarType(c10::get_default_dtype());
@@ -288,11 +287,9 @@ void TensorIteratorBase::compute_types(const TensorIteratorConfig& config) {
 }
 ```
 
-In `compute_types`, PyTorch calculates the `common_dtype_` based on the input tensors and configuration settings like `promote_inputs_to_common_dtype_`. The resulting dtype is then stored in `op.target_dtype`, which is later used in `allocate_or_resize_outputs`.
+在 `compute_types` 中，PyTorch 根据输入张量及配置参数（例如 `promote_inputs_to_common_dtype_`）计算出 `common_dtype_`，并将该结果存储到 `op.target_dtype` 中，后续在 `allocate_or_resize_outputs` 中使用。
 
-To understand how PyTorch implements dtype promotion, let's examine the `compute_common_dtype`.
-
-Note: The `promote_inputs_to_common_dtype_` must be set to `True` to enable this dtype inference mechanism(Typically, the configuration of TensorIterator is determined by macros such as `BINARY_FLOAT_OP_CONFIG`).
+为了更深入理解 dtype 提升的实现，我们来看看 `compute_common_dtype` 的具体逻辑：
 
 ```c++
 // aten/src/ATen/TensorIterator.cpp
@@ -308,7 +305,16 @@ ScalarType TensorIteratorBase::compute_common_dtype() {
   TORCH_INTERNAL_ASSERT(common_dtype_ != ScalarType::Undefined);
   return common_dtype_;
 }
+```
 
+在更新每个张量的结果状态时（ResultTypeState），PyTorch 会区分三种情况：
+- **dimResult**：用于普通（有维度）张量；
+- **zeroResult**：用于未包装的 0 维张量；
+- **wrappedResult**：用于包装后的 0 维张量。
+
+`at::native::result_type` 函数会根据这三种结果状态，推导出最终的 `common_dtype_`。
+
+```c++
 // aten/src/ATen/native/TypeProperties.cpp
 ResultTypeState update_result_type_state(const Tensor& tensor, const ResultTypeState& in_state) {
   if (!tensor.defined()) {
@@ -317,24 +323,24 @@ ResultTypeState update_result_type_state(const Tensor& tensor, const ResultTypeS
   ResultTypeState new_state = in_state;
   ScalarType current = tensor.scalar_type();
   if (tensor.unsafeGetTensorImpl()->is_wrapped_number()) {
-    // if wrapped tensor, use the default dtype for complex/float
+    // 对于包装张量，使用默认的 complex/float 类型
     if(isComplexType(current)) {
-      // default: complex<float>
+      // 默认：complex<float>
       current = typeMetaToScalarType(at::get_default_complex_dtype());
     }
     else if(isFloatingType(current)) {
-      // default: float
+      // 默认：float
       current = typeMetaToScalarType(at::get_default_dtype());
     }
   }
   if ( tensor.dim() > 0 ) {
-    // normal tensor
+    // 普通张量
     new_state.dimResult = promote_skip_undefined(in_state.dimResult, current);
   } else if (tensor.unsafeGetTensorImpl()->is_wrapped_number()) {
-    // wrapped tensor(scalar)
+    // 包装张量（标量）
     new_state.wrappedResult = promote_skip_undefined(in_state.wrappedResult, current);
   } else {
-    // zero dim tensor(not wrapped)
+    // 非包装的 0 维张量
     new_state.zeroResult = promote_skip_undefined(in_state.zeroResult, current);
   }
   return new_state;
@@ -348,9 +354,7 @@ struct ResultTypeState {
 };
 ```
 
-For each tensor, PyTorch invokes `update_result_type_state` to update the **ResultTypeState**. This state include three types of result dtypes: `dimResult` (for normal tensors), `zeroResult` (for 0-dim tensors that are not wrapped) and  `wrappedResult` (for wrapped tensors).
-
-The `at::native::result_type` function is then called to infer the `common_dtype_`:
+接下来，通过调用 `at::native::result_type` 得到最终的 `common_dtype_`：
 
 ```c++
 // aten/src/ATen/native/TypeProperties.cpp
@@ -362,11 +366,11 @@ static inline ScalarType combine_categories(ScalarType higher, ScalarType lower)
   if(isComplexType(higher)) {
     return higher;
   } else if (isComplexType(lower)) {
-    // preserve value type of higher if it is floating type.
+    // 如果 higher 为浮点类型，则保持其数值类型
     if (isFloatingType(higher)) {
       return toComplexType(higher);
     }
-    // in case of integral input, lower complex takes precedence.
+    // 如果输入为整数，则 lower（complex 类型）优先
     return lower;
   } else if (isFloatingType(higher)) {
     return higher;
@@ -381,9 +385,8 @@ static inline ScalarType combine_categories(ScalarType higher, ScalarType lower)
 }
 ```
 
-In most cases, the precedence order of the three result types is: `dimResult` > `zeroResult` > `wrappedResult`.
-
-If the higher result dtype is a `bool` or the lower result dtype is a `FloatingType`, the dtype promotion function `promote_skip_undefined` is invoked:
+在大多数情况下，三种结果状态的优先级为：`dimResult` > `zeroResult` > `wrappedResult`。  
+当更高的结果 dtype 为 `bool` 或者更低的结果 dtype 为浮点类型时，将调用 `promote_skip_undefined` 进行 dtype 提升：
 
 ```c++
 // aten/src/ATen/native/TypeProperties.cpp
@@ -414,7 +417,7 @@ constexpr auto bf = ScalarType::BFloat16;
 constexpr auto ud = ScalarType::Undefined;
 
 ScalarType promoteTypes(ScalarType a, ScalarType b) {
-  // This is generated according to NumPy's promote_types
+  // 此处依据 NumPy 的 promote_types 生成
   if (a == ud || b == ud) {
     return ScalarType::Undefined;
   }
@@ -427,7 +430,7 @@ ScalarType promoteTypes(ScalarType a, ScalarType b) {
   auto ix_a = dtype2index[static_cast<int64_t>(a)];
   auto ix_b = dtype2index[static_cast<int64_t>(b)];
 
-  // This table axes must be consistent with index2dtype
+  // 该查找表与 index2dtype 保持一致
   static constexpr std::array<std::array<ScalarType, index2dtype.size()>, index2dtype.size()>
       _promoteTypesLookup = {{
       /*        u1  i1  i2  i4  i8  f2  f4  f8  c2  c4  c8  b1  bf*/
@@ -450,63 +453,65 @@ ScalarType promoteTypes(ScalarType a, ScalarType b) {
 }
 ```
 
-In `promote_skip_undefined`, PyTorch employs a lookup table to efficiently execute dtype promotion.
+在 `promote_skip_undefined` 中，PyTorch 借助查找表来高效完成 dtype 的提升。
 
-## 3. Review the answer
+---
 
-Having delved into the dtype promotion mechanism of PyTorch, let's revisit and answer the questions posed earlier in the article.
+## 3. 回顾与答案
+
+在详细探讨了 PyTorch 的 dtype 提升机制后，我们回顾一下最初提出的各个例子，并给出答案：
 
 ```py
 >>> (int_tensor + 5).dtype
-# 5 is wrapped to a int64 tensor, but doesn't have higher precedence than
-# dim-tensor, so still int32
+# 5 被包装成 int64 张量，但其优先级不高于有维度张量，因此结果为 int32
 torch.int32
 
 >>> (int_tensor + 5.5).dtype
-# 5.5 is wrapped to a double tensor, then get the default `float` in
-# `update_result_type_state`, then dtype promotion to float
+# 5.5 被包装为 double 张量，经过 `update_result_type_state` 获取默认的 float 类型，
+# 最后提升为 float
 torch.float32
 
 >>> (int_tensor / 5).dtype
-# 5 is wrapped to a long tensor, we get a `int` after `compute_common_dtype`
-# However, since `promote_integer_inputs_to_float` is set for `div` op
-# the dtype of output is promoted to float in `compute_types`
+# 5 被包装为 long 张量，初步计算得到 int 类型，但由于 `div` 操作将整数提升为 float，
+# 最终输出为 float
 torch.float32
 
 >>> (int_tensor + long_zerodim).dtype
-# zerodim's precedence is lower than int_tensor, so no dtype promotion here
+# 0 维张量的优先级低于 int_tensor，因此无 dtype 提升
 torch.int32
 
 >>> (long_tensor + int_tensor).dtype
-# dtype promotion to long
+# 提升为 long 类型
 torch.int64
 
 >>> (bool_tensor + long_tensor).dtype
-# dtype promotion to long
+# 提升为 long 类型
 torch.int64
 
 >>> (bool_tensor + uint_tensor).dtype
-# dtype promotion to uint8
+# 提升为 uint8 类型
 torch.uint8
 
 >>> (float_tensor + double_tensor).dtype
-# dtype promotion to double
+# 提升为 double 类型
 torch.float64
 
 >>> (complex_float_tensor + complex_double_tensor).dtype
-# dtype promotion to complex128
+# 提升为 complex128 类型
 torch.complex128
 
 >>> (bool_tensor + int_tensor).dtype
-# dtype promotion to int
+# 提升为 int 类型
 torch.int32
 
 >>> torch.add(long_tensor, float_tensor).dtype
-# dtype promotion to float
+# 提升为 float 类型
 torch.float32 
 ```
 
-## Referrence
+---
 
-- [pytorch](https://github.com/pytorch/pytorch)
-- [torch.dtype](https://pytorch.org/docs/stable/tensor_attributes.html)
+## 参考资料
+
+- [PyTorch 源码仓库](https://github.com/pytorch/pytorch)
+- [torch.dtype 文档](https://pytorch.org/docs/stable/tensor_attributes.html)

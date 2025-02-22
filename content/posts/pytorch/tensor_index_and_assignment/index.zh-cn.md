@@ -9,13 +9,13 @@ summary: "这篇文章深入探讨了PyTorch**张量索引和赋值**的机制�
 
 这篇文章深入探讨了PyTorch**张量索引和赋值**的机制，包含将Python索引转化为C++的**TensorIndex**、`handleDimInMultiDimIndexing`、`index_put`等内容。
 
-## 等待被翻译
+>这篇文章使用`O3-mini-high`翻译，如有困惑请参考英文原文
 
-非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+---
 
-## 0. Introduction
+## 0. 引言
 
-Let's start with code:
+我们先从代码开始：
 
 ```py
 import torch
@@ -26,11 +26,15 @@ t = torch.tensor([[1, 2, 3],
 t[1, 2] = 3
 ```
 
-When we call `t[1, 2] = 3`, we know that the tensor (row 1, column 2) sets to 3, but **what happens in the C++ part**?
+当我们调用 `t[1, 2] = 3` 时，我们知道该 tensor（第 1 行第 2 列）的值被设置为 3，但**在 C++ 代码层面究竟发生了什么**？
 
-Let's find out.
+让我们一探究竟。
 
-## 1. How to export `set_item` to python layer
+---
+
+## 1. 如何将 `set_item` 导出到 Python 层
+
+在 PyTorch 的 C++ 层，通过以下代码将 `set_item` 导出到 Python 层：
 
 ```c++
 // torch/csrc/autograd/python_variable.cpp
@@ -54,9 +58,9 @@ static PyMappingMethods THPVariable_as_mapping = {
 };
 ```
 
-It's through the **PyModule_AddObject** and **PyTypeObject** provided by Python, see [python_document](https://docs.python.org/3/c-api/typeobj.html) for more details.
+这里利用 Python 提供的 **PyModule_AddObject** 和 **PyTypeObject** 来将接口导出到 Python 层，详细内容可参见 [Python 官方文档](https://docs.python.org/3/c-api/typeobj.html)。
 
-Let's see the function `THPVariable_setitem`:
+接下来看看 `THPVariable_setitem` 函数的实现：
 
 ```c++
 // torch/csrc/autograd/python_variable_indexing.cpp
@@ -64,7 +68,7 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
   // ...
   const auto& self_ = THPVariable_Unpack(self);
 
-  // wrap value to a Tensor
+  // 将 py_value 包装为一个 Tensor
   Variable value;
   if (isQIntType(self_.scalar_type())) {
     // ...
@@ -75,14 +79,14 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
   }
 
   // ...
-  // wrap index in a tuple if it's not already one
+  // 如果 index 不是 tuple，则将其包装为 tuple
   THPObjectPtr holder = wrapTuple(index);
 
   variable_list variableIndices;
-  // Count the number of indexed dimensions (everything but ellipsis and None)
+  // 统计被索引的维度数量（不包括 ellipsis 和 None）
   int64_t specified_dims = count_specified_dimensions(holder.get());
   // ...
-  // get sliced Tensor
+  // 获取切片 Tensor
   Variable sliced = applySlicing(
       self_,
       holder.get(),
@@ -93,14 +97,13 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
       specified_dims);
   
   // ... 
-  // set value according to type of index, we will talk about this later
+  // 根据 index 类型设置值，后面会详细讨论这一部分
 }
 ```
 
-It invokes the `applySlicing` function to obtain the sliced Tensor.
+该函数调用了 `applySlicing` 来获得切片后的 Tensor。
 
 ```c++
-
 static inline Variable applySlicing(
     const Variable& self,
     PyObject* index,
@@ -116,8 +119,7 @@ static inline Variable applySlicing(
   Variable result = self;
   for (const auto i : c10::irange(size)) {
     PyObject* obj = PyTuple_GET_ITEM(index, i);
-    // nested tensor does not have a size (yet) so for now we represent its size
-    // as null
+    // 对于 nested tensor，目前还没有 size，所以用 null 表示
     c10::optional<SymIntArrayRef> result_sizes = result.is_nested()
         ? c10::optional<SymIntArrayRef>(c10::nullopt)
         : c10::optional<SymIntArrayRef>(result.sym_sizes());
@@ -130,7 +132,7 @@ static inline Variable applySlicing(
               recordSelectTrace(THPVariable_Unpack(obj));
             }
             return at::indexing::TensorIndex(THPUtils_unpackLong(obj));
-          } // ...
+          } // ... 其他情况的处理
         })(),
         /*dim_ptr=*/&dim,
         /*specified_dims_ptr=*/&specified_dims,
@@ -144,15 +146,17 @@ static inline Variable applySlicing(
 }
 ```
 
-For each dim, we firstly generate an `at::indexing::TensorIndex(THPUtils_unpackLong(obj))` in the anonymous function, then calls `handleDimInMultiDimIndexing`.
+对每个维度，首先通过匿名函数生成一个 `at::indexing::TensorIndex(THPUtils_unpackLong(obj))`，随后调用 `handleDimInMultiDimIndexing` 来处理该维度的索引。
 
-Note on **Nested Tensor**: This is a new feature in PyTorch that acts like a list of tensors. See [pytorch_document](https://pytorch.org/docs/stable/nested.html) for more details.
+> **注意：** 关于 **Nested Tensor**：这是 PyTorch 的一项新特性，其行为类似于 tensor 的列表。详情请参阅 [PyTorch Nested Tensor 文档](https://pytorch.org/docs/stable/nested.html)。
 
-## 2. `TensorIndex` and `handleDimInMultiDimIndexing`
+---
 
-**TensorIndex** is used for converting C++ tensor indices into `std::vector<TensorIndex>`.
+## 2. `TensorIndex` 与 `handleDimInMultiDimIndexing`
 
-The convert table is:
+**TensorIndex** 用于将 C++ 层的 tensor 索引转换为 `std::vector<TensorIndex>`。
+
+下面是索引类型的转换表：
 
 | Python                   | C++                               |
 |--------------------------|-----------------------------------|
@@ -176,17 +180,17 @@ The convert table is:
 
 ```c++
 struct TORCH_API TensorIndex final {
-  // Case 1: `at::indexing::None`
+  // 情况 1：`at::indexing::None`
   TensorIndex(c10::nullopt_t) : type_(TensorIndexType::None) {}
 
-  // Case 2: "..." / `at::indexing::Ellipsis`
+  // 情况 2： "..." / `at::indexing::Ellipsis`
   TensorIndex(at::indexing::EllipsisIndexType)
       : type_(TensorIndexType::Ellipsis) {}
   TensorIndex(const char* str) : TensorIndex(at::indexing::Ellipsis) {
     // ...
   }
 
-  // Case 3: Integer value
+  // 情况 3： 整数值
   TensorIndex(int64_t integer)
       : integer_(integer), type_(TensorIndexType::Integer) {}
   TensorIndex(int integer) : TensorIndex((int64_t)integer) {}
@@ -195,9 +199,9 @@ struct TORCH_API TensorIndex final {
 }
 ```
 
-In our basic example, during the first iteration, we retrieve **TensorIndex(1)**, followed by **TensorIndex(2)** in the subsequent loop.
+在我们的示例中，在第一次迭代中会获得 **TensorIndex(1)**，而在下一次迭代中获得 **TensorIndex(2)**。
 
-Then we call `handleDimInMultiDimIndexing` to get the Tensor slice
+接下来调用 `handleDimInMultiDimIndexing` 来得到相应的 tensor 切片：
 
 ```c++
 // aten/src/ATen/TensorIndexing.h
@@ -226,8 +230,11 @@ static inline Tensor handleDimInMultiDimIndexing(
     // ...
   } // ...
 }
+```
 
+对于整型索引的情况，会调用 `applySelect`：
 
+```c++
 static inline Tensor applySelect(
     const Tensor& self,
     int64_t dim,
@@ -235,32 +242,34 @@ static inline Tensor applySelect(
     int64_t real_dim,
     const at::Device& /*self_device*/,
     const c10::optional<SymIntArrayRef>& self_sizes) {
-  // ... some check logic
-  // aten::select works on negative indices
+  // ... 一些检查逻辑
+  // aten::select 支持负索引
   return self.select(dim, index);
 }
 ```
 
-After two iterations, we obtain our desired result: a tensor scalar object. `result.item() = 6`, consistent with accessing the tensor using `tensor[1][2]` in Python.
+经过两次迭代后，我们得到了期望的结果：一个标量 Tensor，其值为 6，与 Python 层使用 `tensor[1][2]` 访问一致。
 
-## 3. Set Value
+---
 
-Since we've got the slice Tensor of our index, we can move on to set value.
+## 3. 设置值
+
+既然我们已经根据索引获得了切片后的 Tensor，就可以进行赋值操作了。
 
 ```c++
 // torch/csrc/autograd/python_variable_indexing.cpp
 int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
-  // ... get the tensor sliced and variable Indices
+  // ... 获取切片后的 Tensor 以及 variableIndices
 
   if (variableIndices.empty()) {
-    // set value for some basic type, like integer index
+    // 针对简单的基本类型（如整数索引）的赋值
     pybind11::gil_scoped_release no_gil;
     at::indexing::copy_to(sliced, value);
     return 0;
   }
 
   {
-    // set value for types like bool or tensor index(advanced indexing)
+    // 针对 bool 或 tensor 索引（高级索引）的赋值
     pybind11::gil_scoped_release no_gil;
     SymIntArrayRef valueSizes = value.sym_sizes();
     SymIntArrayRef slicedValueSizes =
@@ -278,36 +287,35 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
 }
 ```
 
-For our simple case, `variableIndices` is empty and we directly copy our value(also a Tensor) to the slice using `at::indexing::copy_to`
+对于我们的简单例子，`variableIndices` 为空，因此直接使用 `at::indexing::copy_to` 将值（同样是一个 Tensor）复制到切片中。
 
 ```c++
 // aten/src/ATen/TensorIndexing.h
 static inline void copy_to(const Tensor& dst, const Tensor& src) {
-  // Note: sym_sizes() is for symbolic tracing, if we are not using TorchScript
-  // Just consider it as sizes()
+  // 注意：sym_sizes() 用于符号跟踪，如果不使用 TorchScript，可视为 sizes()
   if (dst.sym_sizes().equals(src.sym_sizes())) {
-    // case when sizes are the same
+    // 当尺寸完全相同时
     dst.copy_(src);
     return;
   } else if (src.dim() == 0 && src.device().type() == at::kCPU) {
-    // case when dst size bigger than src, eg: slice[0,1,2] = 1
+    // 当 dst 尺寸大于 src，例如：slice[0,1,2] = 1
     dst.fill_(src);
     return;
   }
-  // case when src size is not 0, expand src to the size of dst
+  // 当 src 的尺寸不为 0 时，将 src 扩展到与 dst 相同的尺寸
   auto src_view = src.view_symint(slicePrefix1sSize(src.sym_sizes()));
   c10::MaybeOwned<Tensor> b_src = expand_inplace(dst, src_view, "setitem");
   dst.copy_(*b_src);
 }
 ```
 
-And we just call `dst.copy_()` to set the value.
+最后调用 `dst.copy_()` 完成赋值。需要注意的是，对于 Cuda 等设备，同样使用 `copy_` 操作符来支持跨设备赋值。
 
-Note that this also works for device like **Cuda**, it uses `copy_` operator to set the value to support this feature.
+---
 
-## 4. Expand to advanced indexing
+## 4. 扩展到高级索引
 
-Above we introduce a simple example to show the process of pytorch index, and now let's move on to advanced indexing (tensor index)
+前面介绍了简单的索引例子，现在让我们来看下高级索引（tensor 索引）的情况。
 
 ```python
 import torch
@@ -322,9 +330,9 @@ cols = torch.tensor([1, 1])
 t[rows, cols] = 10
 ```
 
-Question: what's the value of `t` now?
+问题：此时 `t` 的值是多少？
 
-It's easy to know the value now is:
+显然结果为：
 
 ```py
 tensor([[ 1, 10,  3],
@@ -332,9 +340,9 @@ tensor([[ 1, 10,  3],
         [ 7, 10,  9]])
 ```
 
-But how?
+那么这一过程是如何实现的呢？
 
-Similar to the previous section, we call `applySlicing` to obtain our tensor slice. But for this time, our index is Tensor
+类似于前面的过程，我们依然调用 `applySlicing` 获取切片，但这一次索引的元素是 Tensor。
 
 ```c++
 // aten/src/ATen/TensorIndexing.h
@@ -368,7 +376,7 @@ static inline Tensor handleDimInMultiDimIndexing(
 }
 ```
 
-we call for `recordTensorIndex` to set `outIndices`
+此处会调用 `recordTensorIndex` 将索引 Tensor 记录到 `outIndices` 中：
 
 ```c++
 // aten/src/ATen/TensorIndexing.h
@@ -376,19 +384,18 @@ static inline void recordTensorIndex(
     const Tensor& tensor,
     std::vector<Tensor>& outIndices,
     int64_t* dim_ptr) {
-  // dim starts from 0, increment with each 'recordTensorIndex' call
+  // 索引的维度从 0 开始，每调用一次 recordTensorIndex，dim 自增
   outIndices.resize(*dim_ptr + 1);
   outIndices[*dim_ptr] = tensor;
   (*dim_ptr)++;
 };
 ```
 
-And you can see that we don't change the tensor slice itself when index is Tensor, we just set the outIndices. So after `applySlicing`, we get:
+可以看到，当索引为 Tensor 时，并不会修改 tensor 切片本身，只是将对应的索引保存到 outIndices 中。因此，经过 `applySlicing` 后，我们得到了：
+- 切片（sliced）：原始 tensor（形状为 (3,3)）
+- variableIndices（即 outIndices）：包含 `[[0, 2], [1, 1]]`
 
-- sliced(original tensor with shape`(3,3)`)
-- variableIndices(`outIndices`, `[[0, 2], [1, 1]]`)
-
-Then we use **index_put** (`at::indexing::dispatch_index_put_(sliced, std::move(variableIndices), valuesSliced)`) to set value
+随后，通过 **index_put**（调用 `at::indexing::dispatch_index_put_(sliced, std::move(variableIndices), valuesSliced)`）将值设置到对应位置。
 
 ```c++
 // aten/src/ATen/TensorIndexing.h
@@ -401,9 +408,7 @@ static inline Tensor dispatch_index_put_(
 }
 ```
 
-This is another operator that can supports all kinds of device, including **Cuda**.
-
-Note that this is same with using `index_put_` in Python layer:
+这正是 Python 层调用 `index_put_` 的底层实现：
 
 ```py
 t = torch.tensor([[1, 2, 3], 
@@ -416,11 +421,10 @@ cols = torch.tensor([1, 1])
 t.index_put_((rows, cols), torch.tensor([10, 10]))
 ```
 
-## 5. Conclusion
+---
 
-1. For Python 1-D setter, we call C++ `at::indexing::set_item` after
-converting Python index to C++ TensorIndex. This part is quite easy so we skip it in this article.
+## 5. 结论
 
-2. For Python N-D setter, we call C++ `at::indexing::handleDimInMultiDimIndexing`
-for each dim, after converting Python index to C++ TensorIndex. If advanced
-indexing is needed, call `index_put_`.
+1. 对于 Python 一维 setter，我们先将 Python 索引转换为 C++ 层的 TensorIndex，然后调用 C++ 中的 `at::indexing::set_item`。这一部分较为简单，本文略过详细描述。
+
+2. 对于 Python 多维 setter，我们对每个维度调用 `at::indexing::handleDimInMultiDimIndexing` 将 Python 索引转换为 C++ 的 TensorIndex。如果需要高级索引，则调用 `index_put_`。
