@@ -771,7 +771,7 @@ struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
 
 1. 创建`requires_grad=True`的tensor
 2. 前向计算，构建计算图
-3. 反向求导，累加梯度
+3. 反向求导（拓扑排序），累加梯度
 
 对于本文用例（mul）来说，计算图全流程可以用下面这张图表示
 
@@ -779,7 +779,7 @@ struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
 
 在前向计算中，我们介绍了如何创建**grad_fn**、**edge**，构建计算图，并提到了dispatch和structure kernel相关概念。
 
-在反向求导时，我们介绍了engine运行的细节：启动多线程，构建**graph_task**，`thread_main`循环，依赖数检查，**任务队列**等，并深入探究了**accumulateGrad**如何进行累加。
+在反向求导时，我们介绍了engine运行的细节：启动多线程，构建**graph_task**，`thread_main`循环，依赖数检查（然后放入read queue），**任务队列(ready queue，其中任务线程池调度执行)**等，并深入探究了**accumulateGrad**如何进行累加。
 
 希望本文能帮助你理解pytorch autograd底层运行机制！
 

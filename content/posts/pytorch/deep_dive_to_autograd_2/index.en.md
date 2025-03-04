@@ -777,7 +777,7 @@ The whole process of autograd mainly consists of three steps:
 
 1. Create tensor with `requires_grad=True`
 2. Forward computation, construct computation graph
-3. Backward derivation, accumulate gradients
+3. Backward derivation(topological order), accumulate gradients
 
 For the example in this article (mul), the entire computation graph can be represented by the following figure:
 
@@ -785,7 +785,7 @@ For the example in this article (mul), the entire computation graph can be repre
 
 In the forward computation, we introduced how to create **grad_fn**, **edge**, and construct the computation graph, and mentioned concepts related to **dispatch** and **structure kernel**.
 
-During the backward derivation, we introduced the details of engine running: starting multithreading, constructing **graph_task**, `thread_main` loop, dependency check, **task queue**, etc., and deeply explored how **accumulateGrad** performs accumulation.
+During the backward derivation, we introduced the details of engine running: starting multithreading, constructing **graph_task**, `thread_main` loop, dependency check(and then put into the `ready_queue`), **task queue(ready_queue)**, etc., and deeply explored how **accumulateGrad** performs accumulation.
 
 Hope this article can help you understand the underlying operation mechanism of PyTorch's autograd!
 
