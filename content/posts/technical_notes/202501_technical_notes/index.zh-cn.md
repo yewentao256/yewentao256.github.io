@@ -1,8 +1,8 @@
 ---
-title: "2025 一月 Technical Notes"
+title: "2025 Technical Notes（1）"
 date: 2025-01-31T14:02:12+08:00
 categories: ["technical_notes"]
-summary: "2025年一月技术积累笔记"
+summary: "2025年技术积累笔记（一）"
 ---
 
 ## Robotic
@@ -87,54 +87,6 @@ PPO (Proximal Policy Optimization) 等算法，利用奖励模型作为奖励函
 
 ## 分布式训练
 
-### Strategy
-
-传统DP：
-
-- 优点：简单易于实现；社区支持
-- 缺点：每个device maintain一份模型权重和优化器状态
-
-所以why Zero（only stage1 — optimizer state）
-
-- 优点：对上层来说感官就像DP一样，仍然是把数据切成N份给worker，但此时底层的device optimizer state已经被切分了
-- 缺点：需要框架支持（deep speed）
-
-tensor parallelism：
-
-- 优点：单层算子吞吐量提升
-- 缺点：需要对模型做一些修改（但multi-head Attention天然分层）；通信量大
-
-PP：
-
-- 优点：节约显存
-- 缺点：处理bubble，难以debug
-
-DeepSpeed使用例子：
-
-```python
-model_engine, optimizer, _, _ = deepspeed.initialize(args=cmd_args,
-                                                     model=model,
-                                                     model_parameters=params)
-
-# torch.distributed.init_process_group(...) -> deepspeed.init_distributed()
-```
-
-默认 NCCL backend
-
-之后就像平常训练一样
-
-```py
-for step, batch in enumerate(data_loader):
-    #forward() method
-    loss = model_engine(batch)
-    #runs backpropagation
-    model_engine.backward(loss)
-    #weight update
-    model_engine.step()
-```
-
-自动做了并行。如果多节点，默认用Open MPI：A High Performance Message Passing Library
-
 ### RDMA
 
 RDMA (Remote Direct Memory Access)：直接内存读写（网络层）
@@ -156,9 +108,7 @@ NVlink常用于单台服务器内部，GPU、GPU高速互联。多节点间常�
 - 基于梯度大小，权重梯度很小表示它对损失函数影响较小，可能不会显著影响训练
 - 基于activation大小，激活值很小表示对输出影响较小。
 
-剪枝会将对应值设为0，然后矩阵变稀疏可以专门优化减少存储和计算开销。
-
-剪枝后模型性能下降，需要fine-tune来恢复模型性能。这个过程可能迭代多次
+剪枝会将对应值设为0，然后矩阵变稀疏可以专门优化减少存储和计算开销。剪枝后模型性能下降，需要fine-tune来恢复模型性能。这个过程可能迭代多次
 
 蒸馏 Distillation（教师 软标签 给 学生（小模型））
 
@@ -166,7 +116,7 @@ ONNX Runtime：多后端支持（CPU、GPU、TensorRT）等，将不同模型统
 
 RCNN传统算法（Selective Search）候选框然后目标检测；Fast-RCNN 全图扫描出特征图然后再扫出候选框；Faster-RCNN直接用NN来候选框
 
-3D 检测（3D Object Detection）比如摄像头和lidar的融合；nerf并不做3d边界框的检测，之后是3d重建
+3D 检测（3D Object Detection）比如摄像头和lidar的融合；nerf并不做3d边界框的检测，是3d重建
 
 Finetune 会冻结模型某些层，然后用新数据训练，只做小更改。
 
@@ -181,7 +131,7 @@ out算子快是因为：
 - 减少了一次运行时malloc
 - 减少了一次extra copy（主要）
 
-malloc由于pytorch有一套可复用的显存管理，实际开销不大，比如100s的调用，可能占用就2~3s malloc，但如果调了out算子这malloc可能就可以提前被handle（比如等待通信时分配）
+cuda_malloc由于pytorch有一套可复用的显存管理，实际开销不大，比如100s的调用，可能占用就2~3s malloc，但如果调了out算子这malloc可能就可以提前被handle（比如等待通信时分配）
 
 注意：cuda malloc开销是很大的。
 
@@ -307,11 +257,17 @@ class LogSoftmax:
 
 2020奠基之作，标准前向逐渐添加噪声，反向NN学习去噪，使用MSE loss
 
-前向: `Xt = 根号(1-βt) X_(t-1) + 根号(βt) ϵ`
+前向:  
 
-反向：X_(t-1) 粗略等于  X_t - 根号(βt)ϵ0  + 随机补偿 根号(βt) z
+\[
+X_t = \sqrt{1-\beta_t}\, X_{t-1} + \sqrt{\beta_t}\, \epsilon
+\]
 
-注：通常噪声量由一个时间调度参数βt控制，DDPM中是一个线性增长的βt。
+反向：\(X_{t-1}\) 粗略等于 \(X_t - \sqrt{\beta_t}\,\epsilon_0\) + 随机补偿
+
+\(\epsilon_0\) 是模型预测的噪声
+
+注：通常噪声量由一个时间调度参数`βt`控制，DDPM中是一个线性增长的`βt`。
 
 问题：反向采样数百步太慢
 
@@ -330,7 +286,7 @@ class LogSoftmax:
 
 1. 使用预训练的VAE（Variational Autoencoder）将高维压缩为低维表示
 2. 在latent space中执行diffusion降低计算成本。
-3. 反向denoising的时候，可以+一个conditioning（semantic map、text、image）等embedding
+3. 反向denoising的时候，可以加一个conditioning（semantic map、text、image）等embedding
 4. 最后过一层decoder还原为图像
 
 快，但依赖VAE的质量，生成细节可能有所损失
@@ -342,7 +298,7 @@ class LogSoftmax:
 - 基于latent diffusion model的具体实现，by Stability AI
 - 使用CLIP（Contrastive Language–Image Pre-training）提取文本条件，控制生成内容——>强大多模态能力
 
-CLIP（by openai）即image和caption训练到同一embedding的那个方式得到的预训练模型
+CLIP（by openai）即image和caption训练到同一embedding的方式得到的预训练模型
 
 ## NLP
 
@@ -370,14 +326,13 @@ CLIP（by openai）即image和caption训练到同一embedding的那个方式得�
 
 1、Fused Multi-Head Attention 算子
 
-把`Softmax(Q * K^T / 根号d ) * V` 这些操作进行fuse单独写kernel实现
+把`Softmax(Q * K^T / d^0.5) * V` 这些操作进行fuse单独写kernel实现
 
-注意：Q、K、V的shape为`（N，d）`。N表示序列长度，d表示（hidden dimension），如果multi-head就是hidden size / head_num
+注意：Q、K、V的shape为`(N，d)`。N表示序列长度，d表示`hidden dimension`，如果是多头注意力multi-head就是`hidden size / head_num`
 
 2、**Flash attention**
 
-常规attention会存储`N*N`中间activations，让内存使用量`O（N^2）`增长
-所以引入了flash attention优化，即通过块（chunk）来完成softmax和乘法运算
+常规attention会存储`N*N`中间activations，让内存使用量`O（N^2）`增长，所以引入了flash attention优化，即通过块（chunk）来完成softmax和乘法运算
 
 做法：
 
@@ -388,8 +343,8 @@ CLIP（by openai）即image和caption训练到同一embedding的那个方式得�
 这样显存占用就降低为了`O（N*d）`而不是平方了。N越大收益越高，速度也越快
 
 例如：
-QKV的shape都是(4*2)
-标准做法要`softmax_mask(QK^T / 根号2(d=2)) @ V` 需要存储activation=`(4, 4)`矩阵
+
+QKV的shape都是`(4*2)`，标准做法要`softmax_mask(QK^T / 根号2(d=2)) @ V` 需要存储activation=`(4, 4)`矩阵
 
 flash attention分成Q1 Q2，K1、K2 V1 V2，shape都是`（2, 2）`
 
@@ -397,13 +352,14 @@ flash attention分成Q1 Q2，K1、K2 V1 V2，shape都是`（2, 2）`
 - Q1 K2计算 然后softmax 和V2计算，结果加和就得到了Q1与所有K的计算（2*2）
 
 注意：这里为了维系softmax值做了一些努力
+
 如K1时得到临时最大值`M1` 先算局部累加和`σ1=∑e^(xi-M1+M1) = e^M1 * ∑e^(xi-M1) = e^M1 * S1`，然后K2时拿到局部最大值`M2`，然后拿到局部累加和`σ2=∑e^(xi-M2+M2) = e^M2 * ∑e^(xi-M2) = e^M2 * S2`。（这里是标准max-shift）
 
 都计算完后我们知道了全局最大值`M0`
 
 但σ1还是用M1算的，怎么办呢？（ log-sum-exp ）的思路
 
-`e^M1 = e^M0 * e^(M1-M0）`
+`e^M1 = e^M0 * e^(M1-M0)`
 
 所以`σ1 = e^M0 * e^(M1-M0）* S1`
 
@@ -430,18 +386,19 @@ flash attention不同版本的区别？核心思路都一样，就是加上了�
 因为在attention中需要对未来位置进行屏蔽（特别是GPT）
 
 5、Rotary Position Embedding(RoPE)
+
 在传统固定位置编码（sin/cos）和可学习编码外，引入了一种二维旋转矩阵加入位置信息的方式。
 
-何为旋转？x=(x1,x2)，给定一个旋转角θ，那么2D平面对x线性变换是
+何为旋转？`x=(x1,x2)`，给定一个旋转角`θ`，那么2D平面对x线性变换是
 
 `RoPE(x) = (cosθ, -sinθ)`
           `(sinθ, consθ)   * x`
 
-在高维向量（d）里，按偶数对分成`d/2`组，即`d/2`个平面，然后每个平面旋转θ
+在高维向量`d`里，按偶数对分成`d/2`组，即`d/2`个平面，然后每个平面旋转`θ`
 
-θ可能有一个线性对数或者其他函数
+`θ`可能有一个线性对数或者其他函数
 
-注意：cos(a)cos(b) + sin(a)sin(b) = cos(a-b)，这样利于模型学到相对位置信息
+注意：`cos(a)cos(b) + sin(a)sin(b) = cos(a-b)`，这样利于模型学到相对位置信息
 
 ### Transformer
 
@@ -453,14 +410,14 @@ Encoder：
 
 ```bash
 (words -> embedding) + positional encoding ->
-[Multihead self attention -> Norm -> FNN(RELU) (Residual Connection) -> Norm] * N
+[Multihead self attention -> LayerNorm -> FNN(RELU/GELU) (Residual Connection) -> LayerNorm] * N
 ```
 
 Decoder:
 
 ```bash
 (words -> embedding) + positional encoding -> 
-[Multihead self attention（会添加一个mask屏蔽未来单词） + Norm ->  Cross attention + Norm -> FNN -> Norm] * N -> Linear -> Softmax
+[Multihead self attention（会添加一个mask屏蔽未来单词） + Norm ->  Cross attention + LayerNorm -> FNN -> LayerNorm] * N -> Linear -> Softmax
 ```
 
 为什么 self attention？
@@ -484,43 +441,48 @@ sequence length：最大支持4096 tokens
 训练时间例子：210TGS，1024卡，215040 tokens/s，需要差不多108天
 
 一个训练配置：
-DP_size(zero stage1)=8, TP=16, PP(chunk)=8, global_batch_size = 2048 ==> micro_batch_size = 16
+
+`DP_size(zero stage1)=8`, `TP=16`, `PP(chunk)=8`, `global_batch_size = 2048` ==> `micro_batch_size = 16`
 
 ## Recommendation
 
-Job 推荐流程 in JobRight：
+以Job推荐流程为例：
 
-我们现在只有C端，正在做B端（引入B端后策略会复杂一些），只有C端优化的目标就非常直观：用户的申请量（多用户平均的申请量，申请量和用户留存是正相关的，申请量多留存率大）
+一般分为B端（对企业推荐）和C端（对求职者推荐）。C端优化的目标非常直观：多用户的平均申请量（和用户留存是也正相关的，申请量多留存率大）
 
 精排模型也都是以apply rate来作为metric优化，发到前端记录哪些点了哪些没点，然后存下来数据
 
 天级重新训练模型是为了适应job和model，为了catch up最新的数据（不然落后与现在的job与user）（如果是新闻那种，可能半小时就重新推上线）；如果要优化模型的话，都是离线看metric  
 
-1、召回 10000条
+1、召回（recall） 10000条
 
-非常依赖用户输入title的系统，基于title做search，search的时候用embedding，比如JavaScript 和 react developer，虽然词不一样，但我们知道是一类型的job
-fine tune的数据源是把不同的job 划分为category，text taxonomy（分类体系，如游戏-MOBA等）
+比如让用户输入job title做召回，基于title做search，search的时候用embedding，比如JavaScript 和 react developer，虽然词不一样，但我们知道是一类型的job。
+
+Fine tune的数据源是把不同的job 划分为category，text taxonomy（分类体系，如游戏-MOBA等）
+
 然后embedding search（cos相似度）；以及给用户的选项进行filter
 
-2、粗排，得删除，无法处理那么多 10000 -> 500
+2、粗排（Coarse ranking）
+
+召回数据比较多，这里一般会删除，如 10000 -> 500
 
 这里用一些人工硬性策略，比如比较新的job偏好，title比较像的
+
 人工规则打分（比如最近活跃度，热门度等，发布时间等一套加权评分体系），然后截断至500。recall的分数也可以做一个加权
 
-3、精排： 不删除
+3、精排（Fine Ranking）
 
-item侧的feature，job比如category，skills；user侧的feature，看用户点过哪些job，是否新老用户，用户本身的属性等等
+这里可以删除也可以不删除数据
 
-这个模型不是很深，比较依赖cross-feature，两边skill的match，丢给我们的推荐模型（GBDT、lightgbm）然后做推荐
-（这里不是LLM，LLM太慢了，B端可能可以用LLM，离线可以接受更多延迟）
+标准是item侧的feature，job比如category，skills；user侧的feature，看用户点过哪些job，是否新老用户，用户本身的属性等等
 
-4、重排（rerank）的策略
+这个模型不是很深，比较依赖cross-feature，两边skill的match，丢给我们的推荐模型（GBDT、lightgbm）然后做推荐（这里不是LLM，LLM太慢了，B端可能可以用LLM，离线可以接受更多延迟）
+
+4、重排（rerank）
 
 flashness，job有多新，job company有好有坏（glassdoor评分等）
 
-粗排和重排可能有一点类似，重排很多的策略级别都移到粗排
-
-这一套系统可以在s级别响应
+粗排和重排可能有一点类似，重排很多的策略级别都可以移到粗排
 
 ## 常见开源框架
 
@@ -534,7 +496,7 @@ DP用的是Torch的DP，TP用`--tensor-model-parallel-size`控制，PP用`--pipe
 
 Deepspeed则更多强调Zero，也支持TP和PP。
 
-业界有组合使用Megatron-DeepSpeed（也是internlm的方式），Zero+TP+PP
+业界一般会组合使用Megatron-DeepSpeed，Zero+TP+PP
 
 ColossalAI：HPC-AI开发，社区相对更活跃，也更容易上手入门
 
@@ -562,6 +524,12 @@ vLLM：对LLM推理做高吞吐量和低延迟优化，特别适用于流式场�
 
 vLLM也自带批处理机制，可以将多个并发的推理合并成一个批次提高效率。
 
+### CUTLASS
+
+CUTLASS（CUDA Templates for Linear Algebra Subroutines）
+
+NVIDIA用来简化并加速GEMM（general matrix mul）的C++模板库，提供了可复用可组合的模板组件
+
 ## System Design
 
 ML system design技巧：
@@ -585,11 +553,7 @@ ML system design技巧：
 
 ### 推理加速系统
 
-问题：设计一个机器学习推理加速系统
-
-背景：你需要为一个应用设计一个推理加速系统。目标是确保模型推理过程能够高效、低延迟地运行，特别是在计算资源有限的情况下，如移动设备、边缘设备或者负载较高的服务器环境。
-
-要求：
+问题：设计一个机器学习推理加速系统。目标是确保模型推理过程能够高效、低延迟地运行，特别是在计算资源有限的情况下，如移动设备、边缘设备或者负载较高的服务器环境。
 
 - 输入：
   - 模型：深度学习模型（例如，卷积神经网络（CNN）、Transformer、推荐模型等）。
@@ -600,75 +564,43 @@ ML system design技巧：
   - 推理结果：根据输入数据生成的预测输出（例如，推荐的视频列表、图片分类结果、自然语言处理的回答等）。
   - 性能指标：包括推理的延迟（响应时间）、吞吐量（每秒处理的请求数）、模型的大小和精度。
 
-回答：
-
-你会如何设计系统架构以支持低延迟和高吞吐量的需求？
+问题1：如何设计系统架构以支持低延迟和高吞吐量的需求？
 
 - 要求低延迟，那么模型就必须小。所以我们要通过模型压缩、量化的方式提升模型推理效率
-
-- 模型压缩：主要通过剪枝（基于权重大小、基于梯度大小、基于activation大小）实现。剪枝会将对应值设为0，然后矩阵变稀疏可以专门优化减少存储和计算开销。剪枝后模型性能下降，需要fine-tune来恢复模型性能。这个过程可能迭代多次
-
+- 模型压缩：主要通过剪枝（基于权重大小、基于梯度大小、基于activation大小）实现。剪枝会将对应值设为0，然后矩阵变稀疏可以专门优化减少存储和计算开销，或者structure剪枝直接改小模型。剪枝后模型性能下降，需要fine-tune来恢复模型性能。这个过程可能迭代多次
 - 量化：我们可以考虑两种量化方式，1、post training quantilization（PTQ），即训练完成后量化，这里我们可以使用导出model为ONNX格式（注意：需要确保所有算子都支持，否则需要手动写插件，比如flash attention、RMSnorm这种LLM算子还没及时支持的）然后使用tensorRT序列化为.plan文件推理。注意进行校准（99分位后minmax校准或熵校准），以及校准后验证。2、QAT，quantization aware training，但题目假定了模型就是输入，那么我们不能使用这一点。
-
 - 关于高吞吐量，我们可以通过scale的方式加服务器结点，来同时接受更多请求。这一点可以用kubernetes很容易地实现。
 
 - **补充**：除了这些策略外，针对大量请求本身，也可以使用缓存（对于常见请求）（redis），vLLM对于LLM也有paged attention来专门做KV缓存优化。以及消息优先队列（kafka）等来管理推送请求，并加负载均衡load balancer打到各个结点上。
 
-你会如何利用硬件加速来优化推理过程？具体哪些硬件和技术（如GPU、TPU等）适合在这个系统中使用？
+问题2：如何利用硬件加速来优化推理过程？具体哪些硬件和技术（如GPU、TPU等）适合在这个系统中使用？
   
 - 假设我们有GPU集群，如果模型通过上面的剪枝量化、以及可能的其他压缩方式（比如低秩压缩）后不大，那么直接部署单个GPU上即可。如果模型很大（比如LLM），可能需要引入分布式策略，由于是推理场景所以没有DP，通过TP、PP对模型分层切片，实现分布式推理。在这一过程中NVlink等GPU通信方式可以较大幅度提升推理性能。
-
 - 如果我们可以用开源框架，那么vLLM、DeepSpeed-inference等都是可以选择的对象
-
 - **补充**：还有知识蒸馏也可以
 
-如果系统需要扩展，你会如何设计一个高可扩展性的解决方案？
+问题3：如果系统需要扩展，你会如何设计一个高可扩展性的解决方案？
 
 - kubernetes的特性，上面已经提到了，本身便于扩展和加节点。在容器化服务后，
 - Horizontal Pod Autoscaling (HPA)和Cluster Autoscaler自动加结点。
 
-你会如何确保系统在面对不同类型的输入数据（如图像、文本、用户行为数据等）时，仍然能保持高效？
+问题4：如何确保系统在面对不同类型的输入数据（如图像、文本、用户行为数据等）时，仍然能保持高效？
 
 - 这里有两种数据，一种是要求立刻回复的数据，那我们需要单独留出部署好的服务器结点（服务一体化不走微服务）来对接这种请求。
 - 另一种是不着急处理的数据，我们可以在系统结构上加一层，用户输入数据会统一经过一个预处理层，比如图像提前处理为embedding，文本提前处理为embedding，用户行为数据提前清理制表等，然后再queue喂给模型。
 
 整体补充：整个系统上线前需要压测，并用prometheus等进行性能监控和调优。也可以通过A/B test部分上线来预测试，确保整个系统上线完备。此外也要有版本控制，布置好CICD，方便之后上线。如果万一有问题，还可以回滚。
 
-### Robot夹爪系统
-
-一、整体设计
-
-- 感知层（Perception Layer）：视觉传感器、力矩传感器（torque sensors）、位姿传感器等
-- 规划与决策层（Planning & Decision Layer）：根据感知层数据，进行object detection、路径规划、抓取策略等
-- 执行层（execution layer）：包括机器臂本身、关节电机、夹爪等
-
-注意：力的作用是相互的，所以你不需要被夹物体显示数据，夹爪可以自己读数
-
-二、关键数据
-
-- 机器臂自身数据（角度、速度、加速度等，机械臂自己的结构参数如质量、DH参数等）
-- 环境与目标物体数据：视觉传感器、深度传感器获得物体的分类、状态、位姿、尺寸等
-- 夹爪数据：夹爪开合范围、力矩反馈等。如果有触觉和滑动传感器也可以收集
-控制和安全数据：关节指令、执行结果；关节限位、过载、电机温度等
-
-三、总结：感知层获取机器臂、环境和夹爪信息，通过决策层进行路径规划和抓取策略决定，然后执行层对关节和夹爪命令控制，同时监视安全和故障信息来实现可靠的抓取。
-
-## CUDA
-
-CUTLASS（CUDA Templates for Linear Algebra Subroutines）
-
-NVIDIA用来简化并加速GEMM（general matrix mul）的C++模板库，提供了可复用可组合的模板组件
-
 ## 编译器
 
 为什么unrolling能加速？
 
-1、减少循环控制开销（i跳转等）（单核CPU也是）
+1、减少循环控制开销（i跳转等）
 
-2、降低循环分支预测失败的概率（单核CPU也是）
+2、降低循环分支预测失败的概率
+
 分支预测：现代CPU利用分支预测来实现让流水线无缝执行
 
 3、指令级并行，给编译器和CPU更好地调度和优化
 
-但注意：它可能导致代码体积增大，在特殊情况下比如指令缓存较小反而影响性能
-此外，现代编译器一般已经自动做了循环展开的优化，影响几乎微乎其微
+但注意：它可能导致代码体积增大，在特殊情况下比如指令缓存较小反而影响性能。此外，现代编译器一般已经自动做了循环展开的优化，程序员手动unroll影响几乎微乎其微

@@ -1,8 +1,8 @@
 ---
-title: "2025 01 Technical Notes"
+title: "2025 Technical Notes(1)"
 date: 2025-01-31T14:02:12+08:00
 categories: ["technical_notes"]
-summary: "Technical notes during 2025 Jan."
+summary: "Technical notes during 2025."
 ---
 
 >The content in this page here is translated by O3-mini-high.
@@ -66,45 +66,6 @@ which expands to:
 ---
 
 ## Distributed Training
-
-### Strategy
-
-#### Traditional Data Parallelism (DP)
-
-- **Advantages:** Simple to implement and widely supported by community frameworks.
-- **Disadvantages:** Each device maintains a full copy of the model weights and optimizer states.
-
-This is where **Zero Redundancy Optimizer (ZeRO)** comes into play—by sharding only the optimizer state (Stage 1 of ZeRO), the upper layers still see a familiar DP setup, but the heavy optimizer state is partitioned, reducing memory overhead. The downside is that this requires framework support (e.g., DeepSpeed).
-
-#### Tensor Parallelism
-
-- **Advantages:** Increases throughput for individual operators.
-- **Disadvantages:** Requires modifications to the model (although multi-head attention naturally lends itself to splitting) and incurs high communication costs.
-
-#### Pipeline Parallelism (PP)
-
-- **Advantages:** Saves memory.
-- **Disadvantages:** May introduce pipeline bubbles and is often more challenging to debug.
-
-For example, using **DeepSpeed**:
-
-```python
-model_engine, optimizer, _, _ = deepspeed.initialize(args=cmd_args,
-                                                     model=model,
-                                                     model_parameters=params)
-# Behind the scenes, torch.distributed.init_process_group(...) is replaced by deepspeed.init_distributed()
-```
-
-DeepSpeed defaults to the NCCL backend and allows you to write training loops as usual:
-
-```python
-for step, batch in enumerate(data_loader):
-    loss = model_engine(batch)
-    model_engine.backward(loss)
-    model_engine.step()
-```
-
-When scaling to multiple nodes, DeepSpeed typically leverages Open MPI for high-performance message passing.
 
 ### RDMA
 
@@ -412,29 +373,43 @@ For a 70-billion parameter model:
 
 ## Recommendation Systems
 
-### Job Recommendation in JobRight
+Job Recommendation Pipeline: A Technical Overview
 
-For a job recommendation system (initially targeting the consumer side, with plans to expand to business clients), the primary metric is the application rate, as higher application counts correlate with better user retention.
+In a typical job recommendation system, we often split the process into two main parts: recommendations for enterprises (B-end) and recommendations for job seekers (C-end). The C-end optimization objective is straightforward: to increase the average number of applications per user (which also correlates with user retention—more applications typically lead to higher retention).  
 
-1. **Recall Stage (10,000 items):**  
-   - Highly dependent on the job title input by the user.
-   - Use embedding-based search (e.g., “JavaScript” vs. “React Developer” should be recognized as similar).
-   - Fine-tune data by categorizing jobs using a text taxonomy.
-   - Leverage cosine similarity and additional filters.
+In the fine-ranking stage (discussed below), the main metric is usually the “apply rate.” Data is collected by logging which recommended items (jobs) users clicked or didn’t click, and this feedback becomes the training data for the model. Because job markets and user behaviors evolve quickly, it’s common to retrain the model daily (or even more frequently for scenarios like news recommendations) to capture the latest signals. Major model improvements or architecture changes are typically evaluated using offline metrics before being deployed.
 
-2. **Coarse Ranking (Reduce from 10,000 to 500 items):**  
-   - Apply hard rules (e.g., recency, title similarity).
-   - Incorporate manually engineered scores (e.g., recent activity, popularity, publish time) to trim the list.
-   - The recall scores can be used as an additional weighted factor.
+---
 
-3. **Fine Ranking:**  
-   - Do not drop items; instead, use features from both the job (category, skills) and the user (past interactions, user attributes) to compute a ranking score.
-   - The model is typically shallow and leverages cross-features (e.g., matching skills) using recommendation algorithms like GBDT or LightGBM.
+### 1. Recall
 
-4. **Re-Ranking:**  
-   - Adjust rankings based on additional factors such as job freshness or company quality (e.g., ratings from Glassdoor).
+The recall phase generally retrieves a large pool of candidates (e.g., 10,000 jobs). A common strategy is to use the job title provided by the user as input for a search-based recall. This can leverage embedding-based retrieval so that related but differently phrased titles (e.g., “JavaScript Developer” vs. “React Developer”) can still be recognized as similar.  
 
-This multi-stage system can respond within seconds.
+To enable this, you might fine-tune an embedding model on a taxonomy of job categories (e.g., *Game* -> *MOBA*). Then, when performing an embedding search (based on cosine similarity), you can pull up jobs whose descriptions or titles closely match the user’s query. Filters (like job location, required skill levels, etc.) are also commonly applied at this stage.
+
+---
+
+### 2. Coarse Ranking
+
+After the recall step, you typically have a large set of candidates (10,000). Coarse ranking narrows them down to a more manageable size (e.g., 500).  
+
+Often, this phase employs heuristic or rule-based strategies, such as favoring newer job postings or weighting more relevant titles more strongly. You can also incorporate factors like job popularity, how recently the job was posted, and various other metadata. The recall score itself can be one of the inputs. A straightforward method is to compute a composite score based on these features and then truncate the candidate list.
+
+---
+
+### 3. Fine Ranking
+
+The fine-ranking stage is where a more sophisticated machine learning model (e.g., GBDT, LightGBM) comes into play. This model considers detailed item-level features—such as job category, skills required, and metadata—and user-level features, such as a user’s past clicks or applications, whether they are new or returning, their skill profile, and so on.
+
+This stage may or may not further filter out candidates. The main goal is to precisely estimate the likelihood that a user will apply for a given job. Because these models rely on cross-feature interactions (e.g., whether a user’s skill set matches a job’s skill requirements), traditional tree-based models are often used. At the B-end (when recommending candidates to enterprises) it might be feasible to use more complex models like LLMs if the data size and latency constraints are different. However, for the C-end (job seekers), large-scale, real-time recommendation usually needs a more efficient model to handle high traffic.
+
+---
+
+### 4. Rerank
+
+In some systems, there is an additional reranking step, which is often policy-driven. This might consider “freshness” (e.g., how new the job is) or external signals like Glassdoor ratings. In many cases, the logic in the coarse ranking and reranking steps can overlap, and some of these policy-based adjustments (or weighting rules) can be consolidated into one stage.  
+
+Ultimately, the entire pipeline—from recall to coarse ranking to fine ranking (and possibly reranking)—serves to strike a balance between personalization (making sure each user sees the jobs most relevant to them) and overall platform goals, such as showcasing newly posted or high-quality opportunities.
 
 ### Open-Source Frameworks
 
@@ -444,6 +419,7 @@ Developed by NVIDIA, Megatron is a framework for training large language models 
 
 - **Tensor Parallelism (TP)**
 - **Pipeline Parallelism (PP)**
+
 DeepSpeed can also be combined with Megatron (a common approach in the industry), and frameworks like ColossalAI offer alternatives with a more active community.
 
 #### MLflow
@@ -461,6 +437,10 @@ vLLM is an inference system optimized for deploying large language models with h
 
 - **PagedAttention:** Efficiently manages KV cache by partitioning keys/values into pages.
 - Built-in batching to merge concurrent inference requests.
+
+#### CUTLASS
+
+**CUTLASS** (CUDA Templates for Linear Algebra Subroutines) is NVIDIA’s C++ template library designed to simplify and accelerate general matrix multiplication (GEMM) operations. It provides reusable and composable components that are highly optimized for CUDA.
 
 ---
 
@@ -527,34 +507,6 @@ When designing an ML system:
   - For less urgent data, add a preprocessing layer (e.g., converting images or text to embeddings) and queue the data for inference.
 - **Monitoring:**  
   - Use performance monitoring tools like Prometheus and conduct stress testing and A/B testing to validate system performance.
-
-### Robot Gripper System
-
-**Overall Design:**
-
-- **Perception Layer:**  
-  Incorporate visual sensors, torque sensors, and pose sensors.
-- **Planning & Decision Layer:**  
-  Process sensor data to perform object detection, path planning, and grasp strategy formulation.
-- **Execution Layer:**  
-  Control the robotic arm, joint motors, and gripper actuators. Note that since force is mutual, the gripper can read its own force without relying solely on external data.
-
-**Key Data:**
-
-- **Robotic Arm:** Angles, velocities, accelerations, and structural parameters (mass, DH parameters, etc.).
-- **Environment and Object:** Data from visual and depth sensors regarding object classification, pose, state, and dimensions.
-- **Gripper:** Opening range, torque feedback, and, if available, tactile or sliding sensor data.
-- **Control & Safety:** Joint commands, execution results, joint limits, overload detection, and motor temperature monitoring.
-
-*Summary:* The perception layer collects comprehensive data about the arm, environment, and gripper; the decision layer determines the optimal path and grasping strategy; and the execution layer issues commands to the actuators while continuously monitoring for safety and faults.
-
----
-
-## CUDA
-
-### CUTLASS
-
-**CUTLASS** (CUDA Templates for Linear Algebra Subroutines) is NVIDIA’s C++ template library designed to simplify and accelerate general matrix multiplication (GEMM) operations. It provides reusable and composable components that are highly optimized for CUDA.
 
 ---
 
