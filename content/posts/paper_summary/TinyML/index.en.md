@@ -1,6 +1,6 @@
 ---
 title: "Summary: TinyML"
-date: 2025-02-25T10:15:13+08:00
+date: 2025-03-03T10:25:13+08:00
 categories: ["paper_summary"]
 summary: "Summary for paper 'TinyML: Current Progress, Research Challenges, and Future Roadmap'"
 ---
