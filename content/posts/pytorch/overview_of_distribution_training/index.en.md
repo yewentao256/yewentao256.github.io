@@ -183,6 +183,54 @@ Collective communication APIs such as `all-reduce`, `all_gather` etc., are used 
 
 Generally, use Gloo for CPUs and NCCL for GPUs. If you're familiar with and already use MPI communication, then consider installing MPI additionally.
 
+### All Reduce Example
+
+Initial State:
+
+| P0 | P1 | P2 |
+|:--:|:--:|:--:|
+| a0 | b0 | c0 |
+| a1 | b1 | c1 |
+| a2 | b2 | c2 |
+
+We do **reduce scatter** first:
+
+After one timestamp:
+
+| P0 | P1 | P2 |
+|:--:|:--:|:--:|
+| a0 | b0+a0 | c0 |
+| a1 | b1 | c1+b1 |
+| a2+c2 | b2 | c2 |
+
+After one timestamp:
+
+| P0 | P1 | P2 |
+|:--:|:--:|:--:|
+| a0 | b0+a0 | **c0+b0+a0** |
+| **a1+b1+c1** | b1 | c1+b1 |
+| a2+c2 | **b2+a2+c2** | c2 |
+
+Then we do **all gather**, after one timestamp:
+
+| P0 | P1 | P2 |
+|:--:|:--:|:--:|
+| **c0+b0+a0** | b0+a0 | **c0+b0+a0** |
+| **a1+b1+c1** | **a1+b1+c1** | c1+b1 |
+| a2+c2 | **b2+a2+c2** | **b2+a2+c2** |
+
+After one timestamp:
+
+| P0 | P1 | P2 |
+|:--:|:--:|:--:|
+| **c0+b0+a0** | **c0+b0+a0** | **c0+b0+a0** |
+| **a1+b1+c1** | **a1+b1+c1** | **a1+b1+c1** |
+| **b2+a2+c2** | **b2+a2+c2** | **b2+a2+c2** |
+
+Communication done.
+
+Assuming we have `N` nodes and the total gradient to be communicated for each node is `K`, the total communication volume of whole All Reduce is: `2 * K/N * (N-1)`
+
 ## Further Reading - Pytorch Distributed Architecture
 
 ### C10D and DistributedDataParallel
