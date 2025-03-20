@@ -117,6 +117,26 @@ The optimizer then uses these gradients (FP16) to update its model parameters (F
 
 Finally, these FP32 model parameters are cast to FP16, ready for the next iteration of model training (mixed precision training).
 
+An example for using **DeepSpeed**:
+
+```python
+model_engine, optimizer, _, _ = deepspeed.initialize(args=cmd_args,
+                                                     model=model,
+                                                     model_parameters=params)
+# Behind the scenes, torch.distributed.init_process_group(...) is replaced by deepspeed.init_distributed()
+```
+
+DeepSpeed defaults to the NCCL backend and allows you to write training loops as usual:
+
+```python
+for step, batch in enumerate(data_loader):
+    loss = model_engine(batch)
+    model_engine.backward(loss)
+    model_engine.step()
+```
+
+When scaling to multiple nodes, DeepSpeed typically leverages Open MPI for high-performance message passing.
+
 ## Pipeline Parallel
 
 The core idea of **Pipeline Parallelism (PP)** is to distribute different layers of a model across multiple GPUs, with each GPU responsible for a specific segment of the model.

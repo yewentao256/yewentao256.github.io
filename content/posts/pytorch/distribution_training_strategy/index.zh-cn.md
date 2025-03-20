@@ -119,6 +119,32 @@ Zero将Optimizer State（优化器状态），梯度和模型参数划分到各�
 
 最后，这些 FP32 的模型参数会被 **cast** 到 FP16，用于下一个iter的模型训练（混合精度训练）。
 
+DeepSpeed使用例子：
+
+```python
+model_engine, optimizer, _, _ = deepspeed.initialize(args=cmd_args,
+                                                     model=model,
+                                                     model_parameters=params)
+
+# torch.distributed.init_process_group(...) -> deepspeed.init_distributed()
+```
+
+默认 NCCL backend
+
+之后就像平常训练一样
+
+```py
+for step, batch in enumerate(data_loader):
+    #forward() method
+    loss = model_engine(batch)
+    #runs backpropagation
+    model_engine.backward(loss)
+    #weight update
+    model_engine.step()
+```
+
+自动做了并行。如果多节点，默认用Open MPI：A High Performance Message Passing Library
+
 ## Pipeline Parallelism
 
 PP 的核心思想是把一个模型的不同层划分到不同 GPU 上，每个 GPU 只需要负责一部分模型
