@@ -73,17 +73,17 @@ r[0,1] = a[0,0] * b[0,1] + ...
 
 ### Normalization
 
-为什么要Normalization？让每一层的输出调整到一个相对稳定的分布（均值0方差1），再走激活就有意义,
+为什么要Normalization？让每一层的输出调整到一个相对稳定的分布（均值0标准差1），再走激活就有意义,
 
 如resnet 50 BN完后RELU，归一化后再RELU就可以避免大量负值无意义。实践效果可以加速收敛和提升最终效果，也能防止Over fit
 
 假设一个NCHW
 
-BN：对一个batch的norm（N）结合HW，减均值除方差让数据无shift
+BN：对一个batch的norm（N）结合HW，减均值除标准差让数据无shift
 
-Layer Norm：对单个样本的特征（C）结合HW，减均值除方差
+Layer Norm：对单个样本的特征（C）结合HW，减均值除标准差
 
-Group Norm：将C分成G组后，对每组（C/G）减均值除方差，然后再拼起来（当前批值不稳定的时候好用）
+Group Norm：将C分成G组后，对每组（C/G）减均值除标准差，然后再拼起来（当前批值不稳定的时候好用）
 
 Instance Norm：只考虑H和W做归一化
 
@@ -188,8 +188,7 @@ QKV的shape都是（n*d2），其中d2为d/head数。即每个head关注自己�
 
 然后attention = `softmax(Q @ K转置 / 根号d2) @ V`，（根号d2位缩放因子减少softmax尖锐的问题）
 
-cross attention（位于decoder）不同于self attention只看自己的信息，它的Q来自hidden state，但K和V来自encoder。其他公式与上文一样
-通过看encoder的信息能够生成与输入序列相关的输出，从而在机器翻译中这种任务发挥作用
+cross attention（位于decoder）不同于self attention只看自己的信息，它的Q来自hidden state，但K和V来自encoder。其他公式与上文一样。通过看encoder的信息能够生成与输入序列相关的输出，从而在机器翻译中这种任务更好地发挥作用
 
 decoder还有一个masked self attention遮蔽未来的位置数据（注意力分数为负无穷大）
 
@@ -205,7 +204,7 @@ transformer本身没有loss，loss取决于下游架构。如bert的两个loss �
 
 embedding矩阵如何得到？海量数据用Masked Language Modeling, MLM和Next Sentence Prediction, NSP来预训练。预训练不仅仅训练token embedding（positional embedding在bert中是embedding不是固定的cos和sin）和segment embedding（其实就2*d，判断是否是句子1还是句子2，然后d vector会被加到input上），也预训练了transformer的各种weights
 
-transformer各种weights包括（Wq Wk Wv，multi head attention还有一个Wo负责把concat的权重再均匀整合一下等），FNN W和B，layer norm 的 γ和β（对CHW减均值除方差后再*γ + β）
+transformer各种weights包括（Wq Wk Wv，multi head attention还有一个Wo负责把concat的权重再均匀整合一下等），FNN W和B，layer norm 的 γ和β（对CHW减均值除标准差后再*γ + β）
 
 后面出来了GPT，GPT不像bert是双向的，它只考虑左侧上下文，训练时预测下一个词元（所以为什么更合适生成任务）
 
@@ -217,7 +216,7 @@ transformer中为什么用layer norm？因为BN要求N是稳定的，transformer
 
 为什么transformer公式那里有个根号d？
 
-可以理解为缩放因子，不然直接进softmax的话值会很尖锐。为什么是根号d呢？可以理解为原来QK假设均值0方差1，点积后放大了这个差值（到d，所以方差要根号d）
+可以理解为缩放因子，不然直接进softmax的话值会很尖锐。为什么是根号d呢？可以理解为原来QK假设均值0标准差1，点积后放大了这个差值（到d，所以标准差要根号d）
 
 Hugging Face: 一套统一的API——Tokenizer、Model
 
@@ -246,7 +245,7 @@ Image （3*224*224） -> Conv1 -> 64*112*112 -> Conv2 -> 256*56*56 -> Conv3 -> 5
 
 前向：`Xt = 根号(1-βt) X_(t-1) + 根号(βt) ϵ`
 
-其中ϵ∼N(0,I)，表示均值为0 方差1的高斯分布
+其中ϵ∼N(0,I)，表示均值为0 标准差1的高斯分布
 
 反向：X_(t-1) 粗略等于  X_t - 根号(βt)ϵ0  + 随机补偿 根号(βt) z   其中z∼N(0,I)
 

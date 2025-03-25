@@ -68,7 +68,7 @@ where \(\mathbf{A}\) and \(\mathbf{B}\) are low-rank matrices. LoRA optimizes \(
 
 ### Normalization
 
-Why use normalization? It keeps each layer’s outputs in a relatively stable distribution (e.g., mean 0, variance 1), which helps the activation function. For example, if after BN we apply ReLU, normalizing helps avoid large numbers of negative values and speeds up convergence while mitigating overfitting.
+Why use normalization? It keeps each layer’s outputs in a relatively stable distribution (e.g., mean 0, standard deviation 1), which helps the activation function. For example, if after BN we apply ReLU, normalizing helps avoid large numbers of negative values and speeds up convergence while mitigating overfitting.
 
 Consider an input with shape **NCHW**:
 
