@@ -208,29 +208,28 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     # Windows v8-10磁贴颜色
     tileColor = "#da532c"
 
-  #  搜索配置
   [params.search]
     enable = true
-    # 搜索引擎的类型 ["lunr", "algolia", "fuse"]
-    type = "lunr"
+    # 搜索引擎的类型 ("algolia", "fuse")
+    type = "fuse"
     # 文章内容最长索引长度
     contentLength = 4000
     # 搜索框的占位提示语
     placeholder = ""
-    # 最大结果数目
+    # {{< version 0.2.1 >}} 最大结果数目
     maxResultLength = 10
-    # 结果内容片段长度
+    # {{< version 0.2.3 >}} 结果内容片段长度
     snippetLength = 50
-    # 搜索结果中高亮部分的 HTML 标签
+    # {{< version 0.2.1 >}} 搜索结果中高亮部分的 HTML 标签
     highlightTag = "em"
-    # 是否在搜索索引中使用基于 baseURL 的绝对路径
+    # {{< version 0.2.4 >}} 是否在搜索索引中使用基于 baseURL 的绝对路径
     absoluteURL = false
     [params.search.algolia]
       index = ""
       appID = ""
       searchKey = ""
     [params.search.fuse]
-      # DoIt 新增 | 0.2.12 https://fusejs.io/api/options.html
+      # {{< version 0.2.12 >}} https://fusejs.io/api/options.html
       isCaseSensitive = false
       minMatchCharLength = 2
       findAllMatches = false
