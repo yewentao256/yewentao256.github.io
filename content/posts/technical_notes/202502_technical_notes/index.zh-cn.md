@@ -62,7 +62,7 @@ Sequence Parallelism本质是序列做切分并行
 
 flash attention出来之前，`O（N^2）`激活值内存消耗过大，所以序列并行每个GPU只处理自己的那段序列。但由于self attention依赖位置信息，所以需要`all-gather`汇总其他设备的部分来算全局注意力分数，反向时也需要reduce-scatter来局部梯度归约。通常会设计让通信与计算交叠来尽快加速
 
-flash attention出来之后，self attention计算变为`O（N）`，但序列并行仍然有意义——其他MLP等还是很大显存占用。
+flash attention出来之后，self attention计算变为`O（N）`，但sequence parallel仍然有意义——其他MLP等还是很大显存占用（特别是最后logits词表大小的概率分布，它有N*V的memory，llama3有128K词表，8k的sequence length！如果开了sequence parallel，这个可以按线性减少）
 
 Flash attention实现参考（并没有提速效果，只是表示并行的思想）：
 

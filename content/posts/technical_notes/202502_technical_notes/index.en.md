@@ -64,7 +64,7 @@ Sequence Parallelism is essentially parallelizing by splitting the sequence.
 
 Before flash attention, `O(N^2)` activation memory consumption was too large, so with sequence parallelism, each GPU only processed its portion of the sequence. But since self-attention depends on positional information, `all-gather` was needed to aggregate parts from other devices to calculate global attention scores. During backpropagation, `reduce-scatter` was needed for partial gradient reduction. Communication and computation overlap was typically designed to accelerate the process.
 
-After flash attention emerged, self-attention computation became `O(N)`, but sequence parallelism still makes sense—other components like MLPs still consume significant memory.
+After flash attention emerged, self-attention computation became `O(N)`, but sequence parallelism still makes sense—other components like MLPs still consume significant memory. (In particular, the probability distribution of the final logits, which has `N*V` memory footprint. llama3 has `128K` vocab size and 8K sequence length! This can be reduced linearly if sequence parallel is turned on)
 
 Flash attention implementation reference (doesn't provide speedup, just illustrates parallel thinking):
 
