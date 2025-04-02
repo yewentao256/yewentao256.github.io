@@ -11,7 +11,7 @@ summary: "论文阅读总结：'ZeRO: Memory Optimizations Toward Training Trill
 
 [论文链接](https://arxiv.org/pdf/1910.02054)
 
-> 注意：如果你对这个主题感兴趣，也可以阅读[分布式训练策略](../../distribution_training_strategy/)。
+> 注意：如果你对这个主题感兴趣，也可以阅读[分布式训练策略](../../zh-cn/distribution_training_strategy/)。
 
 ## 1. 这篇论文讲了什么？
 
