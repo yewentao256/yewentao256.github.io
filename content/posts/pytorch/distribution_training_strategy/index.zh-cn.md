@@ -53,6 +53,8 @@ Pytorch DP：
 
 Zero将Optimizer State（优化器状态），梯度和模型参数划分到各个数据并行进程中，消除了大量内存冗余占用，并通过一种动态的通信机制在各设备间共享必要的状态。
 
+> Note: 如果你对Zero有兴趣，可以和![zero_paper_summary](../../zh-cn/summary_zero/)一起阅读
+
 ### Zero的三个阶段
 
 ![image](resources/DeepSpeed-Image-1.png)
@@ -96,8 +98,6 @@ Zero将Optimizer State（优化器状态），梯度和模型参数划分到各�
 此时 M3 的模型参数都还在，缺失的激活值会通过之前保留的部分激活值**重计算**得到（如我们有十层，保留0、2、4、6、8，通过模型参数和保留的激活值 计算得到1、3、5、7、9的前向输出）
 
 每个 GPU 根据 loss、激活值和模型参数 进行反向传播计算出自己的梯度后，其他 GPU 将梯度通信给 GPU3 ，GPU3 进行梯度累加并平均，这样 GPU3 上的梯度就是综合考虑所有数据的完整的梯度。
-
-注：这也是为什么stage2比stage1 通信量相同，通信开销更大的原因。由一次all reduce变成每部分点对点传播accumulate了
 
 ![image](resources/zero-5.png)
 
@@ -144,6 +144,54 @@ for step, batch in enumerate(data_loader):
 ```
 
 自动做了并行。如果多节点，默认用Open MPI：A High Performance Message Passing Library
+
+### Zero 通信量分析
+
+常规DP，每一步的梯度聚合 (all-reduce) 有 `2Ψ` 通信量，reduce-scatter使用`Ψ`和 all gather使用`Ψ`（更严谨一点的通信量是`2Ψ (N-1)/N`，这里我们简化处理）
+
+stage1：我们切分了优化器状态，但梯度和模型参数没有切分，通信量保持不变（我们不会通信FP32的optimizer state如momentum、variance等）
+
+stage2：我们切分了梯度，每个GPU只保留自己部分所需要的梯度。
+
+在实现上，Zero不再使用**all-reduce**进行通信，而是在所有GPU计算好某个GPU所需要的某层的梯度后，将这部分梯度打包进行一次**reduce**操作，每次reduce通信量是`Ψ/N`，这部分要进行`N`次。**注意这个梯度reduce的操作可以和计算交叠**（计算不依赖这部分梯度，因为每个GPU始终用于计算的是自己data的梯度，不需要把这个reduce后的梯度投入计算），因此效率也很高。
+
+从全局视角上看，这类似于进行一次所有梯度的**reduce-scatter**通信，这部分通信量是`Ψ`。
+
+然后每个GPU自己的参数更新后，再进行一次全局的**all-gather**操作来收集所有的**参数**（注意这里的参数不是指stage3切分的运行时参数，而是指更新后的模型参数），这部分的通信量也是`Ψ`，综合还是`2Ψ`。
+
+stage3：现在每个GPU只存自己分区的对应参数，这部分通信量包含三部分
+
+1. 前向传播时，要计算某些层，对应分区需要广播这部分的参数，通信量为`Ψ/N`，一共进行`N`次，总通信量为`Ψ`。（备注：论文提到，类似于schedule一次all-gather通信，但实现上是broadcast如上面图例所示）
+2. 反向传播同理，要类似地进行`Ψ`的参数通信
+3. 每层的梯度算出来后，同样进行N次**reduce**操作，相当于只要一次全局**reduce-scatter**通信avg梯度，实现`Ψ`
+
+综合以上三点，三个stage 合计`3Ψ` 1.5倍通信量
+
+注意，和stage2相比，我们在这里不需要再进行一次**all-gather**统合参数，因为参数已经被分区了，每个GPU只需要管理好自己分到的的参数即可。
+
+### Zero-R: Further Optimizations for Residual Memory
+
+上文我们重点介绍了Zero-DP的内容，此外还有Zero-R（residual memory）来进一步优化显存占用，主要包含：activation 分区存储、管理临时buffer和显存碎片优化
+
+- Partitioned Activation Checkpointing：激活分区存储
+
+即将前向计算的结果分区到不同的GPU上存储，需要用到时（如计算该层梯度）才all gather到本地。这可以进一步节约显存
+
+如果显存确实不够，也可以选择**Zero-offload**将activation存储到CPU，对于计算强度很大的模型（如GPT-2），offload不会显著拖慢训练（因为计算和通信交叠）
+
+- CB：固定大小的缓冲 (Constant Size Buffers)
+
+LLM中通常把参数和梯度拼成一大块来提高通信（all-reduce）的效率，因此这块buffer的大小会线性增大，显存占用巨大。
+
+ZeRO-R 采用“固定大小”的缓冲区策略 (constant-size buffer)，模型小则缓冲区能全部容纳，模型大则分批处理，避免了缓冲区占用过多。
+
+- MD：内存碎片消除 (Memory Defragmentation)
+
+长生命周期tensor（activation、gradient）等与短生命周期tensor交替出现（临时激活、算子运算中间缓冲），导致显存碎片化
+
+Zero-R 优先将activation和gradient分配到预留好的连续大块buffer中，不仅减少碎片，还加速了内存分配/释放
+
+从论文实验结果来看，分区activation的通信量大概只有TP的10%，而且能显著增大batch size，这不仅能加速训练，而且减少了整体DP的梯度通信量（iteration数少了），因此引入Zero-R对训练十分有益。
 
 ## Pipeline Parallelism
 
@@ -227,8 +275,6 @@ row Parallelism 将输入数据按 column 划分（`2*2`），将模型参数按
 Zero可以理解为一种高度扩展的DP，可以与PP和TP共同使用，但一般只适用于 Zero Stage1
 
 这是因为如果引入 Zero Stage2 梯度分割的话，每个 micro batch 执行都需要引入一次通信聚合梯度，而使用 PP 天然就会使用更多的micro batch，因此这部分通信开销会相对更大。此外，引入 PP 后模型分层，梯度本身大小也变为了原来的`1 / PP_size`，节约显存效果也没那么明显。因此我们一般不会让 Zero Stage2 与 PP 共同使用。
-
-此外，使用 Zero 后，**Zero-Offload** 可以让我们把一部分优化器状态存储到CPU上，以进一步节约显存。
 
 ## Referrence
 

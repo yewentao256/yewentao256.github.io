@@ -53,6 +53,8 @@ Additionally, Pytorch has developed the **Fully Sharded Data Parallel (FSDP)**, 
 
 The Zero Redundancy Optimizer, commonly referred to as **Zero**, distributes the model states (parameters, gradients, and optimizer states) across various data parallel processes. This approach eliminates significant memory redundancy and employs a dynamic communication mechanism to share necessary states among devices.
 
+> Note: If you are interested in Zero, you can also read ![zero_paper_summary](../../summary_zero/)
+
 ### Three Stage of Zero
 
 ![image](resources/DeepSpeed-Image-1.png)
@@ -95,8 +97,6 @@ During this phase, all model parameters from M3 are still present, and missing a
 
 Each GPU computes its own gradients based on the loss, activation values and model params. These gradients are then communicated to GPU3, which accumulates them to form the complete gradient.
 
-Note: This is why stage2 has the same amount of communication and more communication overhead than stage1. From one **all-reduce** to peer-to-peer **send** and accumulate
-
 ![image](resources/zero-5.png)
 
 Once the gradient accumulation is complete, the other GPUs delete the parameters and gradients of M3 to further conserve memory, and all GPUs delete all stored forward activations. The backward pass continues:
@@ -136,6 +136,55 @@ for step, batch in enumerate(data_loader):
 ```
 
 When scaling to multiple nodes, DeepSpeed typically leverages Open MPI for high-performance message passing.
+
+### ZeRO-DP: Communication Analysis
+
+In standard DP, each iteration requires a **gradient all-reduce**. This typically involves a communication volume of **\(2 \Psi\)**. That’s because reduce-scatter costs \(\Psi\), and then all-gather also costs \(\Psi\).
+
+Stage 1:
+
+- At Stage 1, only the optimizer states (e.g., Adam’s momentum, variance) are partitioned across GPUs. Gradients and parameters remain fully replicated on each GPU.  
+- Consequently, **the communication volume remains at \(2 \Psi\)** for gradient all-reduce.  
+- We do **not** transmit the fp32 optimizer states themselves because they’re partitioned and only exist locally where needed.
+
+Stage 2:
+
+- Each GPU holds only the subset of gradients needed for its parameter partition.  
+- Implementation-wise, we no longer perform an all-reduce on the entire gradient. Instead, each GPU’s portion of the gradients is **reduced** to whichever GPU is responsible for that partition. Each such **reduce** operation handles \(\Psi/N\) data, and there are \(N\) such operations (one per GPU).  
+- Crucially, each GPU only needs its local gradients for backward computation, so it does not depend on receiving the reduced/accumulated gradients from other GPUs. Therefore, these reductions can be overlapped with local computations, making this stage highly efficient in practice.
+- From a global perspective, this is effectively a **reduce-scatter** of size \(\Psi\).  
+- After each GPU has updated its local parameters, we need to gather these updated parameters so that all GPUs end up with the latest model parameters. This **all-gather** also costs \(\Psi\).  
+- Thus, the total is still **\(2 \Psi\)** overall (the same as standard DP).  
+
+Stage 3:
+
+- Now each GPU stores **only** its own partition of the model parameters (fp16). As a result, we need to communicate these parameters at run time:
+  1. **Forward Pass**: For each layer’s partition, the responsible GPU broadcasts that chunk of parameters (i.e., \(\Psi/N\)) to the others so they can compute that layer’s forward pass. Doing this \(N\) times gives a total of \(\Psi\) in communication. (This is similar as scheduling an all-gather in a global view.)  
+  2. **Backward Pass**: Similarly, we need \(\Psi\) of parameter communication to reconstruct each partition of parameters in reverse order for backprop.  
+  3. **Gradient Reduce**: Each GPU calculates the gradients for its slice of data, then reduces them back (via N times \(\Psi/N\)), effectively a global **reduce-scatter** to sum up those gradients. This sums to another \(\Psi\).  
+
+- Adding these up: **\(\Psi + \Psi + \Psi = 3 \Psi\)**, which is **1.5x** compared to the \(2 \Psi\) in standard DP.  
+- Note that, unlike Stage 2, we don’t need an all-gather to unify parameters at the end because each GPU permanently maintains only its own partition of the parameters.
+
+---
+
+## ZeRO-R: Further Optimizations for Residual Memory
+
+Beyond ZeRO-DP, **ZeRO-R** addresses **residual memory** consumption, namely activations, temporary buffers, and memory fragmentation. It encompasses the following:
+
+1. **Partitioned Activation Checkpointing**  
+   - Instead of replicating activations for every GPU, ZeRO-R partitions them. The activation chunk is gathered only on-demand when computing a layer’s backward pass.  
+   - If GPU memory remains tight, **ZeRO-offload** can move these partitioned activations to CPU memory. For highly compute-intensive models (e.g., GPT-2), offloading doesn’t significantly slow down training because computation can overlap with communication.
+
+2. **CB: Constant-Size Buffers**  
+   - Large language models (LLMs) typically fuse parameters and gradients into a single massive buffer to improve all-reduce efficiency. However, as model size grows, this buffer can become huge.  
+   - ZeRO-R uses a **fixed-size buffer** strategy, splitting the work into chunks if necessary, preventing the fused buffer from monopolizing GPU memory.
+
+3. **MD: Memory Defragmentation**  
+   - In training, long-lived tensors (activations, gradients) interleave with short-lived ones (temporary activations, operator workspaces), causing fragmentation.  
+   - ZeRO-R allocates contiguous memory regions in advance for major tensors, which reduces fragmentation and speeds up allocation/deallocation operations.
+
+The paper shows partitioned activations add only about **10%** extra communication compared to tensor (model) parallelism, yet it can significantly **increase batch size**. Larger batch sizes speed up training and reduce the overall number of iterations, thereby **lessening DP’s total gradient communication**. Hence, ZeRO-R provides substantial benefits both in memory savings and training performance.
 
 ## Pipeline Parallel
 
@@ -221,8 +270,6 @@ This setup involves eight nodes with a total of 32 GPUs, each node equipped with
 Zero can be seen as a highly scalable form of DP, compatible with both PP and TP, but typically only suitable for Zero Stage 1.
 
 This limitation arises because introducing Zero Stage 2 gradient partitioning means that each micro-batch operation would require a communication step to aggregate gradients. With PP naturally employing more micro-batches, this increases the communication overhead. Moreover, after introducing PP, the model is layered, and the gradient sizes become 1 / PP_size, reducing the effectiveness of memory savings. Therefore, Zero Stage 2 is generally not used in conjunction with PP.
-
-Furthermore, using Zero allows for **Zero-Offload**, which offloads some optimizer states to the CPU to further save GPU memory. This technique is particularly valuable in scenarios where GPU memory is a limiting factor, enabling larger models or more complex computations without upgrading hardware.
 
 ## Referrence
 
