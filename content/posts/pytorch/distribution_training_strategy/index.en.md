@@ -53,7 +53,7 @@ Additionally, Pytorch has developed the **Fully Sharded Data Parallel (FSDP)**, 
 
 The Zero Redundancy Optimizer, commonly referred to as **Zero**, distributes the model states (parameters, gradients, and optimizer states) across various data parallel processes. This approach eliminates significant memory redundancy and employs a dynamic communication mechanism to share necessary states among devices.
 
-> Note: If you are interested in Zero, you can also read ![zero_paper_summary](../../summary_zero/)
+> Note: If you are interested in Zero, you can also read [zero_paper_summary](../../summary_zero/)
 
 ### Three Stage of Zero
 
@@ -166,9 +166,7 @@ Stage 3:
 - Adding these up: **\(\Psi + \Psi + \Psi = 3 \Psi\)**, which is **1.5x** compared to the \(2 \Psi\) in standard DP.  
 - Note that, unlike Stage 2, we don’t need an all-gather to unify parameters at the end because each GPU permanently maintains only its own partition of the parameters.
 
----
-
-## ZeRO-R: Further Optimizations for Residual Memory
+### ZeRO-R: Further Optimizations for Residual Memory
 
 Beyond ZeRO-DP, **ZeRO-R** addresses **residual memory** consumption, namely activations, temporary buffers, and memory fragmentation. It encompasses the following:
 

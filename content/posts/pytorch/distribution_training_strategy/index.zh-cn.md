@@ -53,7 +53,7 @@ Pytorch DP：
 
 Zero将Optimizer State（优化器状态），梯度和模型参数划分到各个数据并行进程中，消除了大量内存冗余占用，并通过一种动态的通信机制在各设备间共享必要的状态。
 
-> Note: 如果你对Zero有兴趣，可以和![zero_paper_summary](../../zh-cn/summary_zero/)一起阅读
+> Note: 如果你对Zero有兴趣，可以和[zero_paper_summary](../../zh-cn/summary_zero/)一起阅读
 
 ### Zero的三个阶段
 
