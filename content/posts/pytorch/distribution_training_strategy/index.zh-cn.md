@@ -228,6 +228,8 @@ PP 的核心思想是把一个模型的不同层划分到不同 GPU 上，每个
 
 值得指出的是，PP 只需要在相邻模型层传递计算好的批次数据结果，且我们可以通过重叠计算和通信来进一步减少开销，因此 PP 所需通信量是最小的，**在实际训练中一般会把 PP 层跨节点使用，把节点内高带宽通信让给 TP**
 
+>注意：PP尽量不用于 inference，除非显存完全不够。（inference没有足够数据会很多bubble）
+
 ## Tensor Parallel（Model Parallel）
 
 Tensor Parallelism 有时也称为 Model Parallel，属于计算层面的优化，核心思想是每个 GPU 只处理 tensor 的一部分（与PP 处理模型不同层不同，这里 TP 将模型的一层拆分），只在需要时聚合在一起。

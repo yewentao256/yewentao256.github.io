@@ -219,6 +219,8 @@ As illustrated, through a strategic pipeline parallel design, we can reduce bubb
 
 It is worth noting that PP only requires the transmission of batch data results between adjacent model layers. Furthermore, we can overlap computation and communication to further reduce overhead. Therefore, PP generally requires the least amount of communication and is often implemented across nodes, allowing intra-node high bandwidth communication to be reserved for **Tensor Parallelism (TP)**.
 
+>Note: we usually do not use PP for inference unless we don't have enough memory, because for inference, there will not be enough data and therefore a lot of bubbles.
+
 ## Tensor Parallel（Model Parallel）
 
 Tensor Parallelism, also known as Model Parallelism, is a computational optimization technique where each GPU processes only a part of the tensor (unlike Pipeline Parallelism, which handles different layers, Tensor Parallelism splits a single layer of the model) and aggregates the parts only when necessary.
