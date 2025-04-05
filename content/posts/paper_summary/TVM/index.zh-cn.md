@@ -1,7 +1,7 @@
 ---
 title: "Summary: TVM: An Automated End-to-End Optimizing Compiler for Deep Learning"
 date: 2025-03-15T10:13:05+08:00
-categories: ["paper_summary"]
+categories: ["paper_summary", "tvm"]
 summary: "论文阅读总结： 'TVM: An Automated End-to-End Optimizing Compiler for Deep Learning'"
 ---
 
