@@ -1,6 +1,6 @@
 ---
-title: "TVM: 1D convolution CPU Optimization"
-date: 2025-03-31T17:31:05+08:00
+title: "TVM: 1D convolution GPU Optimization"
+date: 2025-04-03T21:50:56+08:00
 categories: ["tvm"]
 summary: "这篇博客展示了使用TVM对1D GPU卷积的优化技术，包括线程组织、内存层次结构利用和低级优化。"
 ---
