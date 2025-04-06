@@ -1,5 +1,5 @@
 ---
-title: "TVM: 1D convolution GPU Optimization"
+title: "TVM: GEMM GPU Optimization"
 date: 2025-04-06T17:06:56+08:00
 categories: ["tvm"]
 summary: "This blog demonstrates optimization techniques for GEMM in GPU using TVM, including thread organization and memory hierarchy exploitation."

@@ -1,5 +1,5 @@
 ---
-title: "TVM: 1D convolution GPU Optimization"
+title: "TVM: GEMM GPU Optimization"
 date: 2025-04-06T17:06:56+08:00
 categories: ["tvm"]
 summary: "本博客展示了使用 TVM 在 GPU 上优化 GEMM（通用矩阵乘法）的技术，包括线程组织和内存层次结构利用"
