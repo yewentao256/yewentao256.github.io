@@ -370,5 +370,5 @@ def conv1d_auto_tune(M, N):
 
 ## 4 附录
 
-- 笔记本（本博客使用的所有代码）：[链接](conv1d_cpu.ipynb)
+- 笔记本（本博客使用的所有代码）：[链接](https://github.com/yewentao256/TVM_tutorial)
 - TVM论文摘要：[链接](../../zh-cn/TVM)

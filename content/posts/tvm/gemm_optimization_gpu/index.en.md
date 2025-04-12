@@ -291,7 +291,7 @@ After exploring 36 different configurations, the AutoTVM tuner found a solution 
 
 ### 2.3 Performance Results
 
-All timings are in milliseconds for a matrix multiplication with `M=1024`, `K=2048`, `N=512` on a GPU:
+For a matrix multiplication with `M=1024`, `K=2048`, `N=512` on a GPU:
 
 | **Implementation**       | **Time (ms)** | **Speedup vs. Naive** | **Speedup vs. Previous** |
 |--------------------------|---------------|------------------------|--------------------------|
@@ -316,5 +316,5 @@ These principles are fundamental to achieving high performance in GPU matrix mul
 
 ## 3. Appendix
 
-- Notebook (all of the code used for this blog): [link](gemm.ipynb)
+- Notebook (all of the code used for this blog): [link](https://github.com/yewentao256/TVM_tutorial)
 - Summary of the TVM paper: [link](../../TVM)

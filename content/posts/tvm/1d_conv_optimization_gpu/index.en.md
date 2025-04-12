@@ -404,7 +404,7 @@ Best Result: 0.0405 ms
 
 ### 2.3 Performance Results
 
-All timings are in milliseconds on a Tesla T4 GPU. Key versions:
+On a Tesla T4 GPU with `M = 16384` and `N = 32`. Key versions:
 
 | **Implementation**    | **Time (ms)** | **Speedup vs. Naive** | **Speedup vs. Previous** |
 |-----------------------|---------------|------------------------|--------------------------|
@@ -424,5 +424,5 @@ The progression from naive to optimized shows how a combination of algorithmic i
 
 ## 3. Appendix
 
-- Notebook (all of the code used for this blog): [link](conv1d_gpu.ipynb)
+- Notebook (all of the code used for this blog): [link](https://github.com/yewentao256/TVM_tutorial)
 - Summary of the TVM paper: [link](../../TVM)

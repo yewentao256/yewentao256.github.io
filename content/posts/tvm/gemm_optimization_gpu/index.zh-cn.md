@@ -318,5 +318,5 @@ AutoTVM 实现探索了一个搜索空间，包括：
 
 ## 3. 附录
 
-- 笔记本（此博客使用的所有代码）：[链接](gemm.ipynb)
+- 笔记本（此博客使用的所有代码）：[链接](https://github.com/yewentao256/TVM_tutorial)
 - TVM 论文摘要：[链接](../../TVM)

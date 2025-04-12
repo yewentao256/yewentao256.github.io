@@ -425,5 +425,5 @@ def conv1d_gpu_template_simple(M, N, dtype="float32"):
 
 ## 3. 附录
 
-- 笔记本（本博客使用的所有代码）：[链接](conv1d_gpu.ipynb)
+- 笔记本（本博客使用的所有代码）：[链接](https://github.com/yewentao256/TVM_tutorial)
 - TVM论文摘要：[链接](../../zh-cn/TVM)

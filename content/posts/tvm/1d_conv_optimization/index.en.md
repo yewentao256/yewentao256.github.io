@@ -349,7 +349,7 @@ Best Result: 0.70 ms
 
 ## 3 Performance Results
 
-All timings are in milliseconds on an x86 CPU (“llvm” target). Key versions:
+On an x86 CPU (“llvm” target) With `M = 4096, N = 128`. Key versions:
 
 | **Implementation**      | **Time (ms)** | **Speedup vs. Naive** |
 |-------------------------|---------------|------------------------|
@@ -368,5 +368,5 @@ All timings are in milliseconds on an x86 CPU (“llvm” target). Key versions:
 
 ## 4 Appendix
 
-- Notebook (all of the code used for this blog): [link](conv1d_cpu.ipynb)
+- Github (all of the code used for this blog): [link](https://github.com/yewentao256/TVM_tutorial)
 - Summary of the TVM paper: [link](../../TVM)

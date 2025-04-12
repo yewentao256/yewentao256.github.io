@@ -312,7 +312,7 @@ The AutoTVM configuration space contained 2,880 possible configurations, and aft
 
 ### 2.3 Performance Results
 
-All timings are in milliseconds for a 2D depthwise convolution with parameters `B=3, C=4, H=16, W=32, K=7` on a GPU:
+For a 2D depthwise convolution with parameters `B=3, C=4, H=16, W=32, K=7` on a GPU:
 
 | **Implementation**       | **Time (ms)** | **Speedup vs. Naive** | **Speedup vs. Previous** |
 |--------------------------|---------------|------------------------|--------------------------|
@@ -332,5 +332,5 @@ Notably, both the manually optimized v3 and v4 implementations, as well as the A
 
 ## 3. Appendix
 
-- Notebook (all of the code used for this blog): [link](conv2d_dw_gpu.ipynb)
+- Notebook (all of the code used for this blog): [link](https://github.com/yewentao256/TVM_tutorial)
 - Summary of the TVM paper: [link](../../TVM)
