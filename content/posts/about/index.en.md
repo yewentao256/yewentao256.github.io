@@ -121,6 +121,12 @@ My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summa
 
 ### Owned Projects
 
+#### TVM Tutorial
+
+- <a href="https://github.com/yewentao256/TVM_tutorial"><img src="https://img.shields.io/github/stars/yewentao256/TVM_tutorial?style=social" alt="GitHub stars" height="20"></a>
+- *Apr 2025*
+- This tutorial series is designed for beginners to learn how to optimize deep learning operations with TVM. Through practical notebooks, we explore step-by-step performance tuning on both CPU and GPU.
+
 #### GAN-Paint
 
 - <a href="https://github.com/yewentao256/GAN-Paint"><img src="https://img.shields.io/github/stars/yewentao256/GAN-Paint?style=social" alt="GitHub stars" height="20"></a>
