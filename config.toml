@@ -174,7 +174,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       minMatchCharLength = 2
       findAllMatches = false
       location = 0
-      threshold = 0.1
+      threshold = 0.05
       distance = 100
       ignoreLocation = true
       useExtendedSearch = false
@@ -578,7 +578,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       title = "GitHub"
 
 [outputs]
-  home = ["HTML", "RSS", "JSON", "JsonFeed"]
+  home = ["HTML", "RSS", "JSON"]
   page = ["HTML", "MarkDown"]
   section = ["HTML", "RSS"]
   taxonomy = ["HTML", "RSS"]
