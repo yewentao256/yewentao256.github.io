@@ -152,14 +152,14 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 
   [params.search]
     enable = true
-    # type ("algolia" (third party service), "fuse")
+    # type of search engine ("algolia", "fuse", "pagefind")
     type = "fuse"
     # maximum content length of the search index
     contentLength = 4000
     placeholder = "search here"
     maxResultLength = 10
     # {{< version 0.2.3 >}} snippet length for search results
-    snippetLength = 50
+    snippetLength = 40
     # {{< version 0.2.1 >}} HTML tag used to highlight search results
     highlightTag = "em"
     # {{< version 0.2.4 >}} Whether to use baseURL-based absolute paths in the search index
@@ -174,11 +174,18 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       minMatchCharLength = 2
       findAllMatches = false
       location = 0
-      threshold = 0.3
+      threshold = 0.1
       distance = 100
-      ignoreLocation = false
+      ignoreLocation = true
       useExtendedSearch = false
       ignoreFieldNorm = false
+    [params.search.pagefind]
+      # https://pagefind.app/docs/search-config/#available-options
+      # run `npx pagefind --site $YOUR_PUBLIC_DIR` after site build to create pagefind index
+      termFrequency = 1.0
+      pageLength = 0.75
+      termSimilarity = 1.0
+      termSaturation = 1.4
   
   [params.home]
     rss = 10
@@ -571,7 +578,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       title = "GitHub"
 
 [outputs]
-  home = ["HTML", "RSS", "JSON"]
+  home = ["HTML", "RSS", "JSON", "JsonFeed"]
   page = ["HTML", "MarkDown"]
   section = ["HTML", "RSS"]
   taxonomy = ["HTML", "RSS"]
