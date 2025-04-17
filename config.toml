@@ -238,81 +238,50 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   [params.page]
     hiddenFromHomePage = false
     hiddenFromSearch = false
-    # 是否使用 twemoji
     twemoji = false
-    # 是否使用 lightgallery
     lightgallery = false
-    # 是否使用 ruby 扩展语法
     ruby = true
-    # 是否使用 fraction 扩展语法
     fraction = true
-    # 是否在文章页面显示原始 Markdown 文档链接
     linkToMarkdown = true
-    # DoIt 新增 | 0.2.14 配置文章原始文件的链接
     linkToSource = "https://github.com/yewentao256/yewentao256.github.io/blob/main/content/{path}"
-    # DoIt 新增 | 0.2.13 配置编辑文章的链接
     linkToEdit = "https://github.com/yewentao256/yewentao256.github.io/edit/main/content/{path}"
-    # DoIt 新增 | 0.2.14 配置提交错误的链接
     linkToReport = "https://github.com/yewentao256/yewentao256.github.io/issues/new?title=[bug]%20{title}&body=|Field|Value|%0A|-|-|%0A|Title|{title}|%0A|Url|{url}|%0A|Filename|https://github.com/yewentao256/yewentao256.github.io/blob/main/content/{path}|"
     
-    # 是否在 RSS 中显示全文内容
     rssFullText = false
 
-    # DoIt 新增 | 0.2.13 过时文章提示
     [params.page.outdatedArticleReminder]
       enable = false
-      # 如果文章最后更新于 90 天之前，显示提醒
       reminder = 90
-      # 如果文章最后更新于 180 天之前，显示警告
       warning = 180
     
-    # 目录配置
     [params.page.toc]
-      # 是否使用目录
       enable = true
-      # 是否保持使用文章前面的静态目录
       keepStatic = false
-      # 是否使侧边目录自动折叠展开
       auto = true
-    # 代码配置
     [params.page.code]
-      # 是否显示代码块的复制按钮
       copy = true
-      # 默认展开显示的代码行数
       maxShownLines = 30
-    # DoIt 新增 | 0.2.14 表格配置
+
     [params.page.table]
-      # 是否开启表格排序
       sort = true
-    # KaTeX 数学公式
     [params.page.math]
       enable = true
-      # 默认行内定界符是 $ ... $ 和 \( ... \)
       inlineLeftDelimiter = ""
       inlineRightDelimiter = ""
-      # 默认块定界符是 $$ ... $$, \[ ... \], \begin{equation} ... \end{equation} 和一些其它的函数
       blockLeftDelimiter = ""
       blockRightDelimiter = ""
-      # KaTeX 插件 copy_tex
+      # KaTeX plugin copy_tex
       copyTex = true
-      # KaTeX 插件 mhchem
+      # KaTeX plugin mhchem
       mhchem = true
     [params.page.mapbox]
-      # Mapbox GL JS 的 access token
       accessToken = ""
-      # 浅色主题的地图样式
       lightStyle = "mapbox://styles/mapbox/light-v10?optimize=true"
-      # 深色主题的地图样式
       darkStyle = "mapbox://styles/mapbox/dark-v10?optimize=true"
-      # 是否添加 NavigationControl
       navigation = true
-      # 是否添加 GeolocateControl
       geolocate = true
-      # 是否添加 ScaleControl
       scale = true
-      # 是否添加 FullscreenControl
       fullscreen = true
-    # 文章页面的分享信息设置
     [params.page.share]
       enable = true
       Twitter = true
@@ -338,16 +307,12 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       Skype = false
       Trello = false
       Mix = false
-    # DoIt 更改 | 0.2.0 评论系统设置
+
     [params.page.comment]
       enable = true
-      # Disqus 评论系统设置
       [params.page.comment.disqus]
-        # DoIt 新增 | 0.1.1
         enable = false
-        # Disqus 的 shortname, 用来在文章中启用 Disqus 评论系统
         shortname = ""
-      # Gitalk 评论系统设置
       [params.page.comment.gitalk]
         # DoIt 新增 | 0.1.1
         enable = false
@@ -355,7 +320,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         repo = ""
         clientId = ""
         clientSecret = ""
-      # Valine 评论系统设置
       [params.page.comment.valine]
         enable = false
         appId = ""
@@ -370,15 +334,8 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         highlight = true
         enableQQ = false
         serverURLs = ""
-        # DoIt 新增 | 0.2.6 emoji 数据文件名称, 默认是 "google.yml"
-        # ("apple.yml", "google.yml", "facebook.yml", "twitter.yml")
-        # 位于 "themes/DoIt/assets/data/emoji/" 目录
-        # 可以在你的项目下相同路径存放你自己的数据文件:
-        # "assets/data/emoji/"
         emoji = ""
-      # Waline 评论系统设置
       [params.page.comment.waline]
-        # DoIt 更改 | 0.2.14
         enable = false
         serverURL = ""
         pageview = true
@@ -392,14 +349,12 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         # imageUploader = false
         # highlighter = false
         # texRenderer = false
-      # Facebook 评论系统设置
       [params.page.comment.facebook]
         enable = false
         width = "100%"
         numPosts = 10
         appId = ""
         languageCode = "zh_CN"
-      # DoIt 新增 | 0.2.0 Telegram Comments 评论系统设置
       [params.page.comment.telegram]
         enable = false
         siteID = ""
@@ -410,10 +365,8 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         dislikes = false
         outlined = false
         dark = false
-      # DoIt 新增 | 0.2.0 Commento 评论系统设置
       [params.page.comment.commento]
         enable = false
-      # DoIt 新增 | 0.2.5 Utterances 评论系统设置
       [params.page.comment.utterances]
         enable = false
         # owner/repo
@@ -422,16 +375,14 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         label = ""
         lightTheme = "github-light"
         darkTheme = "github-dark"
-      # DoIt 新增 | 0.2.12 Twikoo 评论系统设置
       [params.page.comment.twikoo]
         enable = false
         envId = ""
         region = ""
         path = ""
-        cloudbase = true # boolean : true / false. # 是否部署在腾讯云 CloudBase
+        cloudbase = true # boolean : true / false.
         visitor = true
         commentCount = true
-      # DoIt 新增 | 0.2.12 Vssue 评论系统设置
       [params.page.comment.vssue]
         enable = false
         platform = "" # ("bitbucket", "gitea", "gitee", "github", "gitlab")
@@ -439,7 +390,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         repo = ""
         clientId = ""
         clientSecret = ""
-      # DoIt 新增 | 0.2.13 Remark42 评论系统设置
       [params.page.comment.remark42]
         enable = false
         host = ""
@@ -447,7 +397,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         max_shown_comments = 15
         show_email_subscription = true
         simple_view = false
-      # DoIt 新增 | 0.2.13 giscus 评论系统设置
+      # giscus comment system settings
       [params.page.comment.giscus]
         enable = true
         # owner/repo
@@ -462,7 +412,6 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         lightTheme = "light"
         darkTheme = "dark"
         dataLang = "zh-CN"
-      # artalk 评论系统设置
       [page.comment.artalk]
         enable = false
         server = ""
@@ -472,61 +421,31 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
         lightbox = false
         pageview = true
         commentCount = true
-    # DoIt 新增 | 0.2.7 第三方库配置
     [params.page.library]
       [params.page.library.css]
-        # someCSS = "some.css"
-        # DoIt 新增 | 0.2.14 更多第三方库配置
-        # [params.page.library.css.someOtherCSS]
-        #   src = "someOther.css"
-        #   defer = true
-        #   attr = "customAttribute"
-        # 位于 "assets/"
-        # 或者
-        # someCSS = "https://cdn.example.com/some.css"
       [params.page.library.js]
-        # someJavaScript = "some.js"
-        # DoIt 新增 | 0.2.14 更多第三方库配置
-        # [params.page.library.js.someOtherJavaScript]
-        #   src = "someOther.js"
-        #   defer = false
-        #   async = true
-        #   attr = "customAttribute"
-        # 位于 "assets/"
-        # 或者
-        # someJavaScript = "https://cdn.example.com/some.js"
-    # DoIt 更改 | 0.2.10 页面 SEO 配置
     [params.page.seo]
-      # 图片 URL
       images = []
-      # 出版者信息
       [params.page.seo.publisher]
         name = ""
         logoUrl = ""
-    # DoIt 新增 | 0.2.14 相关文章推荐配置
     [params.page.related]
       enable = true
       count = 5
 
-  # DoIt 新增 | 0.2.13 赞赏配置
+  # sponsor settings
   [params.sponsor]
-    enable = false
-    bio = "如果你觉得这篇文章对你有所帮助，欢迎赞赏~"
-    link = "" # 你的赞赏页面的地址
-    custom = "" # 自定义 HTML
+    enable = true
+    bio = "Your star ⭐ is my biggest motivation!"
+    link = "https://github.com/yewentao256/yewentao256.github.io"
+    custom = ""
 
-  # TypeIt 配置
   [params.typeit]
-    # 每一步的打字速度 (单位是毫秒)
     speed = 150
-    # 光标的闪烁速度 (单位是毫秒)
     cursorSpeed = 1000
-    # 光标的字符 (支持 HTML 格式)
     cursorChar = "|"
-    # 打字结束之后光标的持续时间 (单位是毫秒, "-1" 代表无限大)
     duration = -1
 
-  # 网站验证代码，用于 Google/Bing/Yandex/Pinterest/Baidu
   [params.verification]
     google = ""
     bing = ""
@@ -534,64 +453,43 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     pinterest = ""
     baidu = ""
 
-  # 网站 SEO 配置
   [params.seo]
-    # 图片 URL
     image = ""
-    # 缩略图 URL
     thumbnailUrl = ""
 
-  # DoIt 新增 | 0.2.0 网站分析配置
   [params.analytics]
     enable = false
     # Google Analytics
     [params.analytics.google]
       id = ""
-      # 是否匿名化用户 IP
       anonymizeIP = true
     # Fathom Analytics
     [params.analytics.fathom]
       id = ""
-      # 自行托管追踪器时的主机路径
       server = ""
-    # DoIt 新增 | 0.2.13 Baidu Analytics
     [params.analytics.baidu]
       id = ""
-    # DoIt 新增 | 0.2.13 Umami Analytics
     [params.analytics.umami]
       data_website_id = ""
       src = ""
       data_host_url = ""
       data_domains = ""
-    # DoIt 新增 | 0.2.13 Plausible Analytics
     [params.analytics.plausible]
       data_domain = ""
       src = ""
-    # DoIt 新增 | 0.2.14 Cloudflare Analytics
     [params.analytics.cloudflare]
       token = ""
 
-    # DoIt 新增 | 0.2.7 Cookie 许可配置
   [params.cookieconsent]
     enable = true
-    # 用于 Cookie 许可横幅的文本字符串
     [params.cookieconsent.content]
       message = ""
       dismiss = ""
       link = ""
-  # DoIt 更改 | 0.2.7 第三方库文件的 CDN 设置
   [params.cdn]
-    # CDN 数据文件名称, 默认不启用
-    # ("jsdelivr.yml")
-    # 位于 "themes/DoIt/assets/data/cdn/" 目录
-    # 可以在你的项目下相同路径存放你自己的数据文件:
-    # "assets/data/cdn/"
     data = ""
-  # DoIt 新增 | 0.2.8 兼容性设置
   [params.compatibility]
-    # 是否使用 Polyfill.io 来兼容旧式浏览器
     polyfill = false
-    # 是否使用 object-fit-images 来兼容旧式浏览器
     objectFit = false
 
 [languages]
@@ -672,15 +570,12 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
       url = "https://github.com/yewentao256"
       title = "GitHub"
 
-# 用于 Hugo 输出文档的设置
 [outputs]
-  # DoIt 更改 | 0.2.0
   home = ["HTML", "RSS", "JSON"]
   page = ["HTML", "MarkDown"]
   section = ["HTML", "RSS"]
   taxonomy = ["HTML", "RSS"]
 
-# 用于分类的设置
 [taxonomies]
 # author = "authors"
 category = "categories"
