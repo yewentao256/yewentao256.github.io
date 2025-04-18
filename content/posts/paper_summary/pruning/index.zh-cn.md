@@ -2,7 +2,7 @@
 title: "Summary: Learning both Weights and Connections for NNs"
 date: 2025-02-22T10:38:18+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结 'Learning both Weights and Connections for Efficient Neural Networks'"
+summary: "论文速览 'Learning both Weights and Connections for Efficient Neural Networks'"
 ---
 
 > 本博客使用 `O1` 翻译，如果有偏差请阅读英文原版

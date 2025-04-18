@@ -2,7 +2,7 @@
 title: "Summary: Large Scale Distributed Deep Networks"
 date: 2025-03-18T9:55:55+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结： 'Large Scale Distributed Deep Networks'"
+summary: "论文速览： 'Large Scale Distributed Deep Networks'"
 ---
 
 > 本博客使用`o1`翻译，如有冲突请优先参考英文原文

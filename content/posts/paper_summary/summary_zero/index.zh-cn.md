@@ -2,7 +2,7 @@
 title: "Summary: ZeRO: Memory Optimizations Toward Training Trillion Parameter Models"
 date: 2025-04-02T15:06:56+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'ZeRO: Memory Optimizations Toward Training Trillion Parameter Models'"
+summary: "论文速览：'ZeRO: Memory Optimizations Toward Training Trillion Parameter Models'"
 ---
 
 > 本博客使用`claude-3.7`翻译，如有冲突请优先参考英文原文

@@ -2,7 +2,7 @@
 title: "Summary: TinyML"
 date: 2025-03-03T10:25:13+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'TinyML: Current Progress, Research Challenges, and Future Roadmap'"
+summary: "论文速览：'TinyML: Current Progress, Research Challenges, and Future Roadmap'"
 ---
 
 > 本博客使用`o1`翻译，如有冲突请优先参考英文原文

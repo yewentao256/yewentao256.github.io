@@ -2,7 +2,7 @@
 title: "Summary: DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning"
 date: 2025-04-13T10:20:05+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结： 'Incentivizing Reasoning Capability in LLMs via Reinforcement Learning'"
+summary: "论文速览： 'Incentivizing Reasoning Capability in LLMs via Reinforcement Learning'"
 ---
 
 > 本博客使用`o1`翻译，如有冲突请优先参考英文原文

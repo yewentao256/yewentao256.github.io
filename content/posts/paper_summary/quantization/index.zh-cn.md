@@ -2,7 +2,7 @@
 title: "Summary: Quantization and Training of Neural Networks"
 date: 2025-02-15T10:04:18+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结 'Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference'"
+summary: "论文速览 'Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference'"
 ---
 
 ## 等待被翻译

@@ -2,7 +2,7 @@
 title: "Summary: NAS with RL"
 date: 2025-02-25T10:15:13+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'Neural Architecture Search with Reinforcement Learning'"
+summary: "论文速览：'Neural Architecture Search with Reinforcement Learning'"
 ---
 
 > 本博客使用`o3-mini-high`翻译，如有冲突请优先参考英文原文

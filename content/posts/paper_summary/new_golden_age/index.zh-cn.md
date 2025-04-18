@@ -2,7 +2,7 @@
 title: "Summary: A New Golden Age for Computer Architecture"
 date: 2025-01-25T14:02:12+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'A New Golden Age for Computer Architecture'"
+summary: "论文速览：'A New Golden Age for Computer Architecture'"
 ---
 
 ## 等待被翻译

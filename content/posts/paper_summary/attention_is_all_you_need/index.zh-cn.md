@@ -2,7 +2,7 @@
 title: "Summary: Attention is all you need"
 date: 2025-01-30T14:02:12+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'Attention is all you need'"
+summary: "论文速览：'Attention is all you need'"
 ---
 
 ## 等待被翻译

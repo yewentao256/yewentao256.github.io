@@ -2,7 +2,7 @@
 title: "Summary: In-Datacenter Performance Analysis of a Tensor Processing Unit"
 date: 2025-02-04T18:05:32+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结：'In-Datacenter Performance Analysis of a Tensor Processing Unit'"
+summary: "论文速览：'In-Datacenter Performance Analysis of a Tensor Processing Unit'"
 ---
 
 ## 等待被翻译

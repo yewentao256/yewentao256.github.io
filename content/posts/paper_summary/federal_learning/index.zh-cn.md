@@ -2,7 +2,7 @@
 title: "Summary: Communication-Efficient Learning of Deep Networks from Decentralized Data"
 date: 2025-03-25T14:17:56+08:00
 categories: ["paper_summary"]
-summary: "论文阅读总结： 'Communication-Efficient Learning of Deep Networks from Decentralized Data'"
+summary: "论文速览： 'Communication-Efficient Learning of Deep Networks from Decentralized Data'"
 ---
 
 > 本博客使用`o1`翻译，如有冲突请优先参考英文原文
