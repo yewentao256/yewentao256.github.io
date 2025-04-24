@@ -16,6 +16,8 @@ LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summary](https://wentao.site/categories/paper_summary/), [CSAPP](https://wentao.site/categories/csapp/), and [more](https://wentao.site/categories/)
 
+Public presentations: [Link](https://github.com/yewentao256/Public-Talks)
+
 ---
 
 ## 1. Patents
