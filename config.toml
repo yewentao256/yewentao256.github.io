@@ -171,7 +171,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     [params.search.fuse]
       # {{< version 0.2.12 >}} https://fusejs.io/api/options.html
       isCaseSensitive = false
-      minMatchCharLength = 2
+      minMatchCharLength = 4
       findAllMatches = false
       location = 0
       threshold = 0.05
