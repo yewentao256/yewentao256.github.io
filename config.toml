@@ -444,8 +444,15 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   [params.sponsor]
     enable = true
     bio = "Your star ⭐ is my biggest motivation!"
-    link = "https://github.com/yewentao256/yewentao256.github.io"
-    custom = ""
+    link = ""
+    custom = '''
+    <div style="display:flex;justify-content:center">
+      <a href="https://github.com/yewentao256/yewentao256.github.io">
+        <img src="https://img.shields.io/github/stars/yewentao256/yewentao256.github.io?style=social"
+            alt="GitHub stars" height="20">
+      </a>
+    </div>
+    '''
 
   [params.typeit]
     speed = 150
