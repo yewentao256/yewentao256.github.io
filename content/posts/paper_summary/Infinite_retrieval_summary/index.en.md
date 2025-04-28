@@ -7,9 +7,9 @@ summary: "Summary for paper 'Infinite Retrieval: Attention Enhanced LLMs in Long
 
 ## 0. Materials
 
-[Paper](https://arxiv.org/pdf/2502.12962)
+[Paper][https://arxiv.org/pdf/2502.12962](https://arxiv.org/pdf/2502.12962)
 
-[Github](https://github.com/CapitalCode2020/InfiniRetri2)
+[Github][https://github.com/CapitalCode2020/InfiniRetri2](https://github.com/CapitalCode2020/InfiniRetri2)
 
 ## 1. What is the paper about?
 
