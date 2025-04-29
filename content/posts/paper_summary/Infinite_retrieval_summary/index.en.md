@@ -13,6 +13,8 @@ summary: "Summary for paper 'Infinite Retrieval: Attention Enhanced LLMs in Long
 
 ## 1. What is the paper about?
 
+![image](workflow.png)
+
 - Proposes **InfiniRetri**, a training-free framework that equips any Transformer LLM with "infinite" context length by treating the model's own **attention scores** as a retrieval signal.​
 
 - **Workflow**: split long text into chunks → input: chunk + previous cached sentences → read **final-layer** attention → 1-D convolve to score short phrases (rather than scoring single token) → cache the sentences containing the Top-K tokens → slide to next chunk.​

@@ -15,6 +15,8 @@ summary: "论文速览：'Infinite Retrieval: Attention Enhanced LLMs in Long-Co
 
 ## 1. What is the paper about?
 
+![image](workflow.png)
+
 - 提出了 **InfiniRetri**，一个无需训练的框架，通过将模型自身的 **attention 分数** 视为检索信号，使任何 Transformer LLM 具备“无限”上下文长度。  
 - **工作流程**：将长文本拆分为块 → 输入：块 + 之前缓存的句子 → 读取 **最后一层** 注意力 → 对短语（一维卷积而非单个 token）打分 → 缓存包含 Top-K token 的句子 → 滑动到下一个块。  
 - 使用 **0.5 B 规模的 LLM** 在 **1 M-token** 输入的 NIH 任务中达到 **100 % 准确率**，并在 **LongBench QA 任务** 上取得显著提升，同时将推理 token 数量减少约 90–95 %。  
