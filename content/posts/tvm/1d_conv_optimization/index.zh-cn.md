@@ -2,7 +2,7 @@
 title: "TVM: 1D convolution CPU Optimization"
 date: 2025-03-31T17:31:05+08:00
 categories: ["tvm"]
-summary: "这篇博客介绍了使用 TVM 对 CPU conv1D 逐步进行优化的例子，包含 parallelization, loop tiling, vectorization, unrolling 等技巧。"
+summary: "本文演示如何在 TVM 中加速 1-D 卷积：从缩减计算边界、并行化、向量化到显式展开与自动调优。"
 ---
 
 > 本博客使用`claude-3.7-sonet`翻译，如有冲突请优先参考英文原文
@@ -99,7 +99,7 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 ```py
 # 优化v0：缩小k的范围以减少if-else
-def make_conv1d_cpu_scheduler_v0(M, N, verbose=True):
+def make_conv1d_cpu_scheduler_v0(M, N):
     A = te.placeholder((M,), name="A", dtype="float32")
     W = te.placeholder((N,), name="W", dtype="float32")
 
@@ -114,10 +114,7 @@ def make_conv1d_cpu_scheduler_v0(M, N, verbose=True):
     )
 
     s = te.create_schedule(B.op)
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -145,14 +142,11 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 ```py
 # 优化v1: v0 + 并行
-def make_conv1d_cpu_scheduler_v1(M, N, verbose=True):
+def make_conv1d_cpu_scheduler_v1(M, N):
     s, A, W, B = make_conv1d_cpu_scheduler_v0(M, N, False)
     n_axis = B.op.axis[0]   # 输出轴
     s[B].parallel(n_axis)   # 对输出轴并行
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -181,17 +175,14 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 ```py
 # 优化v2: v0 + 并行 + 拆分 + 向量化
-def make_conv1d_cpu_scheduler_v2(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v2(M, N, factor=8):
     s, A, W, B = make_conv1d_cpu_scheduler_v0(M, N, False)
     n_axis = B.op.axis[0]
     # AVX2，向量化带宽=256。8 * float32 或 16 * float16
     outer, inner = s[B].split(n_axis, factor=factor)
     s[B].parallel(outer)
     s[B].vectorize(inner)   # 使用CPU SIMD
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -230,16 +221,13 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 ```py
 # 优化v3: v2 + k轴拆分 + 展开
-def make_conv1d_cpu_scheduler_v3(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v3(M, N, factor=8):
     s, A, W, B = make_conv1d_cpu_scheduler_v2(M, N, factor, False)
 
     k_axis = B.op.reduce_axis[0]
     k_outer, k_inner = s[B].split(k_axis, factor=factor)
     s[B].unroll(k_inner)  # 展开以减少循环开销
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -282,7 +270,7 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 ```py
 # 优化v4: 计算重构(最小化if-else) + 并行 + 拆分 + 向量化
-def make_conv1d_cpu_scheduler_v4(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v4(M, N, factor=8):
     A = te.placeholder((M,), name="A", dtype="float32")
     W = te.placeholder((N,), name="W", dtype="float32")
     k = te.reduce_axis((0, N), name="k")
@@ -304,10 +292,7 @@ def make_conv1d_cpu_scheduler_v4(M, N, factor=8, verbose=True):
     outer, inner = s[B].split(n_axis, factor=factor)
     s[B].parallel(outer)
     s[B].vectorize(inner)   # CPU SIMD使用
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -335,6 +320,77 @@ def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.B
 
 if语句也优化为`if 0 <= cse_var_1 and cse_var_1 < 4096`，所有这些结合起来带来了巨大的性能提升。
 
+### 1.7 v5：综合优化
+
+在 v5 中添加两条 stage pragma，强制 TVM 将八通道内层循环展开为直线代码。
+
+
+```py
+def make_conv1d_cpu_scheduler_v5(M, N, factor=8):
+    A = te.placeholder((M,), name="A", dtype="float32")
+    W = te.placeholder((N,), name="W", dtype="float32")
+    k = te.reduce_axis((0, N), name="k")
+    B = te.compute(
+        (M + N - 1,),
+        lambda n: te.sum(
+            tvm.tir.if_then_else(
+                tvm.tir.all(n - k >= 0, n - k < M),
+                A[n - k] * W[k],
+                tvm.tir.const(0.0, "float32")
+            ),
+            axis=k
+        ),
+        name="B"
+    )
+
+    s = te.create_schedule(B.op)
+    n_axis = B.op.axis[0]
+
+    outer, inner = s[B].split(n_axis, factor=factor)
+    s[B].parallel(outer)
+    s[B].vectorize(inner)
+    k_axis = B.op.reduce_axis[0]
+    s[B].pragma(outer, "auto_unroll_max_step", 16)
+    s[B].pragma(outer, "unroll_explicit", True)
+
+    return s, A, W, B
+```
+
+IR:
+
+```py
+def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.Buffer((4223,), "float32")):
+    T.func_attr({"from_legacy_te_schedule": T.bool(True), "tir.noalias": T.bool(True)})
+    for n_outer in T.parallel(528):
+        cse_var_1: T.int32 = n_outer * 8
+        B[cse_var_1] = T.float32(0)
+        B[cse_var_1 + 1] = T.float32(0)
+        B[cse_var_1 + 2] = T.float32(0)
+        B[cse_var_1 + 3] = T.float32(0)
+        B[cse_var_1 + 4] = T.float32(0)
+        B[cse_var_1 + 5] = T.float32(0)
+        B[cse_var_1 + 6] = T.float32(0)
+        if T.likely(n_outer < 527):
+            B[cse_var_1 + 7] = T.float32(0)
+        for k in range(128):
+            cse_var_8: T.int32 = cse_var_1 - k
+            cse_var_7: T.int32 = cse_var_1 + 6
+            cse_var_6: T.int32 = cse_var_1 + 5
+            cse_var_5: T.int32 = cse_var_1 + 4
+            cse_var_4: T.int32 = cse_var_1 + 3
+            cse_var_3: T.int32 = cse_var_1 + 2
+            cse_var_2: T.int32 = cse_var_1 + 1
+            B[cse_var_1] = B[cse_var_1] + T.if_then_else(0 <= cse_var_8 and cse_var_8 < 4096, A[cse_var_8] * W[k], T.float32(0))
+            B[cse_var_2] = B[cse_var_2] + T.if_then_else(-1 <= cse_var_8 and cse_var_8 < 4095, A[cse_var_2 - k] * W[k], T.float32(0))
+            B[cse_var_3] = B[cse_var_3] + T.if_then_else(-2 <= cse_var_8 and cse_var_8 < 4094, A[cse_var_3 - k] * W[k], T.float32(0))
+            # ... same for 4 5 6 7
+            if T.likely(n_outer < 527):
+                cse_var_9: T.int32 = cse_var_1 + 7
+                B[cse_var_9] = B[cse_var_9] + T.if_then_else(-7 <= cse_var_8 and cse_var_8 < 4089, A[cse_var_9 - k] * W[k], T.float32(0))
+```
+
+更大的直线代码块仍可容纳于 L1-I 缓存中，因此省去的循环簿记和分支误预测成本弥补了代码体积的增长——同样的 4096×128 卷积从 `0.566 ms` 下降到 `0.411 ms`。
+
 ## 2 AutoTVM
 
 我们定义了一个参数化搜索空间（i和k的拆分、向量化开关、展开因子等），并让AutoTVM运行。它尝试不同的配置，测量它们，并选择最佳配置。
@@ -361,10 +417,11 @@ def conv1d_auto_tune(M, N):
 | **v2** (+向量化)     | ~16.04        | 1.52×                 |
 | **v3** (+展开)        | ~14.60        | 1.67×                 |
 | **v4** (重构)       | ~0.57         | 43.03×                |
+| **v5** (Combined)       | ~0.41         | 59.39×                |
 | **AutoTVM** (50次尝试) | ~0.70         | 34.79×                |
 | **NumPy**               | ~0.21         | ~116× (vs. 朴素)     |
 
-1. **朴素 vs. v4：** 我们看到通过逐步减少开销并利用并行性和SIMD，时间从24.35 ms大幅下降到0.57 ms。
+1. **朴素 vs. v5：** 我们看到通过逐步减少开销并利用并行性和SIMD，时间从24.35 ms大幅下降到0.41 ms。
 2. **AutoTVM：** 自动调优收敛到0.70 ms—在这种配置下略慢于我们最好的手动调度，但仍然比朴素实现好得多。
 3. **NumPy参考：** NumPy为~0.21 ms，表明高度优化的库（如MKL）仍然可以更快。
 

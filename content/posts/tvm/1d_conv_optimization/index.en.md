@@ -66,9 +66,6 @@ def make_conv1d_cpu_scheduler_naive(M, N):
         name="B",
     )
     s = te.create_schedule(B.op)
-    print("=" * 100)
-    print(tvm.lower(s, [A, W, B], simple_mode=True))
-    print("=" * 100)
 
     return s, A, W, B
 ```
@@ -97,7 +94,7 @@ Code:
 
 ```py
 # optimize v0: shrink the range of k to reduce if else
-def make_conv1d_cpu_scheduler_v0(M, N, verbose=True):
+def make_conv1d_cpu_scheduler_v0(M, N):
     A = te.placeholder((M,), name="A", dtype="float32")
     W = te.placeholder((N,), name="W", dtype="float32")
 
@@ -112,10 +109,7 @@ def make_conv1d_cpu_scheduler_v0(M, N, verbose=True):
     )
 
     s = te.create_schedule(B.op)
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -143,14 +137,11 @@ Code:
 
 ```py
 # optimize v1: v0 + parallel
-def make_conv1d_cpu_scheduler_v1(M, N, verbose=True):
+def make_conv1d_cpu_scheduler_v1(M, N):
     s, A, W, B = make_conv1d_cpu_scheduler_v0(M, N, False)
     n_axis = B.op.axis[0]   # output axis
     s[B].parallel(n_axis)   # parallel for output axis
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -179,17 +170,14 @@ Code:
 
 ```py
 # optimize v2: v0 + parallel + split + vectorize
-def make_conv1d_cpu_scheduler_v2(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v2(M, N, factor=8):
     s, A, W, B = make_conv1d_cpu_scheduler_v0(M, N, False)
     n_axis = B.op.axis[0]
     # AVX2, bw=256 for vectorization. 8 * float32 or 16 * float16
     outer, inner = s[B].split(n_axis, factor=factor)
     s[B].parallel(outer)
     s[B].vectorize(inner)   # CPU SIMD usage
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -228,16 +216,12 @@ Code:
 
 ```py
 # optimize v3: v2 + k_axis split + unroll
-def make_conv1d_cpu_scheduler_v3(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v3(M, N, factor=8):
     s, A, W, B = make_conv1d_cpu_scheduler_v2(M, N, factor, False)
 
     k_axis = B.op.reduce_axis[0]
     k_outer, k_inner = s[B].split(k_axis, factor=factor)
     s[B].unroll(k_inner)  # unroll to reduce loop overhead
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
     return s, A, W, B
 ```
 
@@ -280,7 +264,7 @@ Code:
 
 ```py
 # optimize v4: compute refactor(minimize if-else) + parallel + split + vectorize
-def make_conv1d_cpu_scheduler_v4(M, N, factor=8, verbose=True):
+def make_conv1d_cpu_scheduler_v4(M, N, factor=8):
     A = te.placeholder((M,), name="A", dtype="float32")
     W = te.placeholder((N,), name="W", dtype="float32")
     k = te.reduce_axis((0, N), name="k")
@@ -302,10 +286,7 @@ def make_conv1d_cpu_scheduler_v4(M, N, factor=8, verbose=True):
     outer, inner = s[B].split(n_axis, factor=factor)
     s[B].parallel(outer)
     s[B].vectorize(inner)   # CPU SIMD usage
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, W, B], simple_mode=True))
-        print("=" * 100)
+
     return s, A, W, B
 ```
 
@@ -333,6 +314,76 @@ Originally, we calculate by `B[n] = Σ(k=0→4095) A[k] * W[n-k]`. Now we change
 
 The if statement is also optimized to `if 0 <= cse_var_1 and cse_var_1 < 4096`, all of this combined make a huge performance improvement
 
+### 1.7 v5: Combine Together
+
+In v5 we add two stage pragmas that force TVM to materialise the eight-lane inner loop as straight-line code.
+
+```py
+def make_conv1d_cpu_scheduler_v5(M, N, factor=8):
+    A = te.placeholder((M,), name="A", dtype="float32")
+    W = te.placeholder((N,), name="W", dtype="float32")
+    k = te.reduce_axis((0, N), name="k")
+    B = te.compute(
+        (M + N - 1,),
+        lambda n: te.sum(
+            tvm.tir.if_then_else(
+                tvm.tir.all(n - k >= 0, n - k < M),
+                A[n - k] * W[k],
+                tvm.tir.const(0.0, "float32")
+            ),
+            axis=k
+        ),
+        name="B"
+    )
+
+    s = te.create_schedule(B.op)
+    n_axis = B.op.axis[0]
+
+    outer, inner = s[B].split(n_axis, factor=factor)
+    s[B].parallel(outer)
+    s[B].vectorize(inner)
+    k_axis = B.op.reduce_axis[0]
+    s[B].pragma(outer, "auto_unroll_max_step", 16)
+    s[B].pragma(outer, "unroll_explicit", True)
+
+    return s, A, W, B
+```
+
+IR:
+
+```py
+def main(A: T.Buffer((4096,), "float32"), W: T.Buffer((128,), "float32"), B: T.Buffer((4223,), "float32")):
+    T.func_attr({"from_legacy_te_schedule": T.bool(True), "tir.noalias": T.bool(True)})
+    for n_outer in T.parallel(528):
+        cse_var_1: T.int32 = n_outer * 8
+        B[cse_var_1] = T.float32(0)
+        B[cse_var_1 + 1] = T.float32(0)
+        B[cse_var_1 + 2] = T.float32(0)
+        B[cse_var_1 + 3] = T.float32(0)
+        B[cse_var_1 + 4] = T.float32(0)
+        B[cse_var_1 + 5] = T.float32(0)
+        B[cse_var_1 + 6] = T.float32(0)
+        if T.likely(n_outer < 527):
+            B[cse_var_1 + 7] = T.float32(0)
+        for k in range(128):
+            cse_var_8: T.int32 = cse_var_1 - k
+            cse_var_7: T.int32 = cse_var_1 + 6
+            cse_var_6: T.int32 = cse_var_1 + 5
+            cse_var_5: T.int32 = cse_var_1 + 4
+            cse_var_4: T.int32 = cse_var_1 + 3
+            cse_var_3: T.int32 = cse_var_1 + 2
+            cse_var_2: T.int32 = cse_var_1 + 1
+            B[cse_var_1] = B[cse_var_1] + T.if_then_else(0 <= cse_var_8 and cse_var_8 < 4096, A[cse_var_8] * W[k], T.float32(0))
+            B[cse_var_2] = B[cse_var_2] + T.if_then_else(-1 <= cse_var_8 and cse_var_8 < 4095, A[cse_var_2 - k] * W[k], T.float32(0))
+            B[cse_var_3] = B[cse_var_3] + T.if_then_else(-2 <= cse_var_8 and cse_var_8 < 4094, A[cse_var_3 - k] * W[k], T.float32(0))
+            # ... same for 4 5 6 7
+            if T.likely(n_outer < 527):
+                cse_var_9: T.int32 = cse_var_1 + 7
+                B[cse_var_9] = B[cse_var_9] + T.if_then_else(-7 <= cse_var_8 and cse_var_8 < 4089, A[cse_var_9 - k] * W[k], T.float32(0))
+```
+
+The larger straight-line block still fits the L1-I cache, so the removed loop bookkeeping and branch mis-prediction cost outweigh the extra code size. The same 4096×128 1-D convolution thereby drops from `0.566 ms → 0.411 ms`.
+
 ## 2 AutoTVM
 
 We define a parameterized search space (splits of \(i\) and \(k\), vectorization toggles, unroll factors, etc.) and let AutoTVM run. It tries different configurations, measures them, and picks the best.
@@ -359,10 +410,11 @@ On an x86 CPU (“llvm” target) With `M = 4096, N = 128`. Key versions:
 | **v2** (+Vectorize)     | ~16.04        | 1.52×                 |
 | **v3** (+Unroll)        | ~14.60        | 1.67×                 |
 | **v4** (Refactor)       | ~0.57         | 43.03×                |
+| **v5** (Combined)       | ~0.41         | 59.39×                |
 | **AutoTVM** (50 trials) | ~0.70         | 34.79×                |
 | **NumPy**               | ~0.21         | ~116× (vs. Naive)     |
 
-1. **Naive vs. v4:** We see a dramatic drop from ~24.35 ms to ~0.57 ms by progressively removing overhead and leveraging parallelism and SIMD.
+1. **Naive vs. v5:** We see a dramatic drop from ~24.35 ms to ~0.41 ms by progressively removing overhead and leveraging parallelism and SIMD.
 2. **AutoTVM:** Automatic tuning converges to ~0.70 ms—slightly slower than our best manual schedule in this configuration, but still vastly better than naive.
 3. **NumPy Reference:** NumPy is ~0.21 ms, indicating that heavily optimized libraries (e.g., MKL) can still be faster.
 
