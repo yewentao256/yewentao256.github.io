@@ -153,7 +153,7 @@ Quantization reduces model precision to speed up inference and reduce memory usa
    \]
    Calibration methods include:
    - **MinMax Calibration:** Uses the minimum and maximum values, though it is sensitive to outliers.
-   - **Entropy Calibration:** Minimizes KL divergence between the original and quantized distributions.
+   - **Entropy Calibration:** Minimizes KL divergence between the original and quantized distributions. （Kullback-Leibler Divergence: relative entropy, a measure of the difference between two probability distributions.）
    - **Percentile Strategy:** Discards extreme values (e.g., the 99.9th percentile) to set calibration bounds.
 
 #### Quantization-Aware Training (QAT)
