@@ -324,7 +324,6 @@ if语句也优化为`if 0 <= cse_var_1 and cse_var_1 < 4096`，所有这些结�
 
 在 v5 中添加两条 stage pragma，强制 TVM 将八通道内层循环展开为直线代码。
 
-
 ```py
 def make_conv1d_cpu_scheduler_v5(M, N, factor=8):
     A = te.placeholder((M,), name="A", dtype="float32")
