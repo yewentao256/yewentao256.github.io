@@ -153,7 +153,7 @@ Quantization reduces model precision to speed up inference and reduce memory usa
    \]
    Calibration methods include:
    - **MinMax Calibration:** Uses the minimum and maximum values, though it is sensitive to outliers.
-   - **Entropy Calibration:** Minimizes KL divergence between the original and quantized distributions.
+   - **Entropy Calibration:** Minimizes KL divergence between the original and quantized distributions. （Kullback-Leibler Divergence: relative entropy, a measure of the difference between two probability distributions.）
    - **Percentile Strategy:** Discards extreme values (e.g., the 99.9th percentile) to set calibration bounds.
 
 #### Quantization-Aware Training (QAT)
@@ -475,7 +475,7 @@ When designing an ML system:
 
 **Design Considerations:**
 
-- **Low Latency:**  
+- **Low Latency:**
   - Compress the model using techniques like pruning (zeroing out unimportant weights based on magnitude, gradient, or activation) and post-training quantization (PTQ).
   - For PTQ, export the model to ONNX, ensure all operators are supported, and build a TensorRT engine with proper calibration (using min-max or entropy calibration).
 - **High Throughput:**  
