@@ -45,10 +45,6 @@ def make_gemm_gpu_scheduler_naive(M, K, N, verbose=True):
     (k,) = s[C].op.reduce_axis
     s[C].bind(y, block_y)
     s[C].bind(x, block_x)
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, B, C], simple_mode=True))
-        print("=" * 100)
     return s, A, B, C
 ```
 
@@ -94,10 +90,6 @@ def make_gemm_gpu_scheduler_v1(M, K, N, verbose=True):
     # 将内部轴绑定到线程
     s[C].bind(xi, te.thread_axis("threadIdx.x"))
 
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, B, C], simple_mode=True))
-        print("=" * 100)
 
     return s, A, B, C
 ```
@@ -147,10 +139,6 @@ def make_gemm_gpu_scheduler_v2(M, K, N, verbose=True):
     s[C].bind(xi, te.thread_axis("threadIdx.x"))
     s[C].bind(yi, te.thread_axis("threadIdx.y"))
 
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, B, C], simple_mode=True))
-        print("=" * 100)
 
     return s, A, B, C
 
@@ -229,10 +217,6 @@ def make_gemm_gpu_scheduler_v3(M, K, N, verbose=True):
     s[BB].bind(BBxi, te.thread_axis("threadIdx.x"))
     s[BB].bind(BBxx, te.thread_axis("threadIdx.y"))
 
-    if verbose:
-        print("=" * 100)
-        print(tvm.lower(s, [A, B, C], simple_mode=True))
-        print("=" * 100)
 
     return s, A, B, C
 ```
@@ -277,6 +261,109 @@ def main(A: T.Buffer((1024, 2048), "float32"), B: T.Buffer((2048, 512), "float32
 
 这大幅提升了性能至 **8.11 毫秒**。
 
+#### 2.1.5 v4：寄存器缓存
+
+> **把 `C` 先写进寄存器，再写回显存**
+
+```python
+CL = s.cache_write(C, "local")          # C → register
+s[CL].compute_at(s[C], vy)              # 寄存器活到 k-inner 全跑完
+ko, ki = s[CL].split(k, factor=4)       # K-tile = 4
+```
+
+- **`cache_write`** 会为 `C` 生成一个局部缓冲块，并把它映射到寄存器 (scope = local)
+- **`compute_at`** 把这个缓冲嵌进 `threadIdx.y` 循环里，让寄存器在同一行/列线程内复用到 K 轴结束
+
+```py
+# opt4: v3 + register caching
+def make_gemm_gpu_scheduler_v4(M, K, N, verbose=True):
+    k, s, A, B, C = base_declaration(M, K, N)
+
+    block_x, block_y = 32, 32
+    tile_k = 4
+
+    CL = s.cache_write(C, "local")
+
+    bx, vx = s[C].split(C.op.axis[0], factor=block_x)
+    by, vy = s[C].split(C.op.axis[1], factor=block_y)
+
+    s[C].bind(bx, te.thread_axis("blockIdx.x"))
+    s[C].bind(by, te.thread_axis("blockIdx.y"))
+    s[C].bind(vx, te.thread_axis("threadIdx.x"))
+    s[C].bind(vy, te.thread_axis("threadIdx.y"))
+
+    # schedule CL (local cache for C)
+    s[CL].compute_at(s[C], vy)
+
+    # split reduction axis
+    ko, ki = s[CL].split(k, factor=tile_k)
+
+    # cache reads for A and B in shared memory
+    AA = s.cache_read(A, "shared", [CL])
+    BB = s.cache_read(B, "shared", [CL])
+
+    s[AA].compute_at(s[CL], ko)
+    s[BB].compute_at(s[CL], ko)
+
+    # cooperative fetching for shared memory
+    for load_buffer in [AA, BB]:
+        fused = s[load_buffer].fuse(*s[load_buffer].op.axis)
+        tz, fused = s[load_buffer].split(fused, nparts=block_y)
+        tx, fused = s[load_buffer].split(fused, nparts=block_x)
+        s[load_buffer].bind(tz, te.thread_axis("threadIdx.y"))
+        s[load_buffer].bind(tx, te.thread_axis("threadIdx.x"))
+
+    return s, A, B, C
+```
+
+
+IR:
+
+```py
+@T.prim_func
+def main(A: T.Buffer((1024, 2048), "float32"), B: T.Buffer((2048, 512), "float32"), C: T.Buffer((1024, 512), "float32")):
+    T.func_attr({"from_legacy_te_schedule": T.bool(True), "tir.noalias": T.bool(True)})
+    blockIdx_x = T.launch_thread("blockIdx.x", 32)
+    C_local = T.allocate([1], "float32", "local")
+    A_shared = T.allocate([128], "float32", "shared")
+    B_shared = T.allocate([128], "float32", "shared")
+    threadIdx_x = T.launch_thread("threadIdx.x", 32)
+    blockIdx_y = T.launch_thread("blockIdx.y", 16)
+    threadIdx_y = T.launch_thread("threadIdx.y", 32)
+    C_local_1 = T.Buffer((1,), data=C_local, scope="local", align=4)
+    C_local_1[0] = T.float32(0)
+    for k_outer in range(512):
+        A_shared_1 = T.Buffer((128,), data=A_shared, scope="shared")
+        with T.launch_thread("threadIdx.y", 32) as threadIdx_y_1:
+            threadIdx_x_1 = T.launch_thread("threadIdx.x", 32)
+            if T.likely(threadIdx_x_1 // 4 + threadIdx_y_1 < 32):
+                if T.likely(threadIdx_x_1 < 4):
+                    A_1 = T.Buffer((2097152,), data=A.data)
+                    A_shared_1[threadIdx_y_1 * 4 + threadIdx_x_1] = A_1[blockIdx_x * 65536 + threadIdx_y_1 * 2048 + k_outer * 4 + threadIdx_x_1]
+        B_shared_1 = T.Buffer((128,), data=B_shared, scope="shared")
+        with T.launch_thread("threadIdx.y", 32) as threadIdx_y_1:
+            threadIdx_x_1 = T.launch_thread("threadIdx.x", 32)
+            if T.likely(threadIdx_x_1 // 4 + threadIdx_y_1 < 32):
+                if T.likely(threadIdx_x_1 < 4):
+                    B_1 = T.Buffer((1048576,), data=B.data)
+                    B_shared_1[threadIdx_y_1 * 4 + threadIdx_x_1] = B_1[k_outer * 2048 + threadIdx_y_1 // 8 * 512 + blockIdx_y * 32 + threadIdx_y_1 % 8 * 4 + threadIdx_x_1]
+        for k_inner in range(4):
+            C_local_1[0] = C_local_1[0] + A_shared_1[threadIdx_x * 4 + k_inner] * B_shared_1[k_inner * 32 + threadIdx_y]
+    C_1 = T.Buffer((524288,), data=C.data)
+    C_1[blockIdx_x * 16384 + threadIdx_x * 512 + blockIdx_y * 32 + threadIdx_y] = C_local_1[0]
+```
+
+IR 循环骨架：
+
+```bash
+for k_outer:          # 只 load A/B 一次
+  for k_inner = 0..3: # 复用 tile 四次
+    C_reg += A_sh * B_sh
+global_C = C_reg      # 一次性写回
+```
+
+优化之后，我们的性能跑到 **≈ 4.56 ms**，比 v3 再快约 1.8 ×。
+
 ### 2.2 AutoTVM 优化
 
 AutoTVM 实现探索了一个搜索空间，包括：
@@ -296,17 +383,18 @@ AutoTVM 实现探索了一个搜索空间，包括：
 以下是在 GPU 上对 `M=1024`、`K=2048`、`N=512` 的矩阵乘法的所有计时（毫秒）：
 
 | **实现**              | **时间（毫秒）** | **相对朴素基准的加速比** | **相对前一版本的加速比** |
-|----------------------|----------------|------------------------|------------------------|
-| **朴素基准**           | 84.52          | 1.0×                   | -                      |
-| **v1**（一维线程）     | 36.98          | 2.3×                   | 2.3×                   |
-| **v2**（二维线程）     | 35.50          | 2.4×                   | 1.04×                  |
-| **v3**（共享内存）     | 8.11           | 10.4×                  | 4.4×                   |
-| **AutoTVM**          | 42.56          | 2.0×                   | -                      |
-| **NumPy**（CPU）      | 74.95          | 1.1×                   | -                      |
-| **PyTorch CPU**      | 18.74          | 4.5×                   | -                      |
-| **PyTorch CUDA**     | 0.70           | 120.7×                 | -                      |
+|--------------------------|---------------|------------------------|--------------------------|
+| **Naive**                | 84.52         | 1.0×                   | -                        |
+| **v1** (1D Threads)      | 36.98         | 2.3×                   | 2.3×                     |
+| **v2** (2D Threads)      | 35.50         | 2.4×                   | 1.04×                    |
+| **v3** (Shared Memory)   | 8.11          | 10.4×                  | 4.4×                     |
+| **v4** (Local Memory)     | 4.56          | 18.5×                  | 1.8×                     |
+| **AutoTVM**              | 42.56         | 2.0×                   | -                        |
+| **NumPy** (CPU)          | 74.95         | 1.1×                   | -                        |
+| **PyTorch CPU**          | 18.74         | 4.5×                   | -                        |
+| **PyTorch CUDA**         | 0.70          | 120.7×                 | -                        |
 
-手动优化 v3 通过利用 GPU 特定的优化（如共享内存、分块和协作线程加载）实现了比朴素基准 **10.4 倍的加速**。
+手动优化 v4 通过利用 GPU 特定的优化（如共享/寄存器内存、分块和协作线程加载）实现了比朴素基准 **18.5 倍的加速**。
 
 从朴素到优化的进展显示了以下几点的重要性：
 
