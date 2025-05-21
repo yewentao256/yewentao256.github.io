@@ -73,12 +73,13 @@ Public presentations: [Link](https://github.com/yewentao256/Public-Talks)
 - **Master of Computer Science**  
   - **Cornell University** | Cornell Tech | New York, USA  
   - *May 2025*
-  - GPA: 4.0/4.0
+  - GPA: 4.21/4.0 (4.3 for A+)
+  - [100k Cornell Startup Award Winner](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)
 
 - **Bachelor of Software Engineering (Excellent Engineer Program)**  
   - **Wuhan UniversityChina** | Wuhan, China
-  - *Jun 2022*  
-  - GPA: 3.91/4.0  
+  - *Jun 2022*
+  - GPA: 3.91/4.0
 
 ---
 
