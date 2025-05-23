@@ -146,6 +146,7 @@ Stage 1:
 - At Stage 1, only the optimizer states (e.g., Adam’s momentum, variance) are partitioned across GPUs. Gradients and parameters remain fully replicated on each GPU.  
 - Consequently, **the communication volume remains at \(2 \Psi\)** for gradient all-reduce.  
 - We do **not** transmit the fp32 optimizer states themselves because they’re partitioned and only exist locally where needed.
+- However, the communication method has changed: first, we fully compute the gradients for our portion of the data. Then, we perform a **reduce scatter** operation to distribute the gradient shards across all devices. Each device uses its own shard of the gradients and optimizer state to update the portion of the parameters it is responsible for. After that, an **all gather** operation is performed to synchronize the updated parameters across all devices.
 
 Stage 2:
 

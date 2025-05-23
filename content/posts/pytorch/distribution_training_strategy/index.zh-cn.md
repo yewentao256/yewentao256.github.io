@@ -149,7 +149,9 @@ for step, batch in enumerate(data_loader):
 
 常规DP，每一步的梯度聚合 (all-reduce) 有 `2Ψ` 通信量，reduce-scatter使用`Ψ`和 all gather使用`Ψ`（更严谨一点的通信量是`2Ψ (N-1)/N`，这里我们简化处理）
 
-stage1：我们切分了优化器状态，但梯度和模型参数没有切分，通信量保持不变（我们不会通信FP32的optimizer state如momentum、variance等）
+stage1：我们切分了优化器状态，但梯度和模型参数没有切分，通信量与传统DP保持不变（我们不会通信FP32的optimizer state如momentum、variance等）。
+
+但通信方式有所变化，我们先完整计算自己这部分data的梯度，然后**reduce scatter**让梯度分片到所有device上，拿自己的一部分梯度和自己的一部分optimizer state对自己负责的一部分参数进行更新。随后**all gather**让参数对所有device统一。
 
 stage2：我们切分了梯度，每个GPU只保留自己部分所需要的梯度。
 
