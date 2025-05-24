@@ -2,7 +2,7 @@
 title: "2025 Technical Notes(2)"
 date: 2025-03-20T11:26:12+08:00
 categories: ["technical_notes"]
-summary: "Technical notes during 2025."
+summary: "Technical notes during 2025 (2)."
 ---
 
 >The content in this page here is translated by claude 3.7 sonet.
