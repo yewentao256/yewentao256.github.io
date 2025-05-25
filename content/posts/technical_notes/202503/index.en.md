@@ -235,7 +235,7 @@ Two-tier routing **+** two background threads.
 
 With CH-BL you naturally get replicas—keep moving until you meet `k` replicas. Among them choose two at random, compute
 
-```
+```bash
 score = queue_len × α + gpu_util × β
 ```
 

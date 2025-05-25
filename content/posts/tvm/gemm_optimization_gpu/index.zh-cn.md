@@ -316,7 +316,6 @@ def make_gemm_gpu_scheduler_v4(M, K, N, verbose=True):
     return s, A, B, C
 ```
 
-
 IR:
 
 ```py
