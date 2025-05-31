@@ -2,11 +2,11 @@
 title: "About Me"
 date: 2023-02-03T16:49:14+08:00
 hiddenFromHomePage: true
-lastmod: 2024-11-07T15:58:26+08:00
+lastmod: 2025-05-31T10:35:26+08:00
 summary: "Personal about page."
 ---
 
-CS M.Eng. student at Cornell University with **3+ years** of experience in deep learning and LLM optimization, and around 2 years of software development. Former deep learning engineer at SenseTime, recognized for delivering **up to 700% performance gains on Llama2 70B across 1024 NPUs**. A dedicated **open-source contributor with 7k+ total stars** across personal and contributed projects. An award-winning developer and **two-time startup co-founder**, driving innovative machine learning applications from prototype to production.
+CS graduate from Cornell University (GPA: **4.21/4.0**, A+ = 4.3) with **3+ years** of experience in deep learning and LLM optimization, and 2 years in software development. Former deep learning engineer at [SenseTime](https://www.sensetime.com/en), recognized for achieving **up to 700% performance improvements on LLaMA2-70B across 1024 NPUs**. Dedicated **open-source contributor with 8k+ stars** across personal and collaborative projects. Award-winning developer and two-time startup co-founder, driving ML innovations from prototype to scalable production.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
@@ -15,8 +15,6 @@ Github: [yewentao256](https://github.com/yewentao256)
 LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summary](https://wentao.site/categories/paper_summary/), [CSAPP](https://wentao.site/categories/csapp/), and [More Categories](https://wentao.site/categories/)
-
-Public presentations: [Public presentations on GitHub](https://github.com/yewentao256/Public-Talks)
 
 ---
 
@@ -29,6 +27,8 @@ Public presentations: [Public presentations on GitHub](https://github.com/yewent
 
 ## 2. Awards
 
+- **[100k Cornell Startup Award Winner](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)**
+  - [PolyRook](https://polyrook.com/): Fast 3D environment generation.
 - **National Third Prize**
   - China University Computer Contest, WeChat Big Data Challenge, 2021
   - **Rank 80 / 6,768 teams**
@@ -71,10 +71,9 @@ Public presentations: [Public presentations on GitHub](https://github.com/yewent
 ## 4. Education
 
 - **Master of Computer Science**  
-  - **Cornell University** | Cornell Tech | New York, USA  
+  - **Cornell University** | New York, USA  
   - *May 2025*
   - GPA: 4.21/4.0 (4.3 for A+)
-  - [100k Cornell Startup Award Winner](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)
 
 - **Bachelor of Software Engineering (Excellent Engineer Program)**  
   - **Wuhan UniversityChina** | Wuhan, China
