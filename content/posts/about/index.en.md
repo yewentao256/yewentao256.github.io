@@ -14,7 +14,12 @@ Github: [yewentao256](https://github.com/yewentao256)
 
 LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
-My blog series: [Pytorch](https://wentao.site/categories/pytorch/), [Paper_Summary](https://wentao.site/categories/paper_summary/), [CSAPP](https://wentao.site/categories/csapp/), and [More Categories](https://wentao.site/categories/)
+My blog series:
+
+- [Pytorch](https://wentao.site/categories/pytorch/)
+- [Paper_Summary](https://wentao.site/categories/paper_summary/)
+- [CSAPP](https://wentao.site/categories/csapp/)
+- and [More Categories](https://wentao.site/categories/)
 
 ---
 
