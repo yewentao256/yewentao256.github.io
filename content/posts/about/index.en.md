@@ -6,7 +6,7 @@ lastmod: 2025-05-31T10:35:26+08:00
 summary: "Personal about page."
 ---
 
-CS graduate from Cornell University (GPA: **4.21/4.0**, A+ = 4.3) with **3+ years** of experience in deep learning and LLM optimization, and 2 years in software development. Former deep learning engineer at [SenseTime](https://www.sensetime.com/en), recognized for achieving **up to 700% performance improvements on LLaMA2-70B across 1024 NPUs**. Dedicated **open-source contributor with 8k+ stars** across personal and collaborative projects, with **20+ contributions to Pytorch**.
+CS graduate from Cornell University (GPA: **4.21/4.0**, A+ = 4.3) with **3+ years** of experience in deep learning and LLM optimization, and 2 years in software development. Former Deep Learning Engineer at [SenseTime](https://www.sensetime.com/en), recognized for achieving **up to 700% performance improvements on LLaMA2-70B across 1024 NPUs**. Dedicated **open-source contributor with 8k+ stars** across personal and collaborative projects, with **20+ contributions to PyTorch**.
 
 **Email**: `zhyanwentao@outlook.com` / `wy335@cornell.edu`
 
