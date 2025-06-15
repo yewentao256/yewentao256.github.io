@@ -56,4 +56,4 @@ summary: "论文速览 'DeepSpeed-MoE: Advancing Mixture-of-Experts Inference an
 - **Pyramid-MoE**：对深层分配更多专家，呼应“深层更需容量”的现象-I。
 - **Residual-MoE**：固定稠密 MLP 并并联单专家，通过残差视角实现 Top-2 级精度但仅需 Top-1 的通信。
 - **Mixture-of-Students (MoS)**：在 PR-MoE 上减深度 + 分阶段蒸馏得到的学生网络。
-- **分阶段 KD 日程**：先 KL + CE 稳定蒸馏，后期仅 CE，避免欠拟合。
+- **分阶段 KD Schedule**：先 KL + CE 稳定蒸馏，后期仅 CE，避免欠拟合。

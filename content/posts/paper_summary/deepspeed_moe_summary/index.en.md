@@ -81,4 +81,4 @@ summary: "Summary for paper 'DeepSpeed-MoE: Advancing Mixture-of-Experts Inferen
 
 - **Staged KD Schedule**: A two-phase KD regime that enables KD early for stability, then disables it mid-training so the student can finish minimising its own loss without under-fitting.
 
-- KL Divergence (KL): A (non-symmetric) information-theoretic measure used in KD to minimise the distance between teacher and student output distributions.
+- **KL Divergence (KL)**: A (non-symmetric) information-theoretic measure used in KD to minimise the distance between teacher and student output distributions.
