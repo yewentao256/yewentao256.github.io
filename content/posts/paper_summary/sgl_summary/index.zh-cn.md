@@ -1,50 +1,49 @@
 ---
-title: "Summary: Attention is all you need"
-date: 2025-01-30T14:02:12+08:00
+title: "Summary: SGLang: Efficient Execution of Structured Language Model Programs"
+date: 2025-08-09T16:29:16+08:00
 categories: ["paper_summary"]
-summary: "论文速览：'Attention is all you need'"
+summary: "论文速览：'SGLang: Efficient Execution of Structured Language Model Programs'"
 ---
 
-## 等待被翻译
+> 本博客使用`GPT-5`翻译，如有冲突请优先参考英文原文
 
-非常抱歉，看起来这篇博文还没有被翻译成中文，请等待一段时间
+## Materials
 
-## Download the Paper
+- [Paper](https://arxiv.org/pdf/2312.07104)
 
-[Paper](https://arxiv.org/pdf/1706.03762)
+- [Github](https://github.com/sgl-project/sglang)
 
-## 1. What is the paper about?
+## 1. 论文是关于什么的？
 
-This paper proposes the **Transformer**, a novel Seq2Seq architecture that relies **entirely on attention mechanisms**, rather than recurrent or convolutional layers, to encode and decode sequences.
+提出 **SGLang**，一种嵌入 Python 的 DSL，用于高效执行多次调用、结构化的 LLM 工作流。
+关键运行时思想：用于 KV 缓存复用的 **RadixAttention**、用于快速受限（如 JSON/正则）解码的 **压缩有限状态机（cFSM）**，以及面向黑盒端点的 **API 预测执行**。
 
-This design allows highly **parallelizable** computations and effectively captures **long-range dependencies** in sequence data, such as text for machine translation tasks.
+## 2. 与以往工作相比有哪些新意？
 
-![image](Transformer_architecture.png)
+- 将 KV 缓存视为带 **缓存感知调度**的**基于树的 LRU 缓存（基数树）**，并进行前端/运行时协同设计；作者称这是首个同时支持**多级共享、LRU 淘汰、协同调度与分布式**场景的方案。
+- 以往引擎（如 **vLLM/PagedAttention**）做内存分页与简单前缀复用，但不支持带 LRU 与调度的**树结构、多级复用**。
+- 其他复用方向（如 **PromptCache**、**ChunkAttention**）探索模块化或前缀感知复用，但要么存在**准确性下降**风险，要么专注于**内核级改动**而非**缓存+调度+语言**的一体化设计。
+- 引入 **压缩 FSM（cFSM）**，使确定路径上的多个 token 能在**一次**解码完成——相较以往逐 token 掩码，显著加速**受限解码**。
 
-## 2. What is new about this specific paper, compared to prior work?
+## 3. 为支撑论点做了哪些实验？
 
-- Elimination of Recurrent/Convolutional Layers: Unlike earlier Seq2Seq models that used LSTMs, GRUs, or CNNs, the Transformer uses **only attention modules** (self-attention and encoder-decoder attention).  
-- The paper introduces **multi-head attention**, enabling the model to learn from multiple "subspace" representations in parallel.  
-- Because the architecture does not have a built-in notion of sequence order (as an RNN does through time steps), the authors propose a sinusoidal **positional encoding** to inject sequence position information.  
-- By removing the recurrence constraint, the Transformer can process all positions in a sequence **in parallel**, significantly reducing training time.
+- 在 MMLU、HellaSwag、ReAct/生成式智能体、Tree-/Skeleton-of-Thought、JSON 解码、多轮对话及一个 DSPy RAG 流水线中，**吞吐最高提升至 6.4×、延迟最低降至 3.7×**。
+- 在 **Mixtral-8×7B** 与 **Llama-70B** 上有类似增益。
+- 在 **LLaVA-v1.5-7B（图像）** 与 **LLaVA-NeXT-34B（视频）** 上吞吐大幅提升；例如从 **0.18→1.15 图/秒** 与 **0.02→0.10 帧/秒**。
+- **消融**显示各组件（树缓存、调度、前端提示/并行）均有贡献；在 JSON 解码中，**cFSM** 带来约 **1.6×** 吞吐提升。
 
-## 3. What experiments were run to support the arguments in this paper?
+## 4. 不足/局限
 
-1. **Machine Translation**: experiments on two major datasets:
-   - *WMT 2014 English-to-German*: The Transformer reached sota BLEU scores (outperforming previous single and even ensemble models) at the time of publication.
-   - *WMT 2014 English-to-French*: A new high performance in translation with significantly less training cost compared to prior sota methods.
+- 只与**较早版本的 vLLM**比较；随着基线演进，结果可能变化。
+- 关于 **cFSM**，附录指出某些正则选择可能导致**概率分布扭曲**——这是一个需要进一步研究的准确性问题。
 
-2. **Parsing**: They also tested the Transformer on an **English constituency parsing** task (the Penn Treebank WSJ dataset). The model produced competitive results, demonstrating that the architecture generalizes beyond translation.
+## 5. 合理的后续工作
 
-## 4. What are the shortcomings/limitations of this paper?
+- 将 **RadixAttention** 适配到**多级存储**（DRAM/磁盘），加入**模糊语义匹配**，缓解**缓存感知调度**中的潜在**饥饿**，并强化**编译器**以进行静态规划。
+- 强化对**多模态工作流**的支持，并在**一致设置**下与更新的 KV 复用基线（如新版 vLLM、ChunkAttention）进行比较。
 
-- While self-attention has a constant path length for dependencies, it scales quadratically with sequence length `O(n^2)` in time and memory. For very long inputs (e.g., thousands of tokens), this can be expensive.  
-- The attention mechanism is global by design. While this can be advantageous for capturing long-range dependencies, there is no inherent, built-in emphasis on local, contiguous structures (unlike convolutions), which might be suboptimal for certain tasks.  
-- Although they demonstrated strong transfer to parsing, the Transformer's **performance on other specialized tasks** might still need careful modifications or additional modules.
+## 附录
 
-## 5. What is a reasonable next step to build upon this paper?
-
-- Investigate *sparse* or *local* attention mechanisms (e.g., restricting attention to neighborhoods or using learned patterns) to handle longer sequences more efficiently.  
-- **Adapt the architecture to non-text data** (e.g., images, audio, video) by combining attention layers with domain-specific preprocessing or embedding methods.  
-- Explore ways to reduce the one-token-at-a-time decoding bottleneck, potentially via parallel or **non-autoregressive** decoding approaches.  
-- Investigate advanced optimization strategies, better positional encoding schemes, or improved architectures that could further reduce memory and computational requirements while preserving or improving performance.
+- **基数树（radix tree）**：一种空间优化的前缀树，其**边**可存储**序列**（而非单一符号），从而支持高效前缀查找与插入。
+- **结构化解码**：在**硬约束**（如正则/CFG）下，通过对非法 token **加掩码**来进行生成。
+- **模糊语义匹配**：一个非正式术语，指按**语义**而非**表面文本**进行匹配（如向量/嵌入相似度），可容忍表层不一致，常用于 **RAG** 检索。
