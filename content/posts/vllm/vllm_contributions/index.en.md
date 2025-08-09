@@ -28,10 +28,9 @@ My bi-weekly journal for contributions to vllm.
 
 **B200 New DeepGemm Integration**:
 
-- Large scope that I owned.  
-  Unit test used to debug: [#21559](https://github.com/vllm-project/vllm/pull/21559)  
-  Log update: [#22208](https://github.com/vllm-project/vllm/pull/22208)  
-  ✅ Done for this large scope! _Special thanks to the help from [Kaichao You](https://github.com/youkaichao) and [Chenggang Zhao](https://github.com/LyricZhao)_
+- ✅ Done for this large scope! _Special thanks to the help from [Kaichao You](https://github.com/youkaichao) and [Chenggang Zhao](https://github.com/LyricZhao)_
+
+- Unit test used to debug: [#21559](https://github.com/vllm-project/vllm/pull/21559) and log update: [#22208](https://github.com/vllm-project/vllm/pull/22208)  
 
 **DBO Support**:
 
