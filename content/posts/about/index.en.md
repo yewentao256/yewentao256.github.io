@@ -6,6 +6,12 @@ lastmod: 2025-08-17T09:44:56+08:00
 summary: "Personal about page."
 ---
 
+Open source
+
+We build together, the world grows brighter
+
+---
+
 Email: `zhyanwentao@outlook.com`
 
 Github: [yewentao256](https://github.com/yewentao256)
@@ -96,10 +102,11 @@ My blog series:
 
 #### PyTorch
 
-- <a href="https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
+- <a href="https://github.com/pytorch/pytorch"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
 - *May 2023 - Present*
 - **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
 - **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
+- Details at [My Contributions](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
 
 ### Main Collaborator
 
@@ -108,14 +115,14 @@ My blog series:
 - <a href="https://github.com/vllm-project/vllm"><img src="https://img.shields.io/github/stars/vllm-project/vllm?style=social" alt="GitHub stars" height="20"></a>
 - *Jun 2025 - Current*
 - DeepGEMM integration, Cuda optimization etc.
-- Details at [https://github.com/vllm-project/vllm/issues?q=author%3Ayewentao256+] and [https://wentao.site/vllm_contributions/]
+- Details at [My Contributions](https://github.com/vllm-project/vllm/issues?q=author%3Ayewentao256+) and [Bi-weekly Journal](https://wentao.site/vllm_contributions/)
 
 #### LazyLLM
 
 - <a href="https://github.com/LazyAGI/LazyLLM"><img src="https://img.shields.io/github/stars/LazyAGI/LazyLLM?style=social" alt="GitHub stars" height="20"></a>
 - *May 2024 - Aug 2024*
 - **Independently built a Retrieval-Augmented Generation (RAG) system** in LazyLLM with a specialized tree architecture, which improved query performance by 50% over LlamaIndex by enhancing the efficiency of parent/child node retrieval, optimizing response times for large language models.
-- Details at [https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+]
+- Details at [My Contributions](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+)
 
 #### DeepLink
 
@@ -123,14 +130,14 @@ My blog series:
 - *May 2023 - May 2024*
 - Designed and implemented the Op Inferrer, bypassing PyTorch's TensorIterator to increase the inference speed of binary, unary, and reduction operators by 5% across 40+ models, including large language models (LLMs).
 - Identified and resolved CUDA performance bottlenecks by optimizing implementations within DeepLink and DIOPI, achieving an average 20% performance improvement across 30+ models; enhanced computational efficiency allowed ResNet50 to surpass PyTorch’s benchmark performance, providing significant speedups for high-demand tasks.
-- Details at [https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+]
+- Details at [My Contributions](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+)
 
 #### DIOPI
 
 - <a href="https://github.com/DeepLink-org/DIOPI"><img src="https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social" alt="GitHub stars" height="20"></a>
 - *Apr 2023 - May 2024*
 - **Developed 30+ machine learning operators** in DIOPI, enabling advanced functionalities across diverse hardware; implemented multi-chip adaptations to support CUDA, Cambricon, and Ascend architectures, enhancing cross-platform compatibility, reducing integration time and enhancing operational efficiency for large-scale systems.
-- Details at [https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+]
+- Details at [My Contributions](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+)
 
 #### MMCV & PAVI Logger
 
