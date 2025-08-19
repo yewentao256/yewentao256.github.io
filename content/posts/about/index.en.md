@@ -69,7 +69,7 @@ My blog series:
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
 
-- **R&D Intern**  
+- **Backend Development Intern**  
   - **SenseTime | Research Institute (Deep Learning Frameworks)**  
   - *Jan 2021 - Jul 2022*
 
