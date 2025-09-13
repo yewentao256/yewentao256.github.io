@@ -100,7 +100,7 @@ My blog series:
 
 ## 5. OpenSource Projects
 
-### Feature Contributor
+### Contributor
 
 #### PyTorch
 
@@ -110,7 +110,7 @@ My blog series:
 - **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 - Details at [My Contributions](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
 
-### Main Collaborator
+### Maintainer
 
 #### vLLM
 
@@ -148,7 +148,7 @@ My blog series:
 - **Rebuilt the PAVI data collection SDK**, achieving a 10× improvement in data upload efficiency through optimized parallel processing, significantly reducing ingestion time and enhancing performance for large-scale datasets.
 - Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
-### Owned Projects
+### Owner
 
 #### TVM Tutorial
 
