@@ -33,6 +33,8 @@ summary: "论文速览：'Demystifying NCCL: An In-depth Analysis of GPU Communi
 
 ![image](intra-node-data-transfer.png)
 
+- 同样也有节点间：
+
 ![image](inter-node-data-transfer.png)
 
 - 通过示例直观说明**树形 All-Reduce（全规约）**（注：关于**环形 All-Reduce**，可参见[我之前的博客](../../overview_of_distribution_training/#all-reduce-example)）：

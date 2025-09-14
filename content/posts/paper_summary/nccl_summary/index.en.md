@@ -25,9 +25,11 @@ summary: "Summary for paper 'Demystifying NCCL: An In-depth Analysis of GPU Comm
 
 - Clarifies transport decisions (**P2P_DIRECT** vs **IPC/FIFO**, SHM fallbacks, GPUDirect RDMA conditions, etc).
 
-- Provides a nice overview for intra/inter-node data transfer
+- Provides a nice overview for intra-node data transfer
 
 ![image](intra-node-data-transfer.png)
+
+- And for inter-node data transfer
 
 ![image](inter-node-data-transfer.png)
 
