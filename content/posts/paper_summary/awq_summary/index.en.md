@@ -72,7 +72,7 @@ Apply with AWQ (set s=2):
 
 ## Appendix
 
-- **GPTQ (Gradientless Post-Training Quantization)**: a PTQ algorithm that uses second-order (Hessian) information to reconstruct weights and compensate quantization error.
+- **GPTQ**: a PTQ algorithm that uses second-order (Hessian) information to reconstruct weights and compensate quantization error.
 - **RTN (Round-To-Nearest)**: the simplest uniform PTQ baseline that rounds each value to the nearest quantization level.
 - **Grouped quantization (g=128)**: partitioning weights into groups of 128 elements, each with its own scale/zero-point, to balance accuracy and storage.
 - **COCO Captioning / CIDEr**: an image-caption dataset and its consensus-based evaluation metric (higher CIDEr is better).

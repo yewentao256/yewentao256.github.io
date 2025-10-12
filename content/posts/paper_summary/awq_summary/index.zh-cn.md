@@ -76,7 +76,7 @@ summary: "论文速览：'AWQ: Activation-Aware Weight Quantization for on-devic
 
 ## 附录
 
-- **GPTQ（Gradientless Post-Training Quantization）**：一种无梯度的后训练量化方法，利用二阶（Hessian）信息重构权重并补偿量化误差。
+- **GPTQ**：一种无梯度的后训练量化方法，利用二阶（Hessian）信息重构权重并补偿量化误差。
 - **RTN（Round-To-Nearest）**：最简单的均匀 PTQ 基线，把每个数值四舍五入到最近的量化等级。
 - **分组量化（g=128）**：把权重按 128 个元素分组，每组有独立的 scale/zero-point，以在精度与存储之间折中。
 - **COCO Captioning / CIDEr**：图像描述数据集及其一致性评测指标（CIDEr 越高越好）。
