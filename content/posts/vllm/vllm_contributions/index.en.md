@@ -11,6 +11,178 @@ My bi-weekly journal for contributions to vllm.
 
 ---
 
+## Oct 1 - Oct 14
+
+**Customer-related Bug Fix**:
+
+- From Clayton (llm-d):  
+  - Image issue with DeepGEMM: no kernel image is available for execution on the device: Gave technical support and fix in two days  
+  - Log optimization [\#26322](https://github.com/vllm-project/vllm/pull/26322)  
+- From Lu Fang (Meta)  
+  - WIP: Improve vLLM CUDA Memory Utilization and Estimation [\#26300](https://github.com/vllm-project/vllm/issues/26300)
+
+**Batch Invariant**:
+
+- Closely collaborate with Bram Wasti, milestone doc: [vLLM Batch-Invariance Work List](https://docs.google.com/document/d/14msdTt0Y-NtANwLspIh3t_53ioCvfZ4ue9yN41Y_nHQ/edit?tab=t.0)  
+- Landed Flashinfer support [\#26373](https://github.com/vllm-project/vllm/pull/26373)  
+- WIP: Deepseek-v3 Batch Invariant on 8xH100 [https://github.com/vllm-project/vllm/pull/26609](https://github.com/vllm-project/vllm/pull/26609)  
+- Several other small PRs
+
+**Community Leadership**:
+
+- Lead implementation  
+  - Vectorize RMS norm variance using vectorize\_read\_with\_alignment [\#26234](https://github.com/vllm-project/vllm/pull/26234)  
+  - Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)  
+    - \[CI\] Fix mypy for vllm/attention and vllm/compilation \#26482  
+    - \[CI\] Fix mypy for vllm/distributed \#26593  
+    - \[CI\] Fix mypy for vllm/engine and vllm/utils \#26540  
+    - \[CI\] Fix mypy for vllm/executor \#26845  
+  - Reduce Unit Test to Speed Up CI [\#22041](https://github.com/vllm-project/vllm/issues/22041)  
+    - \[CI Perf\]Prune Tests in kernel/mamba \#26538  
+    - Pruning kernel Core Tests \#26727  
+- Mentioned and deep review  
+  - \#26669: support flashinfer\_fp4 moe for 5090 gpu  
+  - \#25619: \[UX\] Speedup DeepGEMM warmup with heuristics  
+  - \#26438: \[Bug\]: TypeError: argument 'id': StreamInput must be either an integer or a list of integers  
+  - \+ a lot more
+
+**VLLM Contributions**:
+
+- Huge Performance Improvement  
+  - Enable E8M0 by Default on Hopper for DeepGEMM, 5% E2E throughput improvement: [\#26197](https://github.com/vllm-project/vllm/pull/26197)  
+- Refactoring PRs merged  
+  - [\#25293](https://github.com/vllm-project/vllm/pull/25293) [\#26743](https://github.com/vllm-project/vllm/pull/26743), [\#26601](https://github.com/vllm-project/vllm/pull/26601), [\#26044](https://github.com/vllm-project/vllm/pull/26044) \+ several more  
+- Bug Fix PRs merged:  
+  - [\#26532](https://github.com/vllm-project/vllm/pull/26532), [\#26528](https://github.com/vllm-project/vllm/pull/26528), [\#26448](https://github.com/vllm-project/vllm/pull/26448) \+ several more
+
+## Sep 17 - Sep 30
+
+DeepSeekV3.2 Support
+
+- One week with a tight timeline, working through weekends, closely work with Chen Zhang, Yongye Zhu, Kaichao You, etc.  
+- Main PR: [\#25896](https://github.com/vllm-project/vllm/pull/25896)  
+- Release note: [https://blog.vllm.ai/2025/09/29/deepseek-v3-2.html](https://blog.vllm.ai/2025/09/29/deepseek-v3-2.html)  
+  - Wentao Ye in the Acknowledgements\!  
+- My Work (All PRs combined)  
+  - Everything with DeepGEMM  
+  - Wheels, test script, B200 validation  
+  - Weight loading issue etc like  [\#25909](https://github.com/vllm-project/vllm/pull/25909)
+
+**Customer-related Bug Fix**:
+
+- From Clayton(llm-d):  
+  - Under review: Fixed Negative cuda memory usage: [\#25683](https://github.com/vllm-project/vllm/pull/25683)  
+  - Fixed OOM issue: [\#25290](https://github.com/vllm-project/vllm/pull/25290)  
+  - Fixed Cudagraph cache issue: [\#25093](https://github.com/vllm-project/vllm/pull/25093)  
+- vLLM 0.11.0 release blocker
+  - Issue related with B200 for Qwen3-VL  
+  - Raised in [\#25582](https://github.com/vllm-project/vllm/issues/25582) and fixed by [\#25788](https://github.com/vllm-project/vllm/pull/25788), working closely with Roger Wang
+
+**VLLM Contributions**:
+
+- Several Refactoring/Fix PRs merged: [\#25958](https://github.com/vllm-project/vllm/pull/25958) [\#25710](https://github.com/vllm-project/vllm/pull/25710) [\#25519](https://github.com/vllm-project/vllm/pull/25519) [\#25518](https://github.com/vllm-project/vllm/pull/25518) [\#25517](https://github.com/vllm-project/vllm/pull/25517) \+ several more  
+- Leadership:
+  - Guide Community to produce better code  [\#22602](https://github.com/vllm-project/vllm/pull/22602)  
+  - Feature Request to Optimize reshape\_and\_cache CUDA Kernel  [\#25705](https://github.com/vllm-project/vllm/issues/25705)  
+  - Feature Request to Reduce unit test in CI [\#22041](https://github.com/vllm-project/vllm/issues/22041)  
+- Mentioned by Community and Deep Review  
+  - MOE flag related [\#23442](https://github.com/vllm-project/vllm/pull/23442)  
+  - Cuda graph related [\#25829](https://github.com/vllm-project/vllm/pull/25829)  
+  - Compiled issue [\#25843](https://github.com/vllm-project/vllm/pull/25843)  
+  - A lot more …
+
+## Sep 3 - Sep 16
+
+**Performance Optimization**:
+
+- Optimize DeepGEMM scale Contiguous Layout  
+  - [https://github.com/vllm-project/vllm/pull/24783](https://github.com/vllm-project/vllm/pull/24783)
+  - 5.5% Throughput Improvement  
+- Ready for review: Triton Kernel for per\_block\_cast\_to\_fp8, 6x faster  
+  - [https://github.com/vllm-project/vllm/pull/24611](https://github.com/vllm-project/vllm/pull/24611)  
+  - 6x faster for the torch version
+
+**Severe Bug Fix**:
+
+- Clayton’s torch compile cache issue: [https://github.com/vllm-project/vllm/issues/24915](https://github.com/vllm-project/vllm/issues/24915)  
+- Torch Inductor Graph issue:  
+  - [https://github.com/vllm-project/vllm/pull/24772](https://github.com/vllm-project/vllm/pull/24772)
+
+DBO support
+
+- DBO PR get landed: [https://github.com/vllm-project/vllm/pull/23693](https://github.com/vllm-project/vllm/pull/23693) (Work together with Sage and Lucas)  
+- HT support for DBO PR ready for review (combined with Lucas’ prefill support)  [https://github.com/vllm-project/vllm/pull/24845](https://github.com/vllm-project/vllm/pull/24845)
+
+VLLM Contributions
+
+- Several Refactoring/Fix PRs merged: [\#24902](https://github.com/vllm-project/vllm/pull/24902) [\#24887](https://github.com/vllm-project/vllm/pull/24887) [\#24774](https://github.com/vllm-project/vllm/pull/24774) [\#24696](https://github.com/vllm-project/vllm/pull/24696) [\#24674](https://github.com/vllm-project/vllm/pull/24674) \+ 4 other PRs  
+- Several fix for CI: [\#24259](https://github.com/vllm-project/vllm/pull/24259) [\#24670](https://github.com/vllm-project/vllm/pull/24670)  
+- Reviewed 40+ PRs
+
+## Aug 20 - Sep 2
+
+**Model Support for Deepseek V3.1**:
+
+- Add Hopper DeepGEMM E8M0 for DeepSeekV3.1 scale\_fmt  
+- [https://github.com/vllm-project/vllm/pull/23666](https://github.com/vllm-project/vllm/pull/23666)
+
+**Performance Optimization**:
+
+- Enable Piecewise CUDAGraph for DeepEP HT
+  - [https://github.com/vllm-project/vllm/pull/24123](https://github.com/vllm-project/vllm/pull/24123)  
+  - 33% E2E Throughput improvement for Decode  
+- Enable DeepGEMM Linear on B200
+  - [https://github.com/vllm-project/vllm/pull/23351](https://github.com/vllm-project/vllm/pull/23351)  
+  - 1.5% E2E throughput improvement
+
+Severe Bug Fix
+
+- R1 Accuracy issue: routed\_scaling\_factor double mul  
+  - [https://github.com/vllm-project/vllm/pull/24119](https://github.com/vllm-project/vllm/pull/24119)  
+  - Meta is using vLLM main to deploy  
+  - Meta reach out to express gratitude for the fast fix  
+- Full Cuda graph Hang issue  
+  - [https://github.com/vllm-project/vllm/pull/23595](https://github.com/vllm-project/vllm/pull/23595)  
+  - Temporarily fix and will do more exploration later
+
+DBO support
+
+- [https://github.com/vllm-project/vllm/pull/23693](https://github.com/vllm-project/vllm/pull/23693) (Work together with Sage and Lucas)  
+- HT single handle issue fixed
+
+VLLM Contributions
+
+- Several Refactoring/Fix PRs merged: [\#23287](https://github.com/vllm-project/vllm/pull/23287) [\#23858](https://github.com/vllm-project/vllm/pull/23858) [\#23689](https://github.com/vllm-project/vllm/pull/23689) [\#23660](https://github.com/vllm-project/vllm/pull/23660) [\#23591](https://github.com/vllm-project/vllm/pull/23591) [\#23370](https://github.com/vllm-project/vllm/pull/23370)  
+- Reviewed 50+ PRs
+
+## Aug 6 - Aug 19
+
+I am nominated to be a vllm committer\! Thank so much to Kaichao [Michael Goin](mailto:mgoin@redhat.com) [Robert Shaw](mailto:robshaw@redhat.com),[Taneem Ibrahim](mailto:tibrahim@redhat.com), [Yuan Tang](mailto:yutang@redhat.com) and the vLLM community\!
+
+[https://github.com/vllm-project/vllm/pull/22741](https://github.com/vllm-project/vllm/pull/22741)
+
+**B200 Performance Optimization**:
+
+- Cutlass MLA full cuda graph support  
+  - [https://github.com/vllm-project/vllm/pull/22763](https://github.com/vllm-project/vllm/pull/22763)  
+  - Also needed for DBO  
+  - 6% E2E Throughput Improvement  
+- Bug fix for FusedMoEModularKernel [\#22757](https://github.com/vllm-project/vllm/pull/22757)
+
+**DBO support**:
+
+- Several bugs fixed  
+  - Fix set forward context error  
+  - Fix assert error num\_tokens\_across\_dp is None  
+  - Fix ubatch datatype issue  
+  - Fix R1 accuracy issue  
+- Build on B200 system, it is easy to benchmark now
+
+**VLLM Contributions**:
+
+- Several Refactoring PRs merged: [\#21968](https://github.com/vllm-project/vllm/pull/21968) [\#23137](https://github.com/vllm-project/vllm/pull/23137) [\#22860](https://github.com/vllm-project/vllm/pull/22860)  
+- Reviewed 30+ PRs
+
 ## July 24 – Aug 5
 
 **B200 Performance Optimization**:
