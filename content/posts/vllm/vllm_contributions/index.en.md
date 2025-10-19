@@ -9,6 +9,8 @@ summary: "My bi-weekly journal for contributions to vllm."
 
 My bi-weekly journal for contributions to vllm.
 
+Current data points: 140+ commits that is merged into main branch, 400+ PR reviews.
+
 ---
 
 ## Oct 1 - Oct 14
