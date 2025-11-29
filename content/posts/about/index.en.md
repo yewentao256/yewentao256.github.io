@@ -106,8 +106,9 @@ My blog series:
 
 - <a href="https://github.com/pytorch/pytorch"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
 - *May 2023 - Present*
-- **Optimized the CuDNN Convolution operator in PyTorch**, achieving a 15% performance boost in CNN training and inference for computer vision tasks; successfully merged into the PyTorch codebase.
-- **Authored a [blog series](https://wentao.site/categories/pytorch/) with 10+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
+- Optimized the [cuDNN Convolution](https://github.com/pytorch/pytorch/issues/115611) and [cuDNN BatchNorm operators](https://github.com/pytorch/pytorch/pull/123020), achieving a 15% performance boost in CNN training and inference for computer vision tasks
+- 30+ [contributions]((https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)) to Pytorch.
+- Authored a [blog series](https://wentao.site/categories/pytorch/) with 15+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 - Details at [My Contributions](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
 
 ### Maintainer
@@ -116,14 +117,18 @@ My blog series:
 
 - <a href="https://github.com/vllm-project/vllm"><img src="https://img.shields.io/github/stars/vllm-project/vllm?style=social" alt="GitHub stars" height="20"></a>
 - *Jun 2025 - Current*
-- DeepGEMM integration, Cuda optimization etc.
+- Code owner for quantization, batch-invariant execution, caching, weight loading and CUDA kernels
+- Led design and implementation of batch-invariant, showcased in the [vLLM blog](https://blog.vllm.ai/2025/11/10/bitwise-consistent-train-inference.html) and mentioned at PyTorch Conference 2025.
+- Optimized MoE shared-expert overlap scheduling, improving end-to-end throughput by ~6% and reducing time-to-first-token latency by 25%+.
+- Integrated and tuned DeepGEMM on B200/H100 GPUs, delivering ~11% throughput gains on B200 and ~6% on H100 while preserving accuracy; Shipped [DeepSeek V3.2](https://github.com/vllm-project/vllm/pull/25896) support in one week.
+- Developed and optimized low-precision quantization kernels (INT8/FP8) for LLM inference, speeding up models by ~13% on H100 and FP8 by ~7% on B200 without accuracy loss.
 - Details at [My Contributions](https://github.com/vllm-project/vllm/issues?q=author%3Ayewentao256+) and [Bi-weekly Journal](https://wentao.site/vllm_contributions/)
 
 #### LazyLLM
 
 - <a href="https://github.com/LazyAGI/LazyLLM"><img src="https://img.shields.io/github/stars/LazyAGI/LazyLLM?style=social" alt="GitHub stars" height="20"></a>
 - *May 2024 - Aug 2024*
-- **Independently built a Retrieval-Augmented Generation (RAG) system** in LazyLLM with a specialized tree architecture, which improved query performance by 50% over LlamaIndex by enhancing the efficiency of parent/child node retrieval, optimizing response times for large language models.
+- Built a Retrieval-Augmented Generation (RAG) system with a specialized tree architecture, which improved query performance by 50% over LlamaIndex by enhancing the efficiency of parent/child node retrieval.
 - Details at [My Contributions](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+)
 
 #### DeepLink
