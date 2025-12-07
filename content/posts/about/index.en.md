@@ -96,7 +96,7 @@ Contact:
 - <a href="https://github.com/pytorch/pytorch"><img src="https://img.shields.io/github/stars/pytorch/pytorch" alt="GitHub stars" height="20"></a>
 - *May 2023 - Present*
 - Optimized the [cuDNN Convolution](https://github.com/pytorch/pytorch/issues/115611) and [cuDNN BatchNorm operators](https://github.com/pytorch/pytorch/pull/123020), achieving a 15% performance boost in CNN training and inference for computer vision tasks
-- 30+ [contributions]((https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)) to Pytorch.
+- 30+ [contributions](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256) to Pytorch.
 - Authored a [blog series](https://wentao.site/categories/pytorch/) with 15+ articles**, providing the developer community with insights into PyTorch’s core architecture and optimizations.
 - Details at [My Contributions](https://github.com/pytorch/pytorch/issues?q=author%3Ayewentao256)
 
