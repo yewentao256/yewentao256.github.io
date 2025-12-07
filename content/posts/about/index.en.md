@@ -6,39 +6,28 @@ lastmod: 2025-08-17T09:44:56+08:00
 summary: "Personal about page."
 ---
 
----
-
-Open source
-
-We build together, the world grows brighter
+Hello Friend, welcome to my blog!
 
 ---
 
-Email: `zhyanwentao@outlook.com`
+Contact:
 
-Github: [yewentao256](https://github.com/yewentao256)
-
-LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
-
-My blog series:
-
-- [Pytorch](https://wentao.site/categories/pytorch/)
-- [Paper_Summary](https://wentao.site/categories/paper_summary/)
-- [CSAPP](https://wentao.site/categories/csapp/)
-- and [More Categories](https://wentao.site/categories/)
+- Email: `zhyanwentao@outlook.com`
+- Github: [yewentao256](https://github.com/yewentao256)
+- LinkedIn: [Wentao Ye](https://www.linkedin.com/in/yewentao/)
 
 ---
 
 ## 1. Patents
 
-- One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time **from hours to minutes**.
+- One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time from hours to minutes.
 - Function-Level Task Scheduling Tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)), patented in 2022, streamlining distributed training workflows.
 
 ---
 
 ## 2. Awards
 
-- **[100k Cornell Startup Award Winner](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)**
+- **[100k Cornell Startup Award](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)**
   - [PolyRook](https://polyrook.com/): Fast 3D environment generation.
 - **National Third Prize**
   - China University Computer Contest, WeChat Big Data Challenge, 2021
@@ -98,7 +87,7 @@ My blog series:
 
 ---
 
-## 5. OpenSource Projects
+## 5. Selected OpenSource Projects
 
 ### Contributor
 
@@ -131,20 +120,12 @@ My blog series:
 - Built a Retrieval-Augmented Generation (RAG) system with a specialized tree architecture, which improved query performance by 50% over LlamaIndex by enhancing the efficiency of parent/child node retrieval.
 - Details at [My Contributions](https://github.com/LazyAGI/LazyLLM/issues?q=author%3Ayewentao256+)
 
-#### DeepLink
+#### DeepLink & DIOPI
 
-- <a href="https://github.com/DeepLink-org/deeplink.framework"><img src="https://img.shields.io/github/stars/DeepLink-org/deeplink.framework?style=social" alt="GitHub stars" height="20"></a>
-- *May 2023 - May 2024*
-- Designed and implemented the Op Inferrer, bypassing PyTorch's TensorIterator to increase the inference speed of binary, unary, and reduction operators by 5% across 40+ models, including large language models (LLMs).
-- Identified and resolved CUDA performance bottlenecks by optimizing implementations within DeepLink and DIOPI, achieving an average 20% performance improvement across 30+ models; enhanced computational efficiency allowed ResNet50 to surpass PyTorch’s benchmark performance, providing significant speedups for high-demand tasks.
-- Details at [My Contributions](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+)
-
-#### DIOPI
-
-- <a href="https://github.com/DeepLink-org/DIOPI"><img src="https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social" alt="GitHub stars" height="20"></a>
+- <a href="https://github.com/DeepLink-org/deeplink.framework"><img src="https://img.shields.io/github/stars/DeepLink-org/deeplink.framework?style=social" alt="GitHub stars" height="20"></a> and <a href="https://github.com/DeepLink-org/DIOPI"><img src="https://img.shields.io/github/stars/DeepLink-org/DIOPI?style=social" alt="GitHub stars" height="20"></a>
 - *Apr 2023 - May 2024*
-- **Developed 30+ machine learning operators** in DIOPI, enabling advanced functionalities across diverse hardware; implemented multi-chip adaptations to support CUDA, Cambricon, and Ascend architectures, enhancing cross-platform compatibility, reducing integration time and enhancing operational efficiency for large-scale systems.
-- Details at [My Contributions](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+)
+- Optimized Llama 2-70B training on 1024 NPUs by integrating distributed training strategies (ZeRO, Tensor Parallel, Pipeline Parallel) and operator-level optimizations. Achieved a 700% increase in TGS (Tokens/GPU/Second) and significantly boosted LLM performance.
+- Details at [Deeplink](https://github.com/DeepLink-org/deeplink.framework/issues?q=author%3Ayewentao256+) and [DIOPI](https://github.com/DeepLink-org/DIOPI/issues?q=author%3Ayewentao256+)
 
 #### MMCV & PAVI Logger
 
@@ -154,12 +135,6 @@ My blog series:
 - Integrated the proprietary PAVI Logger system into the MMCV library, enabling efficient and customizable logging for deep learning workflows, with the core system remaining private.
 
 ### Owner
-
-#### TVM Tutorial
-
-- <a href="https://github.com/yewentao256/TVM_tutorial"><img src="https://img.shields.io/github/stars/yewentao256/TVM_tutorial?style=social" alt="GitHub stars" height="20"></a>
-- *Apr 2025*
-- This tutorial series is designed for beginners to learn how to optimize deep learning operations with TVM. Through practical notebooks, we explore step-by-step performance tuning on both CPU and GPU.
 
 #### GAN-Paint
 
