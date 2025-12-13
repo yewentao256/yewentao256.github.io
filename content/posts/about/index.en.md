@@ -18,10 +18,9 @@ Contact:
 
 ---
 
-## 1. Patents
+## 1. Patent
 
 - One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time from hours to minutes.
-- Function-Level Task Scheduling Tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en)), patented in 2022, streamlining distributed training workflows.
 
 ---
 
