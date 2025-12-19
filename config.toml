@@ -446,12 +446,20 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
     bio = "Your star ⭐ is my biggest motivation!"
     link = ""
     custom = '''
-    <div style="display:flex;justify-content:center">
-      <a href="https://github.com/yewentao256/yewentao256.github.io">
-        <img src="https://img.shields.io/github/stars/yewentao256/yewentao256.github.io?style=social"
-            alt="GitHub stars" height="20">
-      </a>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center">
+      <a class="github-button"
+        href="https://github.com/yewentao256"
+        data-show-count="true"
+        aria-label="Follow @yewentao256 on GitHub">Follow</a>
+
+      <a class="github-button"
+        href="https://github.com/yewentao256/yewentao256.github.io"
+        data-icon="octicon-star"
+        data-show-count="true"
+        aria-label="Star yewentao256/yewentao256.github.io on GitHub">Star</a>
     </div>
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
     '''
 
   [params.typeit]
