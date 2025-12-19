@@ -443,7 +443,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
   # sponsor settings
   [params.sponsor]
     enable = true
-    bio = "Your star ⭐ is my biggest motivation!"
+    bio = "Your follow and star ⭐ is my biggest motivation!"
     link = ""
     custom = '''
     <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center">
