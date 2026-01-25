@@ -1,7 +1,7 @@
 ---
 title: "Batch Invariance Introduction in vLLM"
 date: 2026-01-12T15:12:12+08:00
-categories: ["vllm"]
+categories: ["vllm", "presentation"]
 summary: "Introduction of batch invariance"
 ---
 
