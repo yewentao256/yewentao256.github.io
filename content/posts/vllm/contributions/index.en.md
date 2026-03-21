@@ -9,12 +9,124 @@ summary: "My bi-weekly journal for contributions to vllm."
 
 My bi-weekly journal for contributions to vllm.
 
-Current data points: 270+ commits that is merged into main branch, 600+ PR reviews.
+Current data points: 310+ commits that is merged into main branch, 700+ PR reviews.
 
 All contributions: [https://github.com/vllm-project/vllm/graphs/contributors](https://github.com/vllm-project/vllm/graphs/contributors)  
 All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ayewentao256+](https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ayewentao256+)
 
 ---
+
+## March 3 - March 17
+
+**GPU Model Runner V2**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/35214](https://github.com/vllm-project/vllm/pull/35214) Optimize Sampler Redundant Copy for Model Runner v2, 1.8% Throughput Improvement  
+  - Under review: [https://github.com/vllm-project/vllm/pull/35206](https://github.com/vllm-project/vllm/pull/35206) Support Sequence Parallel for Model Runer v2 (Piecewise Cudagraph, PP=1)  
+  - Under review: [https://github.com/vllm-project/vllm/pull/37195](https://github.com/vllm-project/vllm/pull/37195) \[V0 Deprecation\] Deprecate virtual engine
+
+**Large Scaling Serving**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/35781](https://github.com/vllm-project/vllm/pull/35781) **Optimize scheduler overhead for PD disaggregation, around 5% E2E perf improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/36424](https://github.com/vllm-project/vllm/pull/36424) Remove dead code in KV connector  
+- Landed: [https://github.com/vllm-project/vllm/pull/36170](https://github.com/vllm-project/vllm/pull/36170) Remove default ray dependency
+
+**Kernel Optimization**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/37340](https://github.com/vllm-project/vllm/pull/37340) **Add tuned triton moe config for Qwen3.5 H200, 9.9% E2E throughput improvement**
+
+**Pooling Model**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/37347](https://github.com/vllm-project/vllm/pull/37347) Optimize token\_embed for pooling models, 2.8% token throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/36710](https://github.com/vllm-project/vllm/pull/36710) **Optimize compute maxsim using batched version, 3.2% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/36159](https://github.com/vllm-project/vllm/pull/36159) **Compute maxsim in worker side, reducing redundant copies, 2.7% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/35427](https://github.com/vllm-project/vllm/pull/35427) Fix maxsim cuda platform and add cli to control it
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/37313](https://github.com/vllm-project/vllm/pull/37313)  
+  - [https://github.com/vllm-project/vllm/pull/36171](https://github.com/vllm-project/vllm/pull/36171)  
+  - [https://github.com/vllm-project/vllm/pull/36049](https://github.com/vllm-project/vllm/pull/36049)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/36693](https://github.com/vllm-project/vllm/pull/36693)  
+  - [https://github.com/vllm-project/vllm/pull/36674](https://github.com/vllm-project/vllm/pull/36674)  
+  - [https://github.com/vllm-project/vllm/pull/36529](https://github.com/vllm-project/vllm/pull/36529)  
+  - And several more  
+
+## Feb 18 - March 2
+
+**GPU Model Runner V2**:
+
+- [https://github.com/vllm-project/vllm/pull/35333](https://github.com/vllm-project/vllm/pull/35333) Optimize model runner v2 prepare\_inputs copy logic, 6.1% E2E throughput improvement. Nick has a PR after [https://github.com/vllm-project/vllm/pull/35561](https://github.com/vllm-project/vllm/pull/35561)  
+- [https://github.com/vllm-project/vllm/pull/35214](https://github.com/vllm-project/vllm/pull/35214) **Optimize Sampler Redundant Copy for Model Runner v2, 1.8% Throughput Improvement**  
+- [https://github.com/vllm-project/vllm/pull/35206](https://github.com/vllm-project/vllm/pull/35206) **Support Sequence Parallel for Model Runer v2 (Piecewise Cudagraph, PP=1)**  
+- [https://github.com/vllm-project/vllm/pull/34903](https://github.com/vllm-project/vllm/pull/34903) Fix illegal memory access issue for model runner v2
+
+**Async Scheduling**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/34029](https://github.com/vllm-project/vllm/pull/34029) Optimize async scheduling redundant copy, 0.9% E2E throughput improvement  
+- Under review: Optimize sampled\_token\_ids using numpy and remove tolist, 0.9% E2E throughput improvement [https://github.com/vllm-project/vllm/pull/35446](https://github.com/vllm-project/vllm/pull/35446) 
+
+**Large Scaling Serving**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/35781](https://github.com/vllm-project/vllm/pull/35781) **Optimize scheduler overhead for PD disaggregation, around 5% E2E perf improvement**
+
+**Pooling Model**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/35427](https://github.com/vllm-project/vllm/pull/35427) \[Refactor\] Fix maxsim cuda platform and add cli to control it  
+- Landed: [https://github.com/vllm-project/vllm/pull/35330](https://github.com/vllm-project/vllm/pull/35330) **Optimize maxsim scores computation for pooling models, 13.9% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/35127](https://github.com/vllm-project/vllm/pull/35127) Optimize pooling model redundant copy, 1.8% throughput improvement
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/35634](https://github.com/vllm-project/vllm/pull/35634)  
+  - [https://github.com/vllm-project/vllm/pull/35441](https://github.com/vllm-project/vllm/pull/35441)  
+  - [https://github.com/vllm-project/vllm/pull/35418](https://github.com/vllm-project/vllm/pull/35418)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/35314](https://github.com/vllm-project/vllm/pull/35314)  
+  - [https://github.com/vllm-project/vllm/pull/34961](https://github.com/vllm-project/vllm/pull/34961)  
+- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)  
+- Batch invariant: Lead and track all progress in [https://github.com/vllm-project/vllm/issues/27433](https://github.com/vllm-project/vllm/issues/27433)
+
+## Feb 4 - Feb 17
+
+**GPU Model Runner V2**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/34179](https://github.com/vllm-project/vllm/pull/34179) **\[Feature\] Decode Context Parallel support for GPU model runner v2**  
+  - Co-authored with Summer and landed: [https://github.com/vllm-project/vllm/pull/33960](https://github.com/vllm-project/vllm/pull/33960) Pipeline Parallel support for Model Runner V2 (git diff shared)
+
+**Async Scheduling**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/34029](https://github.com/vllm-project/vllm/pull/34029) Optimize async scheduling redundant copy, 0.9% E2E throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/32975](https://github.com/vllm-project/vllm/pull/32975) Optimize detokenizer python logic  
+- Landed: [https://github.com/vllm-project/vllm/pull/33612](https://github.com/vllm-project/vllm/pull/33612) **Optimize spec decoding \+ async scheduling, 1.5% Throughput improvement**
+
+**Performance optimizations**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/33449](https://github.com/vllm-project/vllm/pull/33449) Remove align block size logic in moe\_permute  
+- Landed: [https://github.com/vllm-project/vllm/pull/33368](https://github.com/vllm-project/vllm/pull/33368) **Pipeline Parallel Async send/recv, 2.9% E2E throughput improvement**
+
+**Batch Invariant**:
+
+- Lead and track all progress in [https://github.com/vllm-project/vllm/issues/27433](https://github.com/vllm-project/vllm/issues/27433)  
+- Leading for Community contributions
+  - [\[Doc\] Add Mistral-7b-v0.3 model to the batch invariance validated model \#34584](https://github.com/vllm-project/vllm/pull/34584)  
+  - [\[Feature\] Enable TRITON\_ATTN for Batch Invariance \#33688](https://github.com/vllm-project/vllm/pull/33688)  
+  - [\[Core\] Add determinism warmup automation for batch invariant mode \#33537](https://github.com/vllm-project/vllm/pull/33537)  
+  - [\[Doc\] Add Qwen2.5 models to batch invariance tested models \#33016](https://github.com/vllm-project/vllm/pull/33016)
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/34263](https://github.com/vllm-project/vllm/pull/34263)  
+  - [https://github.com/vllm-project/vllm/pull/33593](https://github.com/vllm-project/vllm/pull/33593)  
+  - [https://github.com/vllm-project/vllm/pull/33944](https://github.com/vllm-project/vllm/pull/33944)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/33998](https://github.com/vllm-project/vllm/pull/33998)  
 
 ## Jan 21 - Feb 3
 
@@ -39,7 +151,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - Lead and track all progress in [https://github.com/vllm-project/vllm/issues/27433](https://github.com/vllm-project/vllm/issues/27433)  
 - Leading community to deliver bug fixes / features  
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs  
   - [https://github.com/vllm-project/vllm/pull/33108](https://github.com/vllm-project/vllm/pull/33108)  
@@ -48,7 +160,6 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
   - And more…  
 - Bug Fix PRs:  
   - [https://github.com/vllm-project/vllm/pull/32949](https://github.com/vllm-project/vllm/pull/32949)  
-- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)
 
 ## Jan 5 - Jan 20
 
@@ -77,7 +188,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - **vLLM office hour speaker (Jan 08\)** [https://docs.google.com/presentation/d/1iaZkoyf2VDQFc3TB2DGld2MpZ-uLsVrXdtYWfT9hEBc/edit?slide=id.g39235cbcce8\_2\_318\#slide=id.g39235cbcce8\_2\_318](https://docs.google.com/presentation/d/1iaZkoyf2VDQFc3TB2DGld2MpZ-uLsVrXdtYWfT9hEBc/edit?slide=id.g39235cbcce8_2_318#slide=id.g39235cbcce8_2_318)  
   [https://www.youtube.com/watch?v=sDLR9DvEFq4](https://www.youtube.com/watch?v=sDLR9DvEFq4)  
   
-**vLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs  
   - [https://github.com/vllm-project/vllm/pull/32692](https://github.com/vllm-project/vllm/pull/32692)
@@ -112,7 +223,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - Landed [https://github.com/vllm-project/vllm/pull/31046](https://github.com/vllm-project/vllm/pull/31046) Fix error 'Dynamo failed to run FX node with fake tensors for Deepseek V3.2  
 - WIP: [https://github.com/vllm-project/vllm/pull/31160](https://github.com/vllm-project/vllm/pull/31160) Fix Number of dimensions of tensors must match. for Deepseek V3.2
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs  
   - [https://github.com/vllm-project/vllm/pull/30898](https://github.com/vllm-project/vllm/pull/30898) Refactor for DeepGemmQuantScaleFMT using cache  
@@ -145,7 +256,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - Landed: Deepgemm fused layout kernel for activations, **4.3% throughput improvement, 10.7% TTFT improvement**. [https://github.com/vllm-project/vllm/pull/29546](https://github.com/vllm-project/vllm/pull/29546)   
 - Due to similar model architecture, these optimizations could be also used to deepseek model series automatically.
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs  
   - [https://github.com/vllm-project/vllm/pull/29903](https://github.com/vllm-project/vllm/pull/29903) Log optimization  
@@ -154,8 +265,6 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - Bug Fix PRs merged:  
   - [https://github.com/vllm-project/vllm/pull/29999](https://github.com/vllm-project/vllm/pull/29999) Fix vLLM config is not set issue that bother committers for almost two weeks  
   - [https://github.com/vllm-project/vllm/pull/29973](https://github.com/vllm-project/vllm/pull/29973) Fix re import error  
-- 50+ PR reviews  
-- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)
 
 ## Nov 13 - Nov 24
 
@@ -173,7 +282,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 - Landed Optimize select\_experts [https://github.com/vllm-project/vllm/pull/28069](https://github.com/vllm-project/vllm/pull/28069)  
 - Several other PRs optimizations
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs merged  
   - [\#29348](https://github.com/vllm-project/vllm/pull/29348) [\#28948](https://github.com/vllm-project/vllm/pull/28948) [\#28881](https://github.com/vllm-project/vllm/pull/28881) and several more  
@@ -181,7 +290,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
   - [\#29202](https://github.com/vllm-project/vllm/pull/29202) [\#29112](https://github.com/vllm-project/vllm/pull/29112) [\#29040](https://github.com/vllm-project/vllm/pull/29040) and several more  
   - Fix torch dynamo warning Dynamo detected a call to a functools.lru\_cache, much faster for the dynamo tracing. [https://github.com/vllm-project/vllm/pull/29038](https://github.com/vllm-project/vllm/pull/29038)  
 - 50+ PR reviews  
-- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)  
+- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)
   - Fix mypy for vllm/v1/worker [https://github.com/vllm-project/vllm/pull/29037](https://github.com/vllm-project/vllm/pull/29037)  
 
 ## Oct 29 - Nov 12
@@ -218,7 +327,7 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
   - [\#27931](https://github.com/vllm-project/vllm/pull/27931) \[Kernel\] Optimize rms\_norm kernel  
   - And a lot more
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs merged  
   - [\#28227](https://github.com/vllm-project/vllm/pull/28227) [\#28157](https://github.com/vllm-project/vllm/pull/28157) [\#27765](https://github.com/vllm-project/vllm/pull/27765) and several more  
@@ -261,7 +370,7 @@ Batch Invariant
   - [\#23812](https://github.com/vllm-project/vllm/pull/23812#event-20390253990) \[Feature\]\[Quantization\] auto\_round support for mixed bits quantization  
   - \+ a lot more
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Refactoring PRs merged  
   - [\#27606](https://github.com/vllm-project/vllm/pull/27606) [\#26935](https://github.com/vllm-project/vllm/pull/26935) [\#26740](https://github.com/vllm-project/vllm/pull/26740)  
@@ -303,7 +412,7 @@ Batch Invariant
   - \#26438: \[Bug\]: TypeError: argument 'id': StreamInput must be either an integer or a list of integers  
   - \+ a lot more
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Huge Performance Improvement  
   - Enable E8M0 by Default on Hopper for DeepGEMM, 5% E2E throughput improvement: [\#26197](https://github.com/vllm-project/vllm/pull/26197)  
@@ -335,7 +444,7 @@ DeepSeekV3.2 Support
   - Issue related with B200 for Qwen3-VL  
   - Raised in [\#25582](https://github.com/vllm-project/vllm/issues/25582) and fixed by [\#25788](https://github.com/vllm-project/vllm/pull/25788), working closely with Roger Wang
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Several Refactoring/Fix PRs merged: [\#25958](https://github.com/vllm-project/vllm/pull/25958) [\#25710](https://github.com/vllm-project/vllm/pull/25710) [\#25519](https://github.com/vllm-project/vllm/pull/25519) [\#25518](https://github.com/vllm-project/vllm/pull/25518) [\#25517](https://github.com/vllm-project/vllm/pull/25517) \+ several more  
 - Leadership:
@@ -370,7 +479,7 @@ DBO support
 - DBO PR get landed: [https://github.com/vllm-project/vllm/pull/23693](https://github.com/vllm-project/vllm/pull/23693) (Work together with Sage and Lucas)  
 - HT support for DBO PR ready for review (combined with Lucas’ prefill support)  [https://github.com/vllm-project/vllm/pull/24845](https://github.com/vllm-project/vllm/pull/24845)
 
-VLLM Contributions
+Other Contributions
 
 - Several Refactoring/Fix PRs merged: [\#24902](https://github.com/vllm-project/vllm/pull/24902) [\#24887](https://github.com/vllm-project/vllm/pull/24887) [\#24774](https://github.com/vllm-project/vllm/pull/24774) [\#24696](https://github.com/vllm-project/vllm/pull/24696) [\#24674](https://github.com/vllm-project/vllm/pull/24674) \+ 4 other PRs  
 - Several fix for CI: [\#24259](https://github.com/vllm-project/vllm/pull/24259) [\#24670](https://github.com/vllm-project/vllm/pull/24670)  
@@ -407,7 +516,7 @@ DBO support
 - [https://github.com/vllm-project/vllm/pull/23693](https://github.com/vllm-project/vllm/pull/23693) (Work together with Sage and Lucas)  
 - HT single handle issue fixed
 
-VLLM Contributions
+Other Contributions
 
 - Several Refactoring/Fix PRs merged: [\#23287](https://github.com/vllm-project/vllm/pull/23287) [\#23858](https://github.com/vllm-project/vllm/pull/23858) [\#23689](https://github.com/vllm-project/vllm/pull/23689) [\#23660](https://github.com/vllm-project/vllm/pull/23660) [\#23591](https://github.com/vllm-project/vllm/pull/23591) [\#23370](https://github.com/vllm-project/vllm/pull/23370)  
 - Reviewed 50+ PRs
@@ -435,7 +544,7 @@ I am nominated to be a vllm committer\! Thank so much to Kaichao [Michael Goin](
   - Fix R1 accuracy issue  
 - Build on B200 system, it is easy to benchmark now
 
-**VLLM Contributions**:
+**Other Contributions**:
 
 - Several Refactoring PRs merged: [\#21968](https://github.com/vllm-project/vllm/pull/21968) [\#23137](https://github.com/vllm-project/vllm/pull/23137) [\#22860](https://github.com/vllm-project/vllm/pull/22860)  
 - Reviewed 30+ PRs

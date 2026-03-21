@@ -15,12 +15,124 @@ summary: "My bi-weekly journal for contributions to vllm."
 
 My bi-weekly journal for contributions to vllm.
 
-Current data points: 270+ commits that is merged into main branch, 600+ PR reviews.
+Current data points: 310+ commits that is merged into main branch, 700+ PR reviews.
 
 All contributions: [https://github.com/vllm-project/vllm/graphs/contributors](https://github.com/vllm-project/vllm/graphs/contributors)  
 All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ayewentao256+](https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ayewentao256+)
 
 ---
+
+## March 3 - March 17
+
+**GPU Model Runner V2**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/35214](https://github.com/vllm-project/vllm/pull/35214) Optimize Sampler Redundant Copy for Model Runner v2, 1.8% Throughput Improvement  
+  - Under review: [https://github.com/vllm-project/vllm/pull/35206](https://github.com/vllm-project/vllm/pull/35206) Support Sequence Parallel for Model Runer v2 (Piecewise Cudagraph, PP=1)  
+  - Under review: [https://github.com/vllm-project/vllm/pull/37195](https://github.com/vllm-project/vllm/pull/37195) \[V0 Deprecation\] Deprecate virtual engine
+
+**Large Scaling Serving**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/35781](https://github.com/vllm-project/vllm/pull/35781) **Optimize scheduler overhead for PD disaggregation, around 5% E2E perf improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/36424](https://github.com/vllm-project/vllm/pull/36424) Remove dead code in KV connector  
+- Landed: [https://github.com/vllm-project/vllm/pull/36170](https://github.com/vllm-project/vllm/pull/36170) Remove default ray dependency
+
+**Kernel Optimization**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/37340](https://github.com/vllm-project/vllm/pull/37340) **Add tuned triton moe config for Qwen3.5 H200, 9.9% E2E throughput improvement**
+
+**Pooling Model**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/37347](https://github.com/vllm-project/vllm/pull/37347) Optimize token\_embed for pooling models, 2.8% token throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/36710](https://github.com/vllm-project/vllm/pull/36710) **Optimize compute maxsim using batched version, 3.2% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/36159](https://github.com/vllm-project/vllm/pull/36159) **Compute maxsim in worker side, reducing redundant copies, 2.7% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/35427](https://github.com/vllm-project/vllm/pull/35427) Fix maxsim cuda platform and add cli to control it
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/37313](https://github.com/vllm-project/vllm/pull/37313)  
+  - [https://github.com/vllm-project/vllm/pull/36171](https://github.com/vllm-project/vllm/pull/36171)  
+  - [https://github.com/vllm-project/vllm/pull/36049](https://github.com/vllm-project/vllm/pull/36049)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/36693](https://github.com/vllm-project/vllm/pull/36693)  
+  - [https://github.com/vllm-project/vllm/pull/36674](https://github.com/vllm-project/vllm/pull/36674)  
+  - [https://github.com/vllm-project/vllm/pull/36529](https://github.com/vllm-project/vllm/pull/36529)  
+  - And several more  
+
+## Feb 18 - March 2
+
+**GPU Model Runner V2**:
+
+- [https://github.com/vllm-project/vllm/pull/35333](https://github.com/vllm-project/vllm/pull/35333) Optimize model runner v2 prepare\_inputs copy logic, 6.1% E2E throughput improvement. Nick has a PR after [https://github.com/vllm-project/vllm/pull/35561](https://github.com/vllm-project/vllm/pull/35561)  
+- [https://github.com/vllm-project/vllm/pull/35214](https://github.com/vllm-project/vllm/pull/35214) **Optimize Sampler Redundant Copy for Model Runner v2, 1.8% Throughput Improvement**  
+- [https://github.com/vllm-project/vllm/pull/35206](https://github.com/vllm-project/vllm/pull/35206) **Support Sequence Parallel for Model Runer v2 (Piecewise Cudagraph, PP=1)**  
+- [https://github.com/vllm-project/vllm/pull/34903](https://github.com/vllm-project/vllm/pull/34903) Fix illegal memory access issue for model runner v2
+
+**Async Scheduling**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/34029](https://github.com/vllm-project/vllm/pull/34029) Optimize async scheduling redundant copy, 0.9% E2E throughput improvement  
+- Under review: Optimize sampled\_token\_ids using numpy and remove tolist, 0.9% E2E throughput improvement [https://github.com/vllm-project/vllm/pull/35446](https://github.com/vllm-project/vllm/pull/35446) 
+
+**Large Scaling Serving**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/35781](https://github.com/vllm-project/vllm/pull/35781) **Optimize scheduler overhead for PD disaggregation, around 5% E2E perf improvement**
+
+**Pooling Model**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/35427](https://github.com/vllm-project/vllm/pull/35427) \[Refactor\] Fix maxsim cuda platform and add cli to control it  
+- Landed: [https://github.com/vllm-project/vllm/pull/35330](https://github.com/vllm-project/vllm/pull/35330) **Optimize maxsim scores computation for pooling models, 13.9% E2E throughput improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/35127](https://github.com/vllm-project/vllm/pull/35127) Optimize pooling model redundant copy, 1.8% throughput improvement
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/35634](https://github.com/vllm-project/vllm/pull/35634)  
+  - [https://github.com/vllm-project/vllm/pull/35441](https://github.com/vllm-project/vllm/pull/35441)  
+  - [https://github.com/vllm-project/vllm/pull/35418](https://github.com/vllm-project/vllm/pull/35418)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/35314](https://github.com/vllm-project/vllm/pull/35314)  
+  - [https://github.com/vllm-project/vllm/pull/34961](https://github.com/vllm-project/vllm/pull/34961)  
+- Lead Fix all of the mypy check, issue in [\#26533](https://github.com/vllm-project/vllm/issues/26533)  
+- Batch invariant: Lead and track all progress in [https://github.com/vllm-project/vllm/issues/27433](https://github.com/vllm-project/vllm/issues/27433)
+
+## Feb 4 - Feb 17
+
+**GPU Model Runner V2**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/34179](https://github.com/vllm-project/vllm/pull/34179) **\[Feature\] Decode Context Parallel support for GPU model runner v2**  
+  - Co-authored with Summer and landed: [https://github.com/vllm-project/vllm/pull/33960](https://github.com/vllm-project/vllm/pull/33960) Pipeline Parallel support for Model Runner V2 (git diff shared)
+
+**Async Scheduling**:
+
+- Under review: [https://github.com/vllm-project/vllm/pull/34029](https://github.com/vllm-project/vllm/pull/34029) Optimize async scheduling redundant copy, 0.9% E2E throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/32975](https://github.com/vllm-project/vllm/pull/32975) Optimize detokenizer python logic  
+- Landed: [https://github.com/vllm-project/vllm/pull/33612](https://github.com/vllm-project/vllm/pull/33612) **Optimize spec decoding \+ async scheduling, 1.5% Throughput improvement**
+
+**Performance optimizations**:
+
+- Landed: [https://github.com/vllm-project/vllm/pull/33449](https://github.com/vllm-project/vllm/pull/33449) Remove align block size logic in moe\_permute  
+- Landed: [https://github.com/vllm-project/vllm/pull/33368](https://github.com/vllm-project/vllm/pull/33368) **Pipeline Parallel Async send/recv, 2.9% E2E throughput improvement**
+
+**Batch Invariant**:
+
+- Lead and track all progress in [https://github.com/vllm-project/vllm/issues/27433](https://github.com/vllm-project/vllm/issues/27433)  
+- Leading for Community contributions
+  - [\[Doc\] Add Mistral-7b-v0.3 model to the batch invariance validated model \#34584](https://github.com/vllm-project/vllm/pull/34584)  
+  - [\[Feature\] Enable TRITON\_ATTN for Batch Invariance \#33688](https://github.com/vllm-project/vllm/pull/33688)  
+  - [\[Core\] Add determinism warmup automation for batch invariant mode \#33537](https://github.com/vllm-project/vllm/pull/33537)  
+  - [\[Doc\] Add Qwen2.5 models to batch invariance tested models \#33016](https://github.com/vllm-project/vllm/pull/33016)
+
+**Other Contributions**:
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/34263](https://github.com/vllm-project/vllm/pull/34263)  
+  - [https://github.com/vllm-project/vllm/pull/33593](https://github.com/vllm-project/vllm/pull/33593)  
+  - [https://github.com/vllm-project/vllm/pull/33944](https://github.com/vllm-project/vllm/pull/33944)  
+  - And more…  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/33998](https://github.com/vllm-project/vllm/pull/33998)  
 
 ## Jan 21 - Feb 3
 
