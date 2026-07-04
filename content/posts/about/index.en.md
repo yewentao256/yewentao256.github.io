@@ -53,6 +53,10 @@ Contact:
   - **Red hat**
   - *Jun 2025 - Current*
 
+- **JOSS Topic Editor**
+  - **[Journal of Open Source Software](https://joss.theoj.org/about#topic_editors)**
+  - *Jan 2026 - Current*
+
 - **Deep Learning Engineer**  
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
