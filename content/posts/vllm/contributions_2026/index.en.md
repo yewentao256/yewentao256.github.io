@@ -14,6 +14,102 @@ All PR reviews: [https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Aopen+
 
 ---
 
+## June 10 \- June 23
+
+**GPU Model Runner V2 Maintainance**:
+
+- Migration from v1 to v2: [https://github.com/vllm-project/vllm/issues/41286](https://github.com/vllm-project/vllm/issues/41286)
+- Landed: [https://github.com/vllm-project/vllm/pull/42759](https://github.com/vllm-project/vllm/pull/42759) Migrate Reset cache for both v2 and v1 model runner  
+- Landed: [https://github.com/vllm-project/vllm/pull/42667](https://github.com/vllm-project/vllm/pull/42667) Migration from v1 to v2, with Qwen and DSv2 MOE models \[3/N\]  
+- Under review: [https://github.com/vllm-project/vllm/pull/44443](https://github.com/vllm-project/vllm/pull/44443) Enable all dense models for mrv2 \[4/N\]  
+  - Landed: [https://github.com/vllm-project/vllm/pull/44568](https://github.com/vllm-project/vllm/pull/44568) Fix v2 AttributeError: 'CohereASRDecoder' object has no attribute 'embed\_input\_ids'  
+  - Landed: [https://github.com/vllm-project/vllm/pull/46095](https://github.com/vllm-project/vllm/pull/46095) Fix MRv2 memory leak test  
+  - Landed: [https://github.com/vllm-project/vllm/pull/45467](https://github.com/vllm-project/vllm/pull/45467) Fix openai.InternalServerError: Error code: 500 \- 'list index out of range'  
+- Landed: [https://github.com/vllm-project/vllm/pull/44446](https://github.com/vllm-project/vllm/pull/44446) Migration to support quantized model by default \[5/N\]  
+- Landed [https://github.com/vllm-project/vllm/pull/45461](https://github.com/vllm-project/vllm/pull/45461) Enable GraniteMOE for MRv2 by default  
+- Under review: [https://github.com/vllm-project/vllm/pull/46646](https://github.com/vllm-project/vllm/pull/46646) Enable all moe models for MRv2
+
+Large Scaling Serving
+
+- Under review: [https://github.com/vllm-project/vllm/pull/44915](https://github.com/vllm-project/vllm/pull/44915) \[Feature\] Migrate DP Supervisor from Python to Rust
+
+DeepSeek V4
+
+- Performance Tracking issue: [https://github.com/vllm-project/vllm/issues/45861](https://github.com/vllm-project/vllm/issues/45861)
+- Landed: [https://github.com/vllm-project/vllm/pull/45061](https://github.com/vllm-project/vllm/pull/45061) **Optimize DSv4 prefill chunk planning, 4.0% E2E Throughput Improvement**  
+- Landed: [https://github.com/vllm-project/vllm/pull/45052](https://github.com/vllm-project/vllm/pull/45052) \[Bug\] Fix test flashmla for DSv4  
+- Landed [https://github.com/vllm-project/vllm/pull/45863](https://github.com/vllm-project/vllm/pull/45863) **DSv4 flashinfer sparse index cache for metadata, 2%\~4% TTFT improvement**
+
+GLM 5.2
+
+- Performance tracking issue: [https://github.com/vllm-project/vllm/issues/46654](https://github.com/vllm-project/vllm/issues/46654)  
+- Under review: [https://github.com/vllm-project/vllm/pull/46635](https://github.com/vllm-project/vllm/pull/46635) **Replace MOE all-reduce with reduce-scatter, 3.1%\~3.2 E2E Throughput improvement**
+
+Kernel Optimization
+
+- Under review: [https://github.com/vllm-project/vllm/pull/43137](https://github.com/vllm-project/vllm/pull/43137) Optimize per\_token\_group\_quant using regsiter directly, 4.5% E2E Throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/44572](https://github.com/vllm-project/vllm/pull/44572) \[Perf\] SM90 cutlass fp8 mm supports odd M by swap\_ab, 180\~290% kernel performance improvement
+
+vLLM Contributions
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/46405](https://github.com/vllm-project/vllm/pull/46405)  
+  - [https://github.com/vllm-project/vllm/pull/46511](https://github.com/vllm-project/vllm/pull/46511)  
+  - [https://github.com/vllm-project/vllm/pull/44681](https://github.com/vllm-project/vllm/pull/44681)  
+  - ...  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/46627](https://github.com/vllm-project/vllm/pull/46627)  
+  - [https://github.com/vllm-project/vllm/pull/46530](https://github.com/vllm-project/vllm/pull/46530)  
+  - [https://github.com/vllm-project/vllm/pull/46070](https://github.com/vllm-project/vllm/pull/46070)  
+  - …
+
+## May 27 \- June 09
+
+GPU Model Runner V2
+
+- Migration from v1 to v2: [https://github.com/vllm-project/vllm/issues/41286](https://github.com/vllm-project/vllm/issues/41286)
+- Landed: [https://github.com/vllm-project/vllm/pull/42665](https://github.com/vllm-project/vllm/pull/42665) Migration from v1 to v2, with more Llama and Mistral dense models \[2/N\]  
+  - Under review: [https://github.com/vllm-project/vllm/pull/42759](https://github.com/vllm-project/vllm/pull/42759) Migrate Reset cache for both v2 and v1 model runner  
+- Under review: [https://github.com/vllm-project/vllm/pull/42667](https://github.com/vllm-project/vllm/pull/42667) Migration from v1 to v2, with Qwen and DSv2 MOE models \[3/N\]  
+  - Under review: [https://github.com/vllm-project/vllm/pull/43915](https://github.com/vllm-project/vllm/pull/43915) Feature: Support ElasticEPScalingExecutor for MRv2  
+- Under review: [https://github.com/vllm-project/vllm/pull/44443](https://github.com/vllm-project/vllm/pull/44443) Enable all dense models for mrv2 \[4/N\]  
+  - Landed: [https://github.com/vllm-project/vllm/pull/44450](https://github.com/vllm-project/vllm/pull/44450) Fix mrv2 mm lora issue  
+  - Under review: [https://github.com/vllm-project/vllm/pull/44568](https://github.com/vllm-project/vllm/pull/44568) Fix v2 AttributeError: 'CohereASRDecoder' object has no attribute 'embed\_input\_ids'  
+- Under review: [https://github.com/vllm-project/vllm/pull/44446](https://github.com/vllm-project/vllm/pull/44446) Migration to support quantized model by default \[5/N\]
+
+Large Scaling Serving
+
+- Landed: [https://github.com/vllm-project/vllm/pull/43707](https://github.com/vllm-project/vllm/pull/43707)  Optimize shutdown logs, easier to follow and consistent  
+- Landed: [https://github.com/vllm-project/vllm/pull/43688](https://github.com/vllm-project/vllm/pull/43688) \[Feature\] SSL support for dp supervisor  
+- Under review: [https://github.com/vllm-project/vllm/pull/44915](https://github.com/vllm-project/vllm/pull/44915) **\[Feature\] Migrate DP Supervisor from Python to Rust**
+
+DeepSeek V4
+
+- Under review: [https://github.com/vllm-project/vllm/pull/45061](https://github.com/vllm-project/vllm/pull/45061) **Optimize DSv4 prefill chunk planning, 4.0% E2E Throughput Improvement**  
+- Under review: [https://github.com/vllm-project/vllm/pull/45052](https://github.com/vllm-project/vllm/pull/45052) \[Bug\] Fix test flashmla for DSv4  
+- Landed [https://github.com/vllm-project/vllm/pull/44914](https://github.com/vllm-project/vllm/pull/44914) \[Bug\] Fix deepseek v4 OOM issue
+
+Kernel Optimization
+
+- Landed: [https://github.com/vllm-project/vllm/pull/43706](https://github.com/vllm-project/vllm/pull/43706) Optimize cutlass fp8 scaled mm bypassing padding, 20% kernel performance improvement  
+- Under review: [http://github.com/vllm-project/vllm/pull/43349](http://github.com/vllm-project/vllm/pull/43349) \[Perf\] Optimize remapped greedy draft token selection for Eagle3 and DFlash, 37\~81% kernel performance improvement  
+- Under review: [https://github.com/vllm-project/vllm/pull/43137](https://github.com/vllm-project/vllm/pull/43137) Optimize per\_token\_group\_quant using regsiter directly, 4.5% E2E Throughput improvement  
+- Landed: [https://github.com/vllm-project/vllm/pull/43014](https://github.com/vllm-project/vllm/pull/43014) Optimize moe permute by pre-allocate buffer, 9\~14% kernel performance improvement  
+- Under review: [https://github.com/vllm-project/vllm/pull/44572](https://github.com/vllm-project/vllm/pull/44572) **\[Perf\] SM90 cutlass fp8 mm supports odd M by swap\_ab, 180\~290% kernel performance improvement**
+
+vLLM Contributions
+
+- Refactoring PRs  
+  - [https://github.com/vllm-project/vllm/pull/44681](https://github.com/vllm-project/vllm/pull/44681)  
+  - [https://github.com/vllm-project/vllm/pull/42453](https://github.com/vllm-project/vllm/pull/42453)  
+  - [https://github.com/vllm-project/vllm/pull/44122](https://github.com/vllm-project/vllm/pull/44122)  
+  - ...  
+- Bug Fix PRs:  
+  - [https://github.com/vllm-project/vllm/pull/43909](https://github.com/vllm-project/vllm/pull/43909)  
+  - [https://github.com/vllm-project/vllm/pull/44005](https://github.com/vllm-project/vllm/pull/44005)  
+  - [https://github.com/vllm-project/vllm/pull/43813](https://github.com/vllm-project/vllm/pull/43813)  
+  - …
+
 ## May 13 \- May 26
 
 **GPU Model Runner V2**:
