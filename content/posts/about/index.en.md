@@ -61,8 +61,8 @@ Contact:
   - **SenseTime | SenseCore**  
   - *Jul 2022 - Aug 2024*
 
-- **R&D Intern**  
-  - **SenseTime | Research Institute (Deep Learning Frameworks)**  
+- **Backend Development Intern**  
+  - **SenseTime | Research Institute**  
   - *Jan 2021 - Jul 2022*
 
 - **Co-founder & CTO**  
@@ -109,7 +109,7 @@ Contact:
 
 - <a href="https://github.com/vllm-project/vllm"><img src="https://img.shields.io/github/stars/vllm-project/vllm?style=social" alt="GitHub stars" height="20"></a>
 - *Jun 2025 - Current*
-- Code owner for quantization, batch-invariant execution, caching, weight loading and CUDA kernels
+- Code owner for Model Runner V2, quantization, batch-invariant execution, caching, weight loading and CUDA kernels
 - Led design and implementation of batch-invariant, showcased in the [vLLM blog](https://blog.vllm.ai/2025/11/10/bitwise-consistent-train-inference.html) and mentioned at PyTorch Conference 2025.
 - Optimized MoE shared-expert overlap scheduling, improving end-to-end throughput by ~6% and reducing time-to-first-token latency by 25%+.
 - Integrated and tuned DeepGEMM on B200/H100 GPUs, delivering ~11% throughput gains on B200 and ~6% on H100 while preserving accuracy; Shipped [DeepSeek V3.2](https://github.com/vllm-project/vllm/pull/25896) support in one week.
