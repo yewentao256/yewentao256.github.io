@@ -2,7 +2,7 @@
 title: "About Me"
 date: 2023-02-03T16:49:14+08:00
 hiddenFromHomePage: true
-lastmod: 2025-08-17T09:44:56+08:00
+lastmod: 2026-11-07T09:44:56+08:00
 summary: "Personal about page."
 ---
 
@@ -26,6 +26,8 @@ Contact:
 
 ## 2. Awards
 
+- **[2026 PyTorch Foundation Contributor Award](https://pytorch.org/contributor-awards/)**
+  - Review Powerhouse - vLLM
 - **[100k Cornell Startup Award](https://tech.cornell.edu/news/cornell-tech-startup-awards-2025/)**
   - [PolyRook](https://polyrook.com/): Fast 3D environment generation.
 - **National Third Prize**
