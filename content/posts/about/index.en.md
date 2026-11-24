@@ -20,7 +20,8 @@ Contact:
 
 ## 1. Patent
 
-- One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A)), patented in 2023, reducing model accuracy validation time from hours to minutes.
+- Deep learning framework testing method and device, electronic equipment and storage medium: One-iter Tool ([CN117312173A](https://patents.google.com/patent/CN117312173A/en?oq=CN117312173A))
+- Task scheduling method, device, electronic equipment, storage medium and program product: Function-level task scheduling tool ([CN115033366A](https://patents.google.com/patent/CN115033366A/en))
 
 ---
 
