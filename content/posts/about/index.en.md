@@ -58,6 +58,8 @@ Contact:
 
 - **JOSS Topic Editor**
   - **[Journal of Open Source Software](https://joss.theoj.org/about#topic_editors)**
+  - My edited papers: [Edited_by_yewentao256](https://joss.theoj.org/papers/edited_by/@yewentao256)
+  - My reviewed papers: [Reviewed_by_yewentao256](https://joss.theoj.org/papers/reviewed_by/@yewentao256)
   - *Jan 2026 - Current*
 
 - **Deep Learning Engineer**  
